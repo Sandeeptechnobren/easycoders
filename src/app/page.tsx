@@ -1,65 +1,111 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import api from '@/lib/axios';
+
+export default function HomePage() {
+  const [categories, setCategories] = useState<any[]>([]);
+
+  useEffect(() => {
+    api.get('/categories').then(res => setCategories(res.data));
+  }, []);
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <div className="min-h-screen bg-light">
+      {/* Hero Section */}
+      <div className="relative bg-secondary text-white overflow-hidden">
+        <div className="absolute inset-0">
+          <div className="absolute inset-0 bg-gradient-to-r from-secondary to-primary opacity-90"></div>
+        </div>
+        <div className="relative max-w-7xl mx-auto px-4 py-24 sm:px-6 lg:px-8 flex flex-col items-center text-center">
+          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-6">
+            Launch Your Tech Career <br />
+            <span className="text-blue-300">With Industry Experts</span>
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="text-xl md:text-2xl text-gray-300 mb-10 max-w-3xl">
+            Master the latest technologies with our comprehensive training programs.
+            Get hands-on experience and build a portfolio that stands out.
           </p>
+          <div className="flex space-x-4">
+            <Link href="/courses" className="bg-primary text-white px-8 py-4 rounded-lg font-bold text-lg hover:bg-blue-600 transition shadow-lg transform hover:-translate-y-1">
+              Explore Courses
+            </Link>
+            <Link href="/about" className="bg-transparent border-2 border-white text-white px-8 py-4 rounded-lg font-bold text-lg hover:bg-white hover:text-secondary transition">
+              Learn More
+            </Link>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </div>
+
+      {/* Features Section */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold text-secondary mb-4">Why Choose TechnoBren?</h2>
+            <p className="text-xl text-gray-600">We provide more than just training; we provide a pathway to your career.</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+            <div className="p-8 bg-light rounded-xl shadow-sm hover:shadow-md transition border border-gray-100">
+              <div className="w-12 h-12 bg-blue-100 text-primary rounded-lg flex items-center justify-center mb-6 text-2xl">
+                🚀
+              </div>
+              <h3 className="text-xl font-bold text-secondary mb-3">Live Projects</h3>
+              <p className="text-gray-600">Work on real-world projects and gain practical experience that employers value.</p>
+            </div>
+            <div className="p-8 bg-light rounded-xl shadow-sm hover:shadow-md transition border border-gray-100">
+              <div className="w-12 h-12 bg-blue-100 text-primary rounded-lg flex items-center justify-center mb-6 text-2xl">
+                👨‍🏫
+              </div>
+              <h3 className="text-xl font-bold text-secondary mb-3">Expert Mentors</h3>
+              <p className="text-gray-600">Learn from industry professionals with years of experience in top tech companies.</p>
+            </div>
+            <div className="p-8 bg-light rounded-xl shadow-sm hover:shadow-md transition border border-gray-100">
+              <div className="w-12 h-12 bg-blue-100 text-primary rounded-lg flex items-center justify-center mb-6 text-2xl">
+                💼
+              </div>
+              <h3 className="text-xl font-bold text-secondary mb-3">Placement Support</h3>
+              <p className="text-gray-600">Get dedicated support for resume building, mock interviews, and job placements.</p>
+            </div>
+          </div>
         </div>
-      </main>
+      </section>
+
+      {/* Categories Section */}
+      <section className="py-20 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl font-bold text-secondary mb-12 text-center">Our Training Programs</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {categories.map((category) => (
+              <div key={category.id} className="bg-white p-8 rounded-xl shadow hover:shadow-lg transition group cursor-pointer">
+                <h3 className="text-2xl font-bold mb-4 text-secondary group-hover:text-primary transition">{category.name}</h3>
+                <ul className="space-y-3 mb-6">
+                  {category.children && category.children.map((child: any) => (
+                    <li key={child.id} className="flex items-center text-gray-600">
+                      <span className="w-1.5 h-1.5 bg-primary rounded-full mr-2"></span>
+                      {child.name}
+                    </li>
+                  ))}
+                </ul>
+                <Link href={`/courses?category=${category.id}`} className="inline-block text-primary font-semibold hover:underline">
+                  View Courses &rarr;
+                </Link>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-20 bg-primary text-white text-center">
+        <div className="max-w-4xl mx-auto px-4">
+          <h2 className="text-3xl font-bold mb-6">Ready to Start Your Journey?</h2>
+          <p className="text-xl mb-8 opacity-90">Join thousands of students who have transformed their careers with TechnoBren.</p>
+          <Link href="/register" className="bg-white text-primary px-8 py-4 rounded-lg font-bold text-lg hover:bg-gray-100 transition shadow-lg">
+            Register Now
+          </Link>
+        </div>
+      </section>
     </div>
   );
 }
