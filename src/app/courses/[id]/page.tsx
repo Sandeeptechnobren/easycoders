@@ -17,45 +17,127 @@ export default function CourseDetailsPage() {
     }, [id]);
 
     const handleEnroll = async () => {
-        // Placeholder for payment integration
         alert('Redirecting to payment gateway...');
     };
 
-    if (loading) return <div className="p-8">Loading...</div>;
-    if (!course) return <div className="p-8">Course not found</div>;
+    if (loading)
+        return (
+            <div
+                className="min-vh-100 d-flex justify-content-center align-items-center"
+                style={{ color: "white", background: "#050505" }}
+            >
+                Loading...
+            </div>
+        );
+
+    if (!course)
+        return (
+            <div
+                className="min-vh-100 d-flex justify-content-center align-items-center"
+                style={{ color: "white", background: "#050505" }}
+            >
+                Course not found
+            </div>
+        );
 
     return (
-        <div className="min-h-screen bg-gray-50 p-8">
-            <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden">
-                <div className="p-8">
-                    <span className="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">
+        <div
+            className="min-vh-100 py-5"
+            style={{ background: "#050505", color: "white" }}
+        >
+            <div className="container">
+
+                {/* MAIN CARD */}
+                <div
+                    className="rounded-4 mx-auto p-4 p-md-5"
+                    style={{
+                        maxWidth: "900px",
+                        background: "rgba(15, 15, 15, 0.85)",
+                        border: "1px solid rgba(0, 194, 255, 0.25)",
+                        boxShadow: "0 0 35px rgba(0, 194, 255, 0.18)",
+                        backdropFilter: "blur(6px)",
+                    }}
+                >
+                    {/* CATEGORY */}
+                    <span
+                        className="badge text-uppercase mb-3"
+                        style={{
+                            background: "rgba(0,194,255,0.25)",
+                            color: "#00c2ff",
+                            padding: "8px 12px",
+                            fontSize: "0.75rem",
+                        }}
+                    >
                         {course.category?.name}
                     </span>
-                    <h1 className="text-4xl font-bold mt-4 mb-6">{course.title}</h1>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-                        <div>
-                            <h3 className="text-lg font-semibold mb-2">Course Details</h3>
-                            <ul className="space-y-2 text-gray-600">
-                                <li><strong>Duration:</strong> {course.duration}</li>
-                                <li><strong>Level:</strong> {course.level}</li>
-                                <li><strong>Price:</strong> ${course.price}</li>
+                    {/* TITLE */}
+                    <h1
+                        className="fw-bold mb-4"
+                        style={{
+                            color: "#14f4ff",
+                            textShadow: "0 0 12px rgba(20,244,255,0.5)",
+                        }}
+                    >
+                        {course.title}
+                    </h1>
+
+                    {/* COURSE DETAILS & ENROLL BUTTON */}
+                    <div className="row g-4 mb-4">
+
+                        {/* LEFT DETAILS */}
+                        <div className="col-md-6">
+                            <h4 className="fw-bold mb-3">Course Details</h4>
+                            <ul className="list-unstyled text-muted" style={{ fontSize: "1.05rem" }}>
+                                <li><strong className="text-white">Duration:</strong> {course.duration}</li>
+                                <li><strong className="text-white">Level:</strong> {course.level}</li>
+                                <li>
+                                    <strong className="text-white">Price:</strong>{" "}
+                                    <span style={{ color: "#00ff9d" }}>₹{course.price}</span>
+                                </li>
                             </ul>
                         </div>
-                        <div>
+
+                        {/* ENROLL BUTTON */}
+                        <div className="col-md-6 d-flex align-items-center">
                             <button
                                 onClick={handleEnroll}
-                                className="w-full bg-green-600 text-white text-xl font-bold py-4 rounded-lg hover:bg-green-700 transition shadow-lg"
+                                className="btn w-100 fw-bold py-3"
+                                style={{
+                                    background: "#00c2ff",
+                                    color: "#000",
+                                    borderRadius: "12px",
+                                    boxShadow: "0 0 20px rgba(0,194,255,0.45)",
+                                    fontSize: "1.2rem",
+                                }}
                             >
-                                Enroll Now
+                                Enroll Now →
                             </button>
                         </div>
+
                     </div>
 
-                    <div className="prose max-w-none">
-                        <h3 className="text-2xl font-bold mb-4">Description</h3>
-                        <p className="text-gray-700 whitespace-pre-line">{course.description}</p>
+                    {/* DESCRIPTION */}
+                    <div className="mt-4">
+                        <h3
+                            className="fw-bold mb-3"
+                            style={{ color: "#00c2ff", textShadow: "0 0 8px rgba(0,194,255,0.4)" }}
+                        >
+                            Description
+                        </h3>
+
+                        <p
+                            className="text-muted"
+                            style={{
+                                fontSize: "1.05rem",
+                                whiteSpace: "pre-line",
+                                lineHeight: "1.7",
+                            }}
+                        >
+                            {course.description}
+                        </p>
                     </div>
+
                 </div>
             </div>
         </div>

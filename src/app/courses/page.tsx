@@ -11,33 +11,105 @@ export default function CoursesPage() {
     const categoryId = searchParams.get('category');
 
     useEffect(() => {
-        const endpoint = categoryId ? `/courses?category_id=${categoryId}` : '/courses';
+        const endpoint = categoryId
+            ? `/courses?category_id=${categoryId}`
+            : '/courses';
+
         api.get(endpoint).then(res => setCourses(res.data));
     }, [categoryId]);
 
     return (
-        <div className="min-h-screen bg-gray-50 p-8">
-            <div className="max-w-7xl mx-auto">
-                <h1 className="text-3xl font-bold mb-8">Available Courses</h1>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div
+            className="min-vh-100 py-5"
+            style={{ background: "#050505", color: "white" }}
+        >
+            <div className="container">
+
+                {/* PAGE TITLE */}
+                <h1
+                    className="fw-bold mb-5 text-center"
+                    style={{
+                        color: "#00c2ff",
+                        textShadow: "0 0 12px rgba(0,194,255,0.4)",
+                    }}
+                >
+                    Available Courses
+                </h1>
+
+                {/* GRID OF COURSES */}
+                <div className="row g-4">
                     {courses.map((course) => (
-                        <div key={course.id} className="bg-white rounded-lg shadow overflow-hidden">
-                            <div className="p-6">
-                                <div className="text-xs font-bold text-blue-600 uppercase mb-2">
+                        <div key={course.id} className="col-12 col-md-4">
+
+                            <div
+                                className="p-4 rounded-4 h-100"
+                                style={{
+                                    background: "rgba(15, 15, 15, 0.85)",
+                                    border: "1px solid rgba(0,194,255,0.18)",
+                                    boxShadow: "0 0 20px rgba(0,194,255,0.1)",
+                                    backdropFilter: "blur(6px)",
+                                    transition: "0.3s ease",
+                                }}
+                                onMouseEnter={(e) => {
+                                    (e.currentTarget.style.boxShadow =
+                                        "0 0 25px rgba(0,194,255,0.35)");
+                                    e.currentTarget.style.border =
+                                        "1px solid rgba(0,194,255,0.45)";
+                                }}
+                                onMouseLeave={(e) => {
+                                    (e.currentTarget.style.boxShadow =
+                                        "0 0 20px rgba(0,194,255,0.1)");
+                                    e.currentTarget.style.border =
+                                        "1px solid rgba(0,194,255,0.18)";
+                                }}
+                            >
+                                {/* CATEGORY */}
+                                <span
+                                    className="small fw-bold text-uppercase"
+                                    style={{ color: "#14f4ff" }}
+                                >
                                     {course.category?.name}
-                                </div>
-                                <h2 className="text-xl font-bold mb-2">{course.title}</h2>
-                                <p className="text-gray-600 mb-4 line-clamp-3">{course.description}</p>
-                                <div className="flex justify-between items-center">
-                                    <span className="text-lg font-bold text-green-600">${course.price}</span>
-                                    <Link href={`/courses/${course.id}`} className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-                                        View Details
+                                </span>
+
+                                {/* TITLE */}
+                                <h3 className="fw-bold mt-2 mb-2">{course.title}</h3>
+
+                                {/* DESCRIPTION */}
+                                <p className="text-muted" style={{ fontSize: "0.95rem" }}>
+                                    {course.description?.length > 120
+                                        ? course.description.slice(0, 120) + '...'
+                                        : course.description}
+                                </p>
+
+                                {/* PRICE + BUTTON */}
+                                <div className="d-flex justify-content-between align-items-center mt-4">
+                                    <span
+                                        className="fw-bold"
+                                        style={{ color: "#00ff9d", fontSize: "1.25rem" }}
+                                    >
+                                        ₹{course.price}
+                                    </span>
+
+                                    <Link
+                                        href={`/courses/${course.id}`}
+                                        className="btn fw-bold px-3 py-2"
+                                        style={{
+                                            background: "#00c2ff",
+                                            color: "#000",
+                                            borderRadius: "8px",
+                                            boxShadow: "0 0 15px rgba(0,194,255,0.4)",
+                                        }}
+                                    >
+                                        View Details →
                                     </Link>
                                 </div>
+
                             </div>
+
                         </div>
                     ))}
                 </div>
+
             </div>
         </div>
     );

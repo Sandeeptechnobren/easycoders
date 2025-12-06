@@ -1,0 +1,113 @@
+:root {
+    --neon-blue: #00c2ff;
+    --neon-cyan: #14f4ff;
+    --text-light: #ffffff;
+    --text-muted: #bfbfbf;
+    --bg-dark: #050505;
+}
+
+/* FOOTER WRAPPER */
+.footer {
+    background: var(--bg-dark);
+    padding-top: 60px;
+    padding-bottom: 20px;
+    margin-top: 20px;
+    color: var(--text-light);
+    border-top: 1px solid rgba(0, 194, 255, 0.15);
+    box-shadow: 0 -4px 25px rgba(0, 194, 255, 0.15);
+}
+
+/* BRAND */
+.logo {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--neon-blue);
+    text-shadow: 0 0 12px rgba(0, 194, 255, 0.4);
+}
+
+.tagline {
+    margin-top: 10px;
+    font-size: 0.95rem;
+    color: var(--text-muted);
+    max-width: 260px;
+}
+
+/* SECTION TITLES */
+.title {
+    font-size: 1.3rem;
+    margin-bottom: 12px;
+    font-weight: 600;
+    color: var(--neon-cyan);
+    text-shadow: 0 0 10px rgba(20, 244, 255, 0.4);
+}
+
+/* QUICK LINKS */
+.links {
+    padding-left: 0;
+}
+
+.link {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--text-light);
+    text-decoration: none;
+    transition: 0.3s ease;
+}
+
+.link:hover {
+    color: var(--neon-blue);
+    text-shadow: 0 0 8px var(--neon-blue);
+    transform: translateX(6px);
+}
+
+/* SOCIAL ICONS */
+.socialIcon {
+    font-size: 1.6rem;
+    color: var(--text-light);
+    background: rgba(255, 255, 255, 0.05);
+    padding: 10px;
+    border-radius: 50%;
+    display: inline-flex;
+    transition: 0.3s ease;
+}
+
+.socialIcon:hover {
+    background: rgba(0, 194, 255, 0.15);
+    color: var(--neon-cyan);
+    box-shadow: 0 0 15px var(--neon-blue);
+    transform: scale(1.15);
+}
+
+/* BOTTOM COPYRIGHT */
+.bottom {
+    text-align: center;
+    margin-top: 40px;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* RESPONSIVE FIXES */
+@media (max-width: 768px) {
+    .logo {
+        text-align: center;
+    }
+
+    .tagline {
+        margin: auto;
+        text-align: center;
+    }
+
+    .title {
+        text-align: center;
+    }
+
+    .links {
+        text-align: center;
+    }
+
+    .social {
+        justify-content: center;
+    }
+}

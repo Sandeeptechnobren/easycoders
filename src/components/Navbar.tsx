@@ -11,9 +11,7 @@ export default function Navbar() {
     const [isScrolled, setIsScrolled] = useState(false);
 
     useEffect(() => {
-        const handleScroll = () => {
-            setIsScrolled(window.scrollY > 10);
-        };
+        const handleScroll = () => setIsScrolled(window.scrollY > 10);
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
@@ -29,45 +27,48 @@ export default function Navbar() {
         <nav className={`${styles.navbar} ${isScrolled ? styles.scrolled : ''}`}>
             <div className={styles.container}>
 
-                {/* Logo */}
-                <Link href="/" className={styles.logo}>
-                    Easy Coders
-                </Link>
+                {/* LOGO */}
+                <div className={styles.logo}>
+                    <img src="/images/eclogo.png" alt="Easy Coders Logo" />
+                    <span className={styles.brandText}>Easy Coders</span>
+                </div>
 
-                {/* Desktop Menu */}
+                {/* DESKTOP MENU */}
                 <div className={styles.desktopMenu}>
                     {navLinks.map((link) => (
                         <Link
                             key={link.name}
                             href={link.href}
-                            className={`${styles.navLink} ${pathname === link.href ? styles.active : ''}`}
+                            className={`${styles.navLink} ${pathname === link.href ? styles.active : ''
+                                }`}
                         >
                             {link.name}
+                            <span className={styles.underline}></span>
                         </Link>
                     ))}
                 </div>
 
-                {/* Mobile Menu Button */}
+                {/* MOBILE TOGGLE */}
                 <button className={styles.menuButton} onClick={() => setIsOpen(!isOpen)}>
                     {isOpen ? '✖' : '☰'}
                 </button>
+
             </div>
 
-            {/* Mobile Menu */}
-            {isOpen && (
-                <div className={styles.mobileMenu}>
-                    {navLinks.map((link) => (
-                        <Link
-                            key={link.name}
-                            href={link.href}
-                            className={`${styles.mobileLink} ${pathname === link.href ? styles.mobileActive : ''}`}
-                            onClick={() => setIsOpen(false)}
-                        >
-                            {link.name}
-                        </Link>
-                    ))}
-                </div>
-            )}
+            {/* MOBILE MENU */}
+            <div className={`${styles.mobileMenu} ${isOpen ? styles.open : ''}`}>
+                {navLinks.map((link) => (
+                    <Link
+                        key={link.name}
+                        href={link.href}
+                        className={`${styles.mobileLink} ${pathname === link.href ? styles.mobileActive : ''
+                            }`}
+                        onClick={() => setIsOpen(false)}
+                    >
+                        {link.name}
+                    </Link>
+                ))}
+            </div>
         </nav>
     );
 }

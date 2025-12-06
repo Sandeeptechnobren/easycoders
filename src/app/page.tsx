@@ -12,100 +12,183 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-light">
-      {/* Hero Section */}
-      <div className="relative bg-secondary text-white overflow-hidden">
-        <div className="absolute inset-0">
-          <div className="absolute inset-0 bg-gradient-to-r from-secondary to-primary opacity-90"></div>
-        </div>
-        <div className="relative max-w-7xl mx-auto px-4 py-24 sm:px-6 lg:px-8 flex flex-col items-center text-center">
-          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-6">
-            Launch Your Tech Career <br />
-            <span className="text-blue-300">With Industry Experts</span>
-          </h1>
-          <p className="text-xl md:text-2xl text-gray-300 mb-10 max-w-3xl">
-            Master the latest technologies with our comprehensive training programs.
-            Get hands-on experience and build a portfolio that stands out.
-          </p>
-          <div className="flex space-x-4">
-            <Link href="/courses" className="bg-primary text-white px-8 py-4 rounded-lg font-bold text-lg hover:bg-blue-600 transition shadow-lg transform hover:-translate-y-1">
-              Explore Courses
-            </Link>
-            <Link href="/about" className="bg-transparent border-2 border-white text-white px-8 py-4 rounded-lg font-bold text-lg hover:bg-white hover:text-secondary transition">
-              Learn More
-            </Link>
-          </div>
-        </div>
-      </div>
+    <div className="min-h-screen bg-black text-white">
 
-      {/* Features Section */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-secondary mb-4">Why Choose TechnoBren?</h2>
-            <p className="text-xl text-gray-600">We provide more than just training; we provide a pathway to your career.</p>
+      {/* ================= HERO + CAROUSEL ================= */}
+      <section className="relative">
+
+        <div id="heroCarousel" className="carousel slide m-5" data-bs-ride="carousel">
+
+          {/* INDICATORS */}
+          <div className="carousel-indicators">
+            <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="0" className="active"></button>
+            <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="1"></button>
+            <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="2"></button>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-            <div className="p-8 bg-light rounded-xl shadow-sm hover:shadow-md transition border border-gray-100">
-              <div className="w-12 h-12 bg-blue-100 text-primary rounded-lg flex items-center justify-center mb-6 text-2xl">
-                🚀
+
+          {/* CAROUSEL ITEMS */}
+          <div className="carousel-inner">
+
+            {/* SLIDE 1 */}
+            <div className="carousel-item active" data-bs-interval="5000">
+              <img
+                src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1200&q=80"
+                className="d-block w-[100%] opacity-40"
+                alt="Coding Class"
+                height='300px'
+              />
+              <div className="carousel-caption d-none d-md-block">
+                <h1 className="display-4 fw-bold text-[#00c2ff] text-shadow-lg">Learn From Experts</h1>
+                <p className="lead">Master real-world development with hands-on training.</p>
               </div>
-              <h3 className="text-xl font-bold text-secondary mb-3">Live Projects</h3>
-              <p className="text-gray-600">Work on real-world projects and gain practical experience that employers value.</p>
             </div>
-            <div className="p-8 bg-light rounded-xl shadow-sm hover:shadow-md transition border border-gray-100">
-              <div className="w-12 h-12 bg-blue-100 text-primary rounded-lg flex items-center justify-center mb-6 text-2xl">
-                👨‍🏫
+
+            {/* SLIDE 2 */}
+            <div className="carousel-item" data-bs-interval="5000">
+              <img
+                src="https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1200&q=80"
+                className="d-block w-100 opacity-40"
+                alt="Developers Working"
+                height='300px'
+
+              />
+              <div className="carousel-caption d-none d-md-block">
+                <h1 className="display-4 fw-bold text-[#14f4ff]">Build Live Projects</h1>
+                <p className="lead">Get industry experience before even stepping into a job.</p>
               </div>
-              <h3 className="text-xl font-bold text-secondary mb-3">Expert Mentors</h3>
-              <p className="text-gray-600">Learn from industry professionals with years of experience in top tech companies.</p>
             </div>
-            <div className="p-8 bg-light rounded-xl shadow-sm hover:shadow-md transition border border-gray-100">
-              <div className="w-12 h-12 bg-blue-100 text-primary rounded-lg flex items-center justify-center mb-6 text-2xl">
-                💼
+
+            {/* SLIDE 3 */}
+            <div className="carousel-item">
+              <img
+                src="https://images.unsplash.com/photo-1551434678-e076c223a692?auto=format&fit=crop&w=1200&q=80"
+                className="d-block w-100 opacity-40"
+                alt="Students Coding"
+                height='300px'
+
+              />
+              <div className="carousel-caption d-none d-md-block text-center">
+                <h1 className="display-4 fw-bold text-[#00c2ff]">Become Job-Ready</h1>
+                <p className="lead">Crack interviews with confidence and skill.</p>
               </div>
-              <h3 className="text-xl font-bold text-secondary mb-3">Placement Support</h3>
-              <p className="text-gray-600">Get dedicated support for resume building, mock interviews, and job placements.</p>
             </div>
+
+          </div>
+
+          {/* PREV/NEXT BUTTONS */}
+          <button className="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
+            <span className="carousel-control-prev-icon"></span>
+          </button>
+          <button className="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
+            <span className="carousel-control-next-icon"></span>
+          </button>
+
+        </div>
+
+        {/* Neon glows */}
+        <div className="absolute -top-20 -left-20 w-[400px] h-[400px] bg-[#00c2ff] opacity-20 blur-[120px]"></div>
+        <div className="absolute bottom-0 right-0 w-[450px] h-[450px] bg-[#14f4ff] opacity-20 blur-[150px]"></div>
+
+      </section>
+
+      {/* ================= FEATURES ================= */}
+      <section className="py-1 bg-black my-4">
+        <div className="container px-4">
+
+          <h2 className="text-center text-4xl fw-bold mb-5">
+            Why Choose <span className="text-[#00c2ff]">Easy Coders?</span>
+          </h2>
+
+          <div className="row g-4">
+
+            {/* CARD */}
+            <div className="col-md-4">
+              <div className="p-4 rounded-3 bg-[#0f0f0f] border border-[#1a1a1a] hover:border-[#00c2ff] shadow-sm hover-shadow-lg transition-all">
+                <div className="fs-1 mb-3 text-[#00c2ff]">🚀</div>
+                <h3 className="fw-bold mb-3">Real Live Projects</h3>
+                <p className="text-gray-400">Work on real production-level applications with hands-on guidance.</p>
+              </div>
+            </div>
+
+            {/* CARD */}
+            <div className="col-md-4">
+              <div className="p-4 rounded-3 bg-[#0f0f0f] border border-[#1a1a1a] hover:border-[#00c2ff] shadow-sm hover-shadow-lg transition-all">
+                <div className="fs-1 mb-3 text-[#00c2ff]">👨‍🏫</div>
+                <h3 className="fw-bold mb-3">Mentors From Industry</h3>
+                <p className="text-gray-400">Learn from expert engineers working in top IT companies.</p>
+              </div>
+            </div>
+
+            {/* CARD */}
+            <div className="col-md-4">
+              <div className="p-4 rounded-3 bg-[#0f0f0f] border border-[#1a1a1a] hover:border-[#00c2ff] shadow-sm hover-shadow-lg transition-all">
+                <div className="fs-1 mb-3 text-[#00c2ff]">💼</div>
+                <h3 className="fw-bold mb-3">Placement Assistance</h3>
+                <p className="text-gray-400">Mock interviews, resume preparation, referrals, and more.</p>
+              </div>
+            </div>
+
           </div>
         </div>
       </section>
 
-      {/* Categories Section */}
-      <section className="py-20 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-secondary mb-12 text-center">Our Training Programs</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      {/* ================= TRAINING PROGRAMS ================= */}
+      {/* <section className="py-24 bg-black">
+        <div className="container px-4">
+
+          <h2 className="text-center text-4xl fw-bold mb-5">
+            Our Training Programs
+          </h2>
+
+          <div className="row g-4">
+
             {categories.map((category) => (
-              <div key={category.id} className="bg-white p-8 rounded-xl shadow hover:shadow-lg transition group cursor-pointer">
-                <h3 className="text-2xl font-bold mb-4 text-secondary group-hover:text-primary transition">{category.name}</h3>
-                <ul className="space-y-3 mb-6">
-                  {category.children && category.children.map((child: any) => (
-                    <li key={child.id} className="flex items-center text-gray-600">
-                      <span className="w-1.5 h-1.5 bg-primary rounded-full mr-2"></span>
-                      {child.name}
-                    </li>
-                  ))}
-                </ul>
-                <Link href={`/courses?category=${category.id}`} className="inline-block text-primary font-semibold hover:underline">
-                  View Courses &rarr;
-                </Link>
+              <div key={category.id} className="col-md-4">
+                <div className="p-4 rounded-3 bg-[#0f0f0f] border border-[#1a1a1a] group hover:border-[#00c2ff] hover-shadow-lg transition-all">
+
+                  <h3 className="fw-bold fs-4 mb-3 group-hover:text-[#00c2ff]">{category.name}</h3>
+
+                  <ul className="list-unstyled mb-3">
+                    {category.children?.map((child: any) => (
+                      <li key={child.id} className="d-flex align-items-center text-gray-400 mb-2">
+                        <span className="me-2 w-2 h-2 rounded-circle bg-[#00c2ff]"></span>
+                        {child.name}
+                      </li>
+                    ))}
+                  </ul>
+
+                  <Link href={`/courses?category=${category.id}`} className="text-[#00c2ff] fw-semibold">
+                    View Courses →
+                  </Link>
+
+                </div>
               </div>
             ))}
+
           </div>
+
+        </div>
+      </section> */}
+
+      {/* ================= CTA ================= */}
+      <section className="py-5 bg-[#080808] text-center">
+        <div className="container">
+
+          <h2 className="text-4xl fw-bold mb-4 text-[#00c2ff]">Ready to Begin Your Journey?</h2>
+          <p className="fs-5 mb-5 text-gray-300">
+            Join thousands of learners already achieving success with TechnoBren.
+          </p>
+
+          <Link
+            href="/register"
+            className="btn px-5 py-3 fw-bold bg-[#00c2ff] text-black rounded-3 shadow-lg hover:bg-[#14f4ff]"
+          >
+            Register Now
+          </Link>
+
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-20 bg-primary text-white text-center">
-        <div className="max-w-4xl mx-auto px-4">
-          <h2 className="text-3xl font-bold mb-6">Ready to Start Your Journey?</h2>
-          <p className="text-xl mb-8 opacity-90">Join thousands of students who have transformed their careers with TechnoBren.</p>
-          <Link href="/register" className="bg-white text-primary px-8 py-4 rounded-lg font-bold text-lg hover:bg-gray-100 transition shadow-lg">
-            Register Now
-          </Link>
-        </div>
-      </section>
     </div>
   );
 }

@@ -13,18 +13,17 @@ export default function PunchInButton() {
     }, []);
 
     const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
-        const R = 6371e3; // metres
-        const φ1 = lat1 * Math.PI / 180; // φ, λ in radians
+        const R = 6371e3;
+        const φ1 = lat1 * Math.PI / 180;
         const φ2 = lat2 * Math.PI / 180;
         const Δφ = (lat2 - lat1) * Math.PI / 180;
         const Δλ = (lon2 - lon1) * Math.PI / 180;
 
-        const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+        const a = Math.sin(Δφ / 2) ** 2 +
             Math.cos(φ1) * Math.cos(φ2) *
-            Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            Math.sin(Δλ / 2) ** 2;
 
-        return R * c; // in metres
+        return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
     };
 
     const handlePunchIn = () => {
@@ -32,7 +31,7 @@ export default function PunchInButton() {
         setMessage('');
 
         if (!navigator.geolocation) {
-            setMessage('Geolocation is not supported by your browser.');
+            setMessage('❌ Geolocation is not supported.');
             setLoading(false);
             return;
         }
@@ -42,10 +41,18 @@ export default function PunchInButton() {
                 const userLat = position.coords.latitude;
                 const userLon = position.coords.longitude;
 
-                if (settings && settings.latitude && settings.longitude) {
-                    const distance = calculateDistance(userLat, userLon, settings.latitude, settings.longitude);
+                if (settings?.latitude && settings?.longitude) {
+                    const distance = calculateDistance(
+                        userLat,
+                        userLon,
+                        Number(settings.latitude),
+                        Number(settings.longitude)
+                    );
+
                     if (distance > settings.radius) {
-                        setMessage(`❌ You are ${Math.round(distance)}m away from the location. Allowed radius: ${settings.radius}m.`);
+                        setMessage(
+                            `❌ You are ${Math.round(distance)}m away. Allowed radius: ${settings.radius}m`
+                        );
                         setLoading(false);
                         return;
                     }
@@ -63,7 +70,7 @@ export default function PunchInButton() {
                     setLoading(false);
                 }
             },
-            (error) => {
+            () => {
                 setMessage('❌ Unable to retrieve your location.');
                 setLoading(false);
             }
@@ -71,23 +78,63 @@ export default function PunchInButton() {
     };
 
     return (
-        <div className="bg-white p-6 rounded-lg shadow mb-6 text-center">
-            <h2 className="text-xl font-semibold mb-4">Daily Attendance</h2>
-            {settings && settings.latitude ? (
-                <p className="text-sm text-gray-500 mb-4">
-                    Required Location: {settings.latitude}, {settings.longitude} (Radius: {settings.radius}m)
+        <div
+            className="p-4 p-md-5 rounded-4 text-center mb-4"
+            style={{
+                background: "rgba(15,15,15,0.85)",
+                border: "1px solid rgba(0,255,157,0.25)",
+                boxShadow: "0 0 25px rgba(0,255,157,0.18)",
+                backdropFilter: "blur(6px)",
+                color: "white",
+            }}
+        >
+            <h3
+                className="fw-bold mb-3"
+                style={{ color: "#00ff9d", textShadow: "0 0 10px rgba(0,255,157,0.5)" }}
+            >
+                Daily Attendance
+            </h3>
+
+            {settings?.latitude ? (
+                <p className="text-muted mb-3">
+                    Required Location:
+                    <span className="text-info"> {settings.latitude}</span>,
+                    <span className="text-info"> {settings.longitude}</span>
+                    <br />
+                    Radius: <span className="text-warning">{settings.radius}m</span>
                 </p>
             ) : (
-                <p className="text-sm text-gray-500 mb-4">No location restriction set.</p>
+                <p className="text-muted mb-3">No location restriction set.</p>
             )}
+
+            {/* Punch In Button */}
             <button
                 onClick={handlePunchIn}
                 disabled={loading}
-                className={`px-6 py-3 rounded-full font-bold text-white transition ${loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'}`}
+                className="btn fw-bold px-5 py-3"
+                style={{
+                    background: loading ? "#666" : "#00ff9d",
+                    color: "#000",
+                    borderRadius: "30px",
+                    boxShadow: loading
+                        ? "none"
+                        : "0 0 18px rgba(0,255,157,0.45)",
+                }}
             >
-                {loading ? 'Locating...' : '📍 Punch In'}
+                {loading ? "Locating..." : "📍 Punch In"}
             </button>
-            {message && <p className="mt-4 font-medium">{message}</p>}
+
+            {/* Status Message */}
+            {message && (
+                <p
+                    className="mt-3 fw-bold"
+                    style={{
+                        color: message.startsWith("✅") ? "#00ff9d" : "#ff4a4a",
+                    }}
+                >
+                    {message}
+                </p>
+            )}
         </div>
     );
 }

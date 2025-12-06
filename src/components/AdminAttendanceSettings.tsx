@@ -64,59 +64,120 @@ export default function AdminAttendanceSettings() {
     };
 
     return (
-        <div className="bg-white p-6 rounded-lg shadow mb-6">
-            <h2 className="text-xl font-semibold mb-4">Attendance Location Settings</h2>
-            <form onSubmit={handleSave} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">Latitude</label>
+        <div
+            className="p-4 p-md-5 mt-4 rounded-4"
+            style={{
+                background: "rgba(15,15,15,0.85)",
+                border: "1px solid rgba(0,194,255,0.25)",
+                boxShadow: "0 0 25px rgba(0,194,255,0.15)",
+                backdropFilter: "blur(6px)",
+                color: "white",
+            }}
+        >
+            <h2
+                className="fw-bold mb-4"
+                style={{
+                    color: "#14f4ff",
+                    textShadow: "0 0 10px rgba(20,244,255,0.4)",
+                }}
+            >
+                Attendance Location Settings
+            </h2>
+
+            <form onSubmit={handleSave}>
+
+                {/* INPUT GRID */}
+                <div className="row g-4">
+
+                    {/* LATITUDE */}
+                    <div className="col-md-6">
+                        <label className="form-label">Latitude</label>
                         <input
                             type="text"
                             value={latitude}
                             onChange={(e) => setLatitude(e.target.value)}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border"
+                            className="form-control bg-dark text-white border-secondary"
+                            style={{ borderRadius: "8px" }}
                             required
                         />
                     </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">Longitude</label>
+
+                    {/* LONGITUDE */}
+                    <div className="col-md-6">
+                        <label className="form-label">Longitude</label>
                         <input
                             type="text"
                             value={longitude}
                             onChange={(e) => setLongitude(e.target.value)}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border"
+                            className="form-control bg-dark text-white border-secondary"
+                            style={{ borderRadius: "8px" }}
                             required
                         />
                     </div>
+
+                    {/* RADIUS */}
+                    <div className="col-md-6">
+                        <label className="form-label">Radius (meters)</label>
+                        <input
+                            type="number"
+                            value={radius}
+                            onChange={(e) => setRadius(e.target.value)}
+                            className="form-control bg-dark text-white border-secondary"
+                            style={{ borderRadius: "8px" }}
+                            required
+                            min={10}
+                        />
+                    </div>
                 </div>
-                <div>
-                    <label className="block text-sm font-medium text-gray-700">Radius (meters)</label>
-                    <input
-                        type="number"
-                        value={radius}
-                        onChange={(e) => setRadius(e.target.value)}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border"
-                        required
-                        min="10"
-                    />
-                </div>
-                <div className="flex gap-4">
+
+                {/* BUTTONS */}
+                <div className="d-flex gap-3 mt-4 flex-wrap">
+
+                    {/* USE CURRENT LOCATION */}
                     <button
                         type="button"
                         onClick={getCurrentLocation}
-                        className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition"
+                        className="btn fw-bold"
+                        style={{
+                            background: "#444",
+                            color: "#fff",
+                            borderRadius: "10px",
+                            padding: "10px 20px",
+                            boxShadow: "0 0 10px rgba(255,255,255,0.1)",
+                        }}
                     >
                         📍 Use Current Location
                     </button>
+
+                    {/* SAVE SETTINGS */}
                     <button
                         type="submit"
                         disabled={loading}
-                        className={`px-4 py-2 rounded text-white transition ${loading ? 'bg-gray-400' : 'bg-indigo-600 hover:bg-indigo-700'}`}
+                        className="btn fw-bold"
+                        style={{
+                            background: loading ? "#777" : "#00c2ff",
+                            color: "#000",
+                            borderRadius: "10px",
+                            padding: "10px 20px",
+                            boxShadow: "0 0 15px rgba(0,194,255,0.45)",
+                        }}
                     >
-                        {loading ? 'Saving...' : 'Save Settings'}
+                        {loading ? "Saving..." : "Save Settings"}
                     </button>
                 </div>
-                {message && <p className="mt-2 font-medium">{message}</p>}
+
+                {/* FEEDBACK MESSAGE */}
+                {message && (
+                    <p
+                        className="mt-3 fw-bold"
+                        style={{
+                            color: message.startsWith("✅") ? "#00ff9d" : "#ff4a4a",
+                        }}
+                    >
+                        {message}
+                    </p>
+                )}
+
             </form>
         </div>
     );
