@@ -1,12 +1,11 @@
-:root {
+/* :root {
     --neon-blue: #00c2ff;
     --neon-cyan: #14f4ff;
     --text-light: #ffffff;
     --text-muted: #bfbfbf;
     --bg-dark: #050505;
-}
+} */
 
-/* FOOTER WRAPPER */
 .footer {
     background: var(--bg-dark);
     padding-top: 60px;
