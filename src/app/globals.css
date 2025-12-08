@@ -12,6 +12,44 @@ body {
   color: #343a40;
   /* background: #f8f9fa; */
 }
+.loader-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: #050505;
+}
+
+.loader-logo {
+    width: 150px;
+    animation: pulse 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes pulse {
+    0% {
+        opacity: 0.4;
+        transform: scale(0.9);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1.1);
+    }
+}
+@keyframes pulse {
+    0% {
+        opacity: 0.4;
+        transform: scale(0.9);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1.1);
+    }
+}
+
+.loader-logo {
+    width: 150px;
+    animation: pulse 1.2s ease-in-out infinite alternate;
+}
 
 @layer utilities {
   .text-balance {

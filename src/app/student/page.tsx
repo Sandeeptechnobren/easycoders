@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import api from '@/lib/axios';
 import { useRouter } from 'next/navigation';
 import PunchInButton from '@/components/PunchInButton';
-
+import Loader from "../loader/page";
 export default function StudentDashboard() {
     const [tasks, setTasks] = useState<any[]>([]);
     const [tickets, setTickets] = useState<any[]>([]);
@@ -35,16 +35,7 @@ export default function StudentDashboard() {
         localStorage.removeItem('user');
         router.push('/login');
     };
-
-    if (loading)
-        return (
-            <div
-                className="d-flex justify-content-center align-items-center min-vh-100"
-                style={{ background: "#050505", color: "white" }}
-            >
-                Loading...
-            </div>
-        );
+if (loading) return <Loader />;
 
     return (
         <div
@@ -64,7 +55,7 @@ export default function StudentDashboard() {
                     >
                         Student Dashboard
                     </h1>
-
+{/* 
                     <button
                         onClick={handleLogout}
                         className="btn fw-bold px-4 py-2"
@@ -76,7 +67,7 @@ export default function StudentDashboard() {
                         }}
                     >
                         Logout
-                    </button>
+                    </button> */}
                 </div>
 
                 {/* PUNCH IN */}

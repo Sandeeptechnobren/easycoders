@@ -10,15 +10,17 @@ export default function AboutPage() {
         api.get('/about').then(res => setAbout(res.data));
     }, []);
 
-    if (!about)
-        return (
-            <div
-                className="d-flex justify-content-center align-items-center min-vh-100"
-                style={{ background: "#050505", color: "white" }}
-            >
-                Loading...
-            </div>
-        );
+if (!about)
+    return (
+        <div className="loader-container">
+            <img
+                src="/images/eclogo.png"
+                alt="Easy Coders Loader"
+                className="loader-logo"
+            />
+        </div>
+    );
+
 
     return (
         <div
