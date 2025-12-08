@@ -33,14 +33,12 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  /* ✅ Base links */
   const commonLinks: NavLink[] = [
     { name: 'Home', href: '/' },
     { name: 'Courses', href: '/courses' },
     { name: 'About Us', href: '/about' },
   ];
 
-  /* ✅ Role-based links */
   const studentLinks: NavLink[] = [
     ...commonLinks,
     { name: 'Logout', onClick: logout },
@@ -60,8 +58,6 @@ export default function Navbar() {
     ...commonLinks,
     { name: 'Login', href: '/login' },
   ];
-
-  /* ✅ Decide visible links */
   const navLinks: NavLink[] =
     role === 'admin'
       ? adminLinks
