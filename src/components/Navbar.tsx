@@ -7,11 +7,17 @@ import styles from './Navbar.module.css';
 import { useAuth } from '@/context/AuthContext';
 
 /* ✅ Proper Nav type */
-type NavLink = {
-  name: string;
-  href?: string;
-  onClick?: () => void;
-};
+type NavLink =
+  | {
+    name: string;
+    href: string;
+    onClick?: undefined;
+  }
+  | {
+    name: string;
+    href?: undefined;
+    onClick: () => void;
+  };
 
 export default function Navbar() {
   const { role, logout } = useAuth();
@@ -89,7 +95,7 @@ export default function Navbar() {
             ) : (
               <Link
                 key={link.name}
-                href={link.href!}
+                href={link.href}
                 className={`${styles.navLink} ${pathname === link.href ? styles.active : ''
                   }`}
               >
@@ -126,7 +132,7 @@ export default function Navbar() {
           ) : (
             <Link
               key={link.name}
-              href={link.href!}
+              href={link.href}
               className={`${styles.mobileLink} ${pathname === link.href ? styles.mobileActive : ''
                 }`}
               onClick={() => setIsOpen(false)}
