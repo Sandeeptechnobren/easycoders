@@ -38,7 +38,7 @@ function CoursesList() {
                             {course.category?.name}
                         </span>
                         <h3 className="fw-bold mt-2 mb-2">{course.title}</h3>
-                        <p className="text-muted" style={{ fontSize: "0.95rem" }}>
+                        <p className="text-gray" style={{ fontSize: "0.95rem" }}>
                             {course.description?.length > 120
                                 ? course.description.slice(0, 120) + '...'
                                 : course.description}

@@ -38,19 +38,6 @@ export default function AdminDashboard() {
                     >
                         Admin Dashboard
                     </h1>
-
-                    <button
-                        onClick={handleLogout}
-                        className="btn fw-bold px-4 py-2"
-                        style={{
-                            background: "#ff3b3b",
-                            color: "#fff",
-                            borderRadius: "8px",
-                            boxShadow: "0 0 12px rgba(255,0,0,0.4)"
-                        }}
-                    >
-                        Logout
-                    </button>
                 </div>
 
                 {/* MAIN GRID */}
@@ -116,7 +103,7 @@ export default function AdminDashboard() {
                             </h3>
 
                             <div className="d-grid gap-2 mb-4">
-                                <button
+                                <button onClick={() => router.push('/admin/addCourse')}
                                     className="btn fw-bold py-2"
                                     style={{
                                         background: "#00c2ff",
@@ -127,7 +114,7 @@ export default function AdminDashboard() {
                                 >
                                     Add Course
                                 </button>
-                                <button
+                                <button onClick={() => router.push('/admin/addcategory')}
                                     className="btn fw-bold py-2"
                                     style={{
                                         background: "#00ff9d",
