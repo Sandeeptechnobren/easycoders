@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: 'https://api.easycoders.in/backend/public/api',
+    baseURL: 'https://api.easycoders.in/projects/backend/public/api',
     headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
