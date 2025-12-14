@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import styles from './Navbar.module.css';
 import { useAuth } from '@/context/AuthContext';
+import { useRouter } from 'next/navigation';
 
 /* ✅ Proper Nav type */
 type NavLink =
@@ -22,16 +23,21 @@ type NavLink =
 export default function Navbar() {
   const { role, logout } = useAuth();
   const pathname = usePathname();
-
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-
-  /* ✅ Navbar scroll effect */
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 10);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  const handleLogout = () => {
+    logout();
+    setIsOpen(false);
+    localStorage.removeItem('token');
+    router.push('/');
+  };
 
   const commonLinks: NavLink[] = [
     { name: 'Home', href: '/' },
@@ -40,18 +46,21 @@ export default function Navbar() {
   ];
 
   const studentLinks: NavLink[] = [
-    ...commonLinks,
-    { name: 'Logout', onClick: logout },
+    // ...commonLinks,
+    { name: 'Home', href: '/student' },
+    { name: 'Logout', onClick: handleLogout },
   ];
 
   const trainerLinks: NavLink[] = [
-    ...commonLinks,
-    { name: 'Logout', onClick: logout },
+    // ...commonLinks,
+    { name: 'Home', href: '/trainer' },
+    { name: 'Logout', onClick: handleLogout },
   ];
 
   const adminLinks: NavLink[] = [
-    ...commonLinks,
-    { name: 'Logout', onClick: logout },
+    // ...commonLinks,
+    { name: 'Home', href: '/admin' },
+    { name: 'Logout', onClick: handleLogout },
   ];
 
   const guestLinks: NavLink[] = [
@@ -70,13 +79,10 @@ export default function Navbar() {
   return (
     <nav className={`${styles.navbar} ${isScrolled ? styles.scrolled : ''}`}>
       <div className={styles.container}>
-        {/* ✅ Logo */}
         <div className={styles.logo}>
           <img src="/images/eclogo.png" alt="Easy Coders Logo" />
           <span className={styles.brandText}>Easy Coders</span>
         </div>
-
-        {/* ✅ Desktop Menu */}
         <div className={styles.desktopMenu}>
           {navLinks.map((link) =>
             link.onClick ? (
@@ -101,8 +107,6 @@ export default function Navbar() {
             )
           )}
         </div>
-
-        {/* ✅ Mobile Toggle */}
         <button
           className={styles.menuButton}
           onClick={() => setIsOpen(!isOpen)}
@@ -110,8 +114,6 @@ export default function Navbar() {
           {isOpen ? '✖' : '☰'}
         </button>
       </div>
-
-      {/* ✅ Mobile Menu */}
       <div className={`${styles.mobileMenu} ${isOpen ? styles.open : ''}`}>
         {navLinks.map((link) =>
           link.onClick ? (
