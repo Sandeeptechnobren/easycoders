@@ -3,9 +3,11 @@
 import React, { useEffect, useState } from 'react';
 import api from '@/lib/axios';
 import { useParams } from 'next/navigation';
+import Loader from '@/app/loader/page';
 
 export default function CourseDetailsPage() {
-    const { id } = useParams();
+    const params = useParams();
+    const id = Array.isArray(params.id) ? params.id[0] : params.id;
 
     const [course, setCourse] = useState<any>(null);
     const [loading, setLoading] = useState(true);
@@ -19,17 +21,23 @@ export default function CourseDetailsPage() {
         college: '',
     });
     useEffect(() => {
+        if (!id) {
+            setLoading(false);
+            return;
+        };
         const fetchCourse = async () => {
             try {
                 const res = await api.get(`/courses/${id}`);
-                setCourse(res.data);
-            } catch (err) {
-                console.error(err);
+                setCourse(res.data?.data ?? res.data);
+            } catch (error) {
+                console.error(error);
+                setCourse(null);
             } finally {
                 setLoading(false);
             }
         };
-        if (id) fetchCourse();
+
+        fetchCourse();
     }, [id]);
     const handleEnroll = () => {
         setShowEnrollForm(true);
@@ -40,10 +48,10 @@ export default function CourseDetailsPage() {
         }, 100);
     };
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setFormData({
-            ...formData,
+        setFormData(prev => ({
+            ...prev,
             [e.target.name]: e.target.value,
-        });
+        }));
     };
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -51,10 +59,7 @@ export default function CourseDetailsPage() {
             setSubmitting(true);
             await api.post('/addenrollmentrequest', {
                 course_id: id,
-                name: formData.name,
-                email: formData.email,
-                phone_number: formData.phone_number,
-                college: formData.college,
+                ...formData,
             });
             alert('Enrollment successful! We will contact you soon.');
             setFormData({
@@ -74,20 +79,15 @@ export default function CourseDetailsPage() {
             setSubmitting(false);
         }
     };
-    if (loading)
+    if (loading) return <Loader />;
+    if (!course) {
         return (
             <div className="min-vh-100 d-flex justify-content-center align-items-center"
-                style={{ color: 'white', background: '#050505' }}>
-                Loading...
-            </div>
-        );
-    if (!course)
-        return (
-            <div className="min-vh-100 d-flex justify-content-center align-items-center"
-                style={{ color: 'white', background: '#050505' }}>
+                style={{ background: '#050505', color: 'white' }}>
                 Course not found
             </div>
         );
+    }
     return (
         <div className="min-vh-100 py-5" style={{ background: '#050505', color: 'white' }}>
             <div className="container">
@@ -101,49 +101,69 @@ export default function CourseDetailsPage() {
                         backdropFilter: 'blur(6px)',
                     }}
                 >
-                    <span className="badge text-uppercase mb-3"
+                    <span
+                        className="badge text-uppercase mb-3"
                         style={{
                             background: 'rgba(0,194,255,0.25)',
                             color: '#00c2ff',
                             padding: '8px 12px',
                             fontSize: '0.75rem',
-                        }}>
+                        }}
+                    >
                         {course.category?.name}
                     </span>
-
-                    <h1 className="fw-bold mb-4"
+                    {course.offer && (
+                        <span
+                            style={{
+                                position: 'absolute',
+                                top: '12px',
+                                right: '12px',
+                                background:
+                                    'linear-gradient(135deg, #ff9800, #ff5722)',
+                                color: '#000',
+                                padding: '6px 10px',
+                                fontSize: '0.7rem',
+                                fontWeight: 700,
+                                borderRadius: '20px',
+                                boxShadow:
+                                    '0 0 12px rgba(255,152,0,0.6)',
+                                textTransform: 'uppercase',
+                            }}
+                        >
+                            {course.offer}
+                        </span>
+                    )}
+                    <h1
+                        className="fw-bold mb-4"
                         style={{
                             color: '#14f4ff',
                             textShadow: '0 0 12px rgba(20,244,255,0.5)',
-                        }}>
+                        }}
+                    >
                         {course.title}
                     </h1>
-
                     <div className="row g-4 mb-4">
                         <div className="col-md-6">
                             <h4 className="fw-bold mb-3" style={{ color: '#00c2ff' }}>
                                 Course Details
                             </h4>
-
                             <ul className="list-unstyled">
-                                <li style={{ color: '#c9d1d9', marginBottom: '8px' }}>
-                                    <strong style={{ color: '#ffffff' }}>Duration:</strong> {course.duration}
+                                <li className="mb-2">
+                                    <strong>Duration:</strong> {course.duration}
                                 </li>
-
-                                <li style={{ color: '#c9d1d9', marginBottom: '8px' }}>
-                                    <strong style={{ color: '#ffffff' }}>Level:</strong> {course.level}
+                                <li className="mb-2">
+                                    <strong>Level:</strong> {course.level}
                                 </li>
-
                                 <li>
-                                    <strong style={{ color: '#ffffff' }}>Price:</strong>{' '}
+                                    <strong>Fees:</strong>{' '}
+                                    <span style={{ color: '#b00101ff', fontWeight: 600 }}>
+                                        <del>₹{course.original_price}</del>&nbsp;</span>
                                     <span style={{ color: '#00ff9d', fontWeight: 600 }}>
-                                        ₹{course.price}
-                                    </span>
+                                        ₹{course.discounted_price}
+                                    </span> (Special discount on One Time Payment, Easy Installments)
                                 </li>
                             </ul>
                         </div>
-
-
                         <div className="col-md-6 d-flex align-items-center">
                             {!showEnrollForm && (
                                 <button
@@ -162,16 +182,20 @@ export default function CourseDetailsPage() {
                             )}
                         </div>
                     </div>
-
-                    <h3 className="fw-bold mb-3"
-                        style={{ color: '#00c2ff' }}>
+                    <h3 className="fw-bold mb-3" style={{ color: '#00c2ff' }}>
                         Description
                     </h3>
-
-                    <p className="text-white"
-                        style={{ whiteSpace: 'pre-line', lineHeight: '1.7' }}>
-                        {course.description}
-                    </p>
+                    <p style={{ lineHeight: '1.7' }}>{course.description}</p>
+                    <h3 className="fw-bold mb-3" style={{ color: '#00c2ff' }}>
+                        Key Perks
+                    </h3>
+                    <ul>
+                        {course.category?.features?.map((f: any) => (
+                            <li key={f.id} style={{ marginBottom: '6px' }}>
+                                {f.feature}
+                            </li>
+                        ))}
+                    </ul>
                     {showEnrollForm && (
                         <div
                             id="enroll-form"
@@ -179,61 +203,27 @@ export default function CourseDetailsPage() {
                             style={{
                                 background: 'rgba(10, 10, 10, 0.9)',
                                 border: '1px solid rgba(0, 194, 255, 0.25)',
-                                boxShadow: '0 0 25px rgba(0, 194, 255, 0.15)',
                             }}
                         >
-                            <h3 className="fw-bold mb-4 text-center"
-                                style={{ color: '#00c2ff' }}>
+                            <h3 className="fw-bold mb-4 text-center" style={{ color: '#00c2ff' }}>
                                 Enroll for this Course
                             </h3>
                             <form onSubmit={handleSubmit} className="row g-4">
-                                <div className="col-md-6">
-                                    <label className="form-label text-light">Full Name</label>
-                                    <input
-                                        type="text"
-                                        name="name"
-                                        value={formData.name}
-                                        onChange={handleChange}
-                                        className="form-control bg-dark text-white"
-                                        required
-                                    />
-                                </div>
-
-                                <div className="col-md-6">
-                                    <label className="form-label text-light">Email</label>
-                                    <input
-                                        type="email"
-                                        name="email"
-                                        value={formData.email}
-                                        onChange={handleChange}
-                                        className="form-control bg-dark text-white"
-                                        required
-                                    />
-                                </div>
-
-                                <div className="col-md-6">
-                                    <label className="form-label text-light">Phone</label>
-                                    <input
-                                        type="text"
-                                        name="phone_number"
-                                        value={formData.phone_number}
-                                        onChange={handleChange}
-                                        className="form-control bg-dark text-white"
-                                        required
-                                    />
-                                </div>
-
-                                <div className="col-md-6">
-                                    <label className="form-label text-light">College</label>
-                                    <input
-                                        type="text"
-                                        name="college"
-                                        value={formData.college}
-                                        onChange={handleChange}
-                                        className="form-control bg-dark text-white"
-                                    />
-                                </div>
-
+                                {['name', 'email', 'phone_number', 'college'].map((field, i) => (
+                                    <div className="col-md-6" key={i}>
+                                        <label className="form-label text-light">
+                                            {field.replace('_', ' ').toUpperCase()}
+                                        </label>
+                                        <input
+                                            type="text"
+                                            name={field}
+                                            value={(formData as any)[field]}
+                                            onChange={handleChange}
+                                            className="form-control bg-dark text-white"
+                                            required={field !== 'college'}
+                                        />
+                                    </div>
+                                ))}
                                 <div className="col-12 text-center mt-4">
                                     <button
                                         type="submit"
@@ -245,7 +235,6 @@ export default function CourseDetailsPage() {
                                                 : 'linear-gradient(135deg, #00c2ff, #00ff9d)',
                                             color: '#000',
                                             borderRadius: '12px',
-                                            fontSize: '1.1rem',
                                         }}
                                     >
                                         {submitting ? 'Submitting...' : 'Submit Enrollment →'}
