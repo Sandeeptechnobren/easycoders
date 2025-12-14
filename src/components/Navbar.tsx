@@ -43,6 +43,7 @@ export default function Navbar() {
     { name: 'Home', href: '/' },
     { name: 'Courses', href: '/courses' },
     { name: 'About Us', href: '/about' },
+    { name: 'Contact Us', href: '/contactus' },
   ];
 
   const studentLinks: NavLink[] = [
