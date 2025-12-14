@@ -108,7 +108,7 @@ export default function RegisterPage() {
                     </div>
 
                     {/* ROLE SELECT */}
-                    <div className="mb-3">
+                    {/* <div className="mb-3">
                         <label className="form-label">Role</label>
                         <select
                             className="form-select bg-dark text-white border-secondary"
@@ -119,29 +119,20 @@ export default function RegisterPage() {
                             <option value="student">Student</option>
                             <option value="trainer">Trainer</option>
                         </select>
-                    </div>
-
-                    {/* COLLEGE SELECT (Only if Student) */}
+                    </div> */}
                     {role === 'student' && (
                         <div className="mb-3">
                             <label className="form-label">College</label>
-                            <select
-                                className="form-select bg-dark text-white border-secondary"
+                            <input
+                                type="text"
+                                className="form-control bg-dark text-white border-secondary"
                                 value={collegeId}
                                 onChange={(e) => setCollegeId(e.target.value)}
+                                required
                                 style={{ borderRadius: "8px" }}
-                            >
-                                <option value="">Select College</option>
-                                {colleges.map((college) => (
-                                    <option key={college.id} value={college.id}>
-                                        {college.name}
-                                    </option>
-                                ))}
-                            </select>
+                            />
                         </div>
                     )}
-
-                    {/* SUBMIT BUTTON */}
                     <button
                         type="submit"
                         className="btn w-100 fw-bold py-2 mt-2"
