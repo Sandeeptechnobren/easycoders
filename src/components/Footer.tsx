@@ -5,20 +5,15 @@ import styles from './Footer.module.css';
 export default function Footer() {
     return (
         <footer className={styles.footer} >
-            <div className="container py-5">
-
-                <div className="row gy-5">
-
-                    {/* Brand Section */}
-                    <div className="col-12 col-md-4">
+            <div className="container ">
+                <div className="row">
+                    <div className="col-4 col-md-4">
                         <h2 className={styles.logo}>Easy Coders</h2>
                         <p className={styles.tagline}>
                             Empowering learners with modern, industry-ready skills.
                         </p>
                     </div>
-
-                    {/* Navigation Links */}
-                    <div className="col-6 col-md-4">
+                    <div className="col-4 col-md-4">
                         <h3 className={styles.title}>Quick Links</h3>
                         <ul className={`list-unstyled ${styles.links}`}>
                             <li><Link href="/" className={styles.link}>Home</Link></li>
@@ -27,9 +22,7 @@ export default function Footer() {
                             <li><Link href="/login" className={styles.link}>Login</Link></li>
                         </ul>
                     </div>
-
-                    {/* Social Section */}
-                    <div className="col-6 col-md-4">
+                    <div className="col-4 col-md-4">
                         <h3 className={styles.title}>Connect</h3>
                         <div className={`d-flex gap-3 ${styles.social}`}>
                             <a href="#" className={styles.socialIcon}>🌐</a>
@@ -38,13 +31,10 @@ export default function Footer() {
                             <a href="#" className={styles.socialIcon}>▶️</a>
                         </div>
                     </div>
-
                 </div>
             </div>
-
-            {/* Bottom Bar */}
             <div className={styles.bottom}>
-                © {new Date().getFullYear()} Easy Coders. All rights reserved.
+                © {new Date().getFullYear()} <a href="https://easycoders.in/">Easy Coders</a>. All rights reserved.
             </div>
         </footer>
     );
