@@ -126,8 +126,6 @@ export default function RegisterPage() {
                             <input
                                 type="text"
                                 className="form-control bg-dark text-white border-secondary"
-                                value={collegeId}
-                                onChange={(e) => setCollegeId(e.target.value)}
                                 required
                                 style={{ borderRadius: "8px" }}
                             />
@@ -147,8 +145,6 @@ export default function RegisterPage() {
                     </button>
 
                 </form>
-
-                {/* LOGIN REDIRECT */}
                 <p className="mt-3 text-center">
                     Already have an account?{" "}
                     <Link

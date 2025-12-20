@@ -9,9 +9,10 @@
 } */
 
 body {
-  color: #343a40;
-  /* background: #f8f9fa; */
+    color: #343a40;
+    /* background: #f8f9fa; */
 }
+
 .loader-container {
     display: flex;
     justify-content: center;
@@ -30,16 +31,19 @@ body {
         opacity: 0.4;
         transform: scale(0.9);
     }
+
     100% {
         opacity: 1;
         transform: scale(1.1);
     }
 }
+
 @keyframes pulse {
     0% {
         opacity: 0.4;
         transform: scale(0.9);
     }
+
     100% {
         opacity: 1;
         transform: scale(1.1);
@@ -52,7 +56,14 @@ body {
 }
 
 @layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
+    .text-balance {
+        text-wrap: balance;
+    }
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    margin: 2%;
+    padding: 2%;
 }

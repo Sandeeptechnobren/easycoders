@@ -1,5 +1,4 @@
 'use client';
-
 import { useEffect, useState } from 'react';
 import api from '@/lib/axios';
 import { useRouter } from 'next/navigation';
@@ -9,8 +8,8 @@ export default function StudentDashboard() {
     const [tasks, setTasks] = useState<any[]>([]);
     const [tickets, setTickets] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    const router = useRouter();
 
+    const router = useRouter();
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -28,15 +27,13 @@ export default function StudentDashboard() {
         };
         fetchData();
     }, []);
-
     const handleLogout = async () => {
         await api.post('/logout');
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         router.push('/login');
     };
-if (loading) return <Loader />;
-
+    if (loading) return <Loader />;
     return (
         <div
             className="min-vh-100 py-5"
@@ -55,29 +52,11 @@ if (loading) return <Loader />;
                     >
                         Student Dashboard
                     </h1>
-{/* 
-                    <button
-                        onClick={handleLogout}
-                        className="btn fw-bold px-4 py-2"
-                        style={{
-                            background: "#ff3b3b",
-                            color: "#fff",
-                            borderRadius: "8px",
-                            boxShadow: "0 0 12px rgba(255,0,0,0.4)"
-                        }}
-                    >
-                        Logout
-                    </button> */}
                 </div>
-
-                {/* PUNCH IN */}
                 <div className="mb-4">
                     <PunchInButton />
                 </div>
-
-                <div className="row g-4">
-
-                    {/* TASKS PANEL */}
+                {/* <div className="row g-4">
                     <div className="col-md-6">
                         <div
                             className="p-4 rounded-4 h-100"
@@ -94,7 +73,6 @@ if (loading) return <Loader />;
                             >
                                 My Tasks
                             </h3>
-
                             {tasks.length === 0 ? (
                                 <p className="text-muted">No tasks assigned yet.</p>
                             ) : (
@@ -106,7 +84,6 @@ if (loading) return <Loader />;
                                         >
                                             <h5 className="fw-bold text-white">{task.title}</h5>
                                             <p className="text-muted">{task.description}</p>
-
                                             <span
                                                 className="badge px-3 py-2"
                                                 style={{
@@ -129,8 +106,6 @@ if (loading) return <Loader />;
                             )}
                         </div>
                     </div>
-
-                    {/* COURSES PANEL */}
                     <div className="col-md-6">
                         <div
                             className="p-4 rounded-4 h-100"
@@ -147,16 +122,13 @@ if (loading) return <Loader />;
                             >
                                 My Courses
                             </h3>
-
                             <p className="text-muted">
                                 Enrolled courses will appear here.
                             </p>
                         </div>
                     </div>
-                </div>
-
-                {/* TICKETS PANEL */}
-                <div
+                </div> */}
+                {/* <div
                     className="mt-5 p-4 rounded-4"
                     style={{
                         background: "rgba(15,15,15,0.85)",
@@ -171,8 +143,6 @@ if (loading) return <Loader />;
                     >
                         Support Tickets
                     </h3>
-
-                    {/* Raise Ticket Form */}
                     <form
                         onSubmit={(e) => {
                             e.preventDefault();
@@ -212,10 +182,7 @@ if (loading) return <Loader />;
                             Raise Ticket
                         </button>
                     </form>
-
-                    {/* Existing Tickets */}
                     <h4 className="fw-bold mb-3">My Tickets</h4>
-
                     <ul className="list-unstyled">
                         {tickets.map((ticket) => (
                             <li
@@ -224,7 +191,6 @@ if (loading) return <Loader />;
                             >
                                 <div className="d-flex justify-content-between">
                                     <strong>{ticket.title}</strong>
-
                                     <span
                                         className="badge px-3 py-2"
                                         style={{
@@ -242,9 +208,7 @@ if (loading) return <Loader />;
                                         {ticket.status}
                                     </span>
                                 </div>
-
                                 <p className="text-muted mt-2">{ticket.description}</p>
-
                                 {ticket.trainer_reply && (
                                     <div
                                         className="mt-2 p-2 rounded"
@@ -259,8 +223,7 @@ if (loading) return <Loader />;
                             </li>
                         ))}
                     </ul>
-                </div>
-
+                </div> */}
             </div>
         </div>
     );
