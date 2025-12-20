@@ -56,7 +56,7 @@ export default function StudentDashboard() {
                 <div className="mb-4">
                     <PunchInButton />
                 </div>
-                <div className="row g-4">
+                {/* <div className="row g-4">
                     <div className="col-md-6">
                         <div
                             className="p-4 rounded-4 h-100"
@@ -127,8 +127,8 @@ export default function StudentDashboard() {
                             </p>
                         </div>
                     </div>
-                </div>
-                <div
+                </div> */}
+                {/* <div
                     className="mt-5 p-4 rounded-4"
                     style={{
                         background: "rgba(15,15,15,0.85)",
@@ -223,7 +223,7 @@ export default function StudentDashboard() {
                             </li>
                         ))}
                     </ul>
-                </div>
+                </div> */}
             </div>
         </div>
     );

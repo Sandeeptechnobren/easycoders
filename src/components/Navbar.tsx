@@ -62,7 +62,8 @@ export default function Navbar() {
     { name: 'Tasks', href: '/admin/tasks' },
     { name: 'Contact Inquiries', href: '/admin/contactInquiries' },
     { name: 'Enrollment Requests', href: '/admin/enrollmentRequests' },
-    { name: 'Trainer Management', href: '/admin/trainerManagement' },
+    // { name: 'Trainer Management', href: '/admin/trainerManagement' },
+    { name: 'Student Management', href: '/admin/studentManagement' },
     { name: 'Logout', onClick: handleLogout },
   ];
 

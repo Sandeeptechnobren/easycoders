@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 
 export default function LoginPage() {
-  const { login } = useAuth(); // 🔥 Context for role updates
+  const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -39,7 +39,7 @@ export default function LoginPage() {
       else if (role === 'trainer') router.push('/trainer');
       else if (role === 'student') router.push('/student');
       else router.push('/');
-      
+
     } catch (err: any) {
       setError(err.response?.data?.message || 'Login failed');
     }
@@ -118,10 +118,10 @@ export default function LoginPage() {
         <p className="mt-3 text-center">
           Don't have an account?{" "}
           <Link
-            href="/register"
+            href="/contactus"
             style={{ color: "#14f4ff", textDecoration: "none" }}
           >
-            Register
+            Contact Us
           </Link>
         </p>
       </div>
