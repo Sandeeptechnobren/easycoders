@@ -52,187 +52,194 @@ export default function Tickets() {
     if (loading || loadingCategories) return <Loader />;
 
     return (
-        <div className="container py-4">
-            {/* Page Header */}
-            <div className="d-flex justify-content-between align-items-center mb-4">
-                <div>
-                    <h3 className="fw-bold mb-1">🎫 My Support Tickets</h3>
-                    <p className="text-muted mb-0">
-                        Raise and track your support requests
-                    </p>
+        <div className="min-vh-100 py-5" style={{ background: "#050505", color: "white" }}>
+            <div className="container">
+                {/* Page Header */}
+                <div className="d-flex justify-content-between align-items-center mb-5">
+                    <div>
+                        <h1 className="fw-bold mb-2" style={{ color: "#00c2ff", textShadow: "0 0 12px rgba(0,194,255,0.5)" }}>
+                            Support Tickets
+                        </h1>
+                        <p className="text-white mb-0">Raise and track your support requests</p>
+                    </div>
+                    <button
+                        className="btn fw-bold px-4 py-2"
+                        onClick={() => setAddTicketPopup(true)}
+                        style={{
+                            background: "linear-gradient(45deg, #00c2ff, #00ff9d)",
+                            border: "none",
+                            color: "#000",
+                            borderRadius: "12px",
+                            boxShadow: "0 0 15px rgba(0,194,255,0.3)"
+                        }}
+                    >
+                        + Raise Ticket
+                    </button>
                 </div>
-                <button
-                    className="btn btn-primary px-4"
-                    onClick={() => setAddTicketPopup(true)}
-                >
-                    + Raise Ticket
-                </button>
-            </div>
 
-            {/* Tickets Table */}
-            <div className="card shadow-sm border-0">
-                <div className="card-body p-0">
-                    <table className="table table-hover align-middle mb-0">
-                        <thead className="table-light">
-                            <tr>
-                                <th>#</th>
-                                <th>Ticket ID</th>
-                                <th>Title</th>
-                                <th>Description</th>
-                                <th>Status</th>
-                                <th>Created</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {tickets.length === 0 ? (
-                                <tr>
-                                    <td colSpan={6} className="text-center py-5">
-                                        <div className="text-muted">
-                                            <h6>No tickets yet</h6>
-                                            <p className="mb-0">
-                                                Raise a ticket to get support
-                                            </p>
-                                        </div>
-                                    </td>
+                {/* Tickets Table Card */}
+                <div
+                    className="p-4 rounded-4"
+                    style={{
+                        background: "rgba(20,20,20,0.6)",
+                        border: "1px solid rgba(255,255,255,0.1)",
+                        backdropFilter: "blur(10px)",
+                        boxShadow: "0 8px 32px rgba(0,0,0,0.4)"
+                    }}
+                >
+                    <div className="table-responsive">
+                        <table className="table" style={{ color: "white" }}>
+                            <thead>
+                                <tr style={{ borderBottom: "2px solid rgba(255,255,255,0.1)" }}>
+                                    <th className="py-3 bg-transparent text-white border-0">ID</th>
+                                    <th className="py-3 bg-transparent text-white border-0">Title</th>
+                                    <th className="py-3 bg-transparent text-white border-0">Description</th>
+                                    <th className="py-3 bg-transparent text-white border-0">Status</th>
+                                    <th className="py-3 bg-transparent text-white border-0">Created</th>
                                 </tr>
-                            ) : (
-                                tickets.map((ticket, index) => (
-                                    <tr key={ticket.id}>
-                                        <td>{index + 1}</td>
-                                        <td className="fw-semibold">
-                                            {ticket.ticket_id}
-                                        </td>
-                                        <td>{ticket.title}</td>
-                                        <td
-                                            style={{
-                                                maxWidth: 250,
-                                                whiteSpace: 'nowrap',
-                                                overflow: 'hidden',
-                                                textOverflow: 'ellipsis',
-                                            }}
-                                        >
-                                            {ticket.description}
-                                        </td>
-                                        <td>
-                                            <span
-                                                className={`badge ${ticket.status === 'open'
-                                                        ? 'bg-warning text-dark'
-                                                        : 'bg-success'
-                                                    }`}
-                                            >
-                                                {ticket.status}
-                                            </span>
-                                        </td>
-                                        <td className="text-muted">
-                                            {new Date(
-                                                ticket.created_at
-                                            ).toLocaleDateString()}
+                            </thead>
+                            <tbody>
+                                {tickets.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={5} className="text-center py-5 border-0">
+                                            <div className="text-muted opacity-50">
+                                                <h6>No tickets yet</h6>
+                                                <p className="mb-0 small">Raise a ticket to get support</p>
+                                            </div>
                                         </td>
                                     </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            {/* Modal */}
-            <div
-                className={`modal fade ${addTicketPopup ? 'show d-block' : ''}`}
-                style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}
-            >
-                <div className="modal-dialog modal-dialog-centered modal-lg">
-                    <div className="modal-content border-0 shadow-lg rounded-3">
-                        <div className="modal-header bg-primary text-white">
-                            <h5 className="modal-title fw-semibold">
-                                🎫 Raise Support Ticket
-                            </h5>
-                            <button
-                                className="btn-close btn-close-white"
-                                onClick={() => setAddTicketPopup(false)}
-                            />
-                        </div>
-
-                        <form onSubmit={handleTicketSubmit}>
-                            <div className="modal-body">
-                                <div className="row g-3">
-                                    <div className="col-12">
-                                        <label className="form-label fw-semibold">
-                                            Ticket Title
-                                        </label>
-                                        <input
-                                            className="form-control"
-                                            placeholder="Short issue title"
-                                            value={title}
-                                            onChange={e =>
-                                                setTitle(e.target.value)
-                                            }
-                                            required
-                                        />
-                                    </div>
-
-                                    <div className="col-md-6">
-                                        <label className="form-label fw-semibold">
-                                            Category
-                                        </label>
-                                        <select
-                                            className="form-select"
-                                            value={task_category}
-                                            onChange={e =>
-                                                setTaskCategory(e.target.value)
-                                            }
-                                            required
-                                        >
-                                            <option value="">
-                                                Select category
-                                            </option>
-                                            {taskCategories.map(category => (
-                                                <option
-                                                    key={category.id}
-                                                    value={category.id}
+                                ) : (
+                                    tickets.map((ticket) => (
+                                        <tr key={ticket.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                                            <td className="py-3 bg-transparent border-0 font-monospace text-white">
+                                                #{ticket.ticket_id}
+                                            </td>
+                                            <td className="py-3 bg-transparent text-white border-0 fw-semibold">
+                                                {ticket.title}
+                                            </td>
+                                            <td className="py-3 bg-transparent border-0 text-white" style={{ maxWidth: "250px" }}>
+                                                <div className="text-truncate">{ticket.description}</div>
+                                            </td>
+                                            <td className="py-3 bg-transparent border-0">
+                                                <span
+                                                    className="badge px-3 py-2 rounded-pill"
+                                                    style={{
+                                                        background: "rgba(0,194,255,0.15)",
+                                                        color: "#00c2ff",
+                                                        border: "1px solid rgba(0,194,255,0.3)"
+                                                    }}
                                                 >
-                                                    {category.name}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </div>
-
-                                    <div className="col-12">
-                                        <label className="form-label fw-semibold">
-                                            Description
-                                        </label>
-                                        <textarea
-                                            className="form-control"
-                                            rows={4}
-                                            placeholder="Describe your issue clearly..."
-                                            value={description}
-                                            onChange={e =>
-                                                setDescription(e.target.value)
-                                            }
-                                            required
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="modal-footer bg-light">
-                                <button
-                                    type="button"
-                                    className="btn btn-outline-secondary"
-                                    onClick={() => setAddTicketPopup(false)}
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    type="submit"
-                                    className="btn btn-primary px-4"
-                                >
-                                    Create Ticket
-                                </button>
-                            </div>
-                        </form>
+                                                    {ticket.status}
+                                                </span>
+                                            </td>
+                                            <td className="py-3 bg-transparent border-0 text-white">
+                                                {new Date(ticket.created_at).toLocaleDateString()}
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
+
+                {/* Modal Overlay */}
+                {addTicketPopup && (
+                    <div
+                        className="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center"
+                        style={{
+                            background: "rgba(0,0,0,0.8)",
+                            zIndex: 1050,
+                            backdropFilter: "blur(5px)"
+                        }}
+                    >
+                        <div
+                            className="p-4 rounded-4 shadow-lg w-100"
+                            style={{
+                                maxWidth: "600px",
+                                background: "#111",
+                                border: "1px solid rgba(255,255,255,0.1)"
+                            }}
+                        >
+                            <div className="d-flex justify-content-between align-items-center mb-4">
+                                <h3 className="fw-bold m-0 text-white">Raise New Ticket</h3>
+                                <button
+                                    onClick={() => setAddTicketPopup(false)}
+                                    className="btn btn-link text-white text-decoration-none fs-4 p-0"
+                                >
+                                    &times;
+                                </button>
+                            </div>
+
+                            <form onSubmit={handleTicketSubmit}>
+                                <div className="mb-3">
+                                    <label className="form-label text-white small text-uppercase fw-bold">Title</label>
+                                    <input
+                                        className="form-control bg-dark border-secondary text-white"
+                                        style={{ borderColor: "rgba(255,255,255,0.1)" }}
+                                        placeholder="Brief summary of the issue"
+                                        value={title}
+                                        onChange={e => setTitle(e.target.value)}
+                                        required
+                                    />
+                                </div>
+
+                                <div className="mb-3">
+                                    <label className="form-label text-white small text-uppercase fw-bold">Category</label>
+                                    <select
+                                        className="form-select bg-dark border-secondary text-white"
+                                        style={{ borderColor: "rgba(255,255,255,0.1)" }}
+                                        value={task_category}
+                                        onChange={e => setTaskCategory(e.target.value)}
+                                        required
+                                    >
+                                        <option value="">Select Category</option>
+                                        {taskCategories.map(category => (
+                                            <option key={category.id} value={category.id}>
+                                                {category.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div className="mb-4">
+                                    <label className="form-label text-white small text-uppercase fw-bold">Description</label>
+                                    <textarea
+                                        className="form-control bg-dark border-secondary text-white"
+                                        style={{ borderColor: "rgba(255,255,255,0.1)" }}
+                                        rows={5}
+                                        placeholder="Detailed explanation..."
+                                        value={description}
+                                        onChange={e => setDescription(e.target.value)}
+                                        required
+                                    />
+                                </div>
+
+                                <div className="d-flex justify-content-end gap-2">
+                                    <button
+                                        type="button"
+                                        className="btn btn-outline-secondary px-4"
+                                        onClick={() => setAddTicketPopup(false)}
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="btn fw-bold px-4"
+                                        style={{
+                                            background: "#00c2ff",
+                                            color: "#000",
+                                            border: "none",
+                                            boxShadow: "0 0 10px rgba(0,194,255,0.4)"
+                                        }}
+                                    >
+                                        Submit Ticket
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );

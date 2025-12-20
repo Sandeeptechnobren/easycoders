@@ -35,88 +35,134 @@ export default function TasksPage() {
     if (loadingTasks || loadingCategories) return <Loader />;
 
     return (
-        <div className="container mt-4">
-            <div className="d-flex justify-content-between align-items-center">
-                <h4 className="mb-4 mt-2">My Tasks</h4>
-                <select
-                    className="form-select w-25"
-                    value={selectedCategory}
-                    onChange={(e) => setSelectedCategory(e.target.value)}
+        <div className="min-vh-100 py-5" style={{ background: "#050505", color: "white" }}>
+            <div className="container">
+                {/* Header Section */}
+                <div className="d-flex justify-content-between align-items-center mb-5">
+                    <div>
+                        <h1 className="fw-bold mb-2" style={{ color: "#00c2ff", textShadow: "0 0 12px rgba(0,194,255,0.5)" }}>
+                            My Tasks
+                        </h1>
+                        <p className="text-white mb-0">Track and manage your assigned tasks</p>
+                    </div>
+
+                    <div className="position-relative" style={{ width: "250px" }}>
+                        <select
+                            className="form-select bg-dark text-white border-0 shadow-none"
+                            style={{
+                                border: "1px solid rgba(255,255,255,0.1)",
+                                borderRadius: "10px",
+                                padding: "10px 15px",
+                                outline: "none",
+                                cursor: "pointer"
+                            }}
+                            value={selectedCategory}
+                            onChange={(e) => setSelectedCategory(e.target.value)}
+                        >
+                            <option value="">All Categories</option>
+                            {taskCategories.map((category) => (
+                                <option key={category.id} value={category.id}>
+                                    {category.name}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                </div>
+
+                {/* Tasks Table Card */}
+                <div
+                    className="p-4 rounded-4"
+                    style={{
+                        background: "rgba(20,20,20,0.6)",
+                        border: "1px solid rgba(255,255,255,0.1)",
+                        backdropFilter: "blur(10px)",
+                        boxShadow: "0 8px 32px rgba(0,0,0,0.4)"
+                    }}
                 >
-                    <option value="">All</option>
-                    {taskCategories.map((category) => (
-                        <option key={category.id} value={category.id}>
-                            {category.name}
-                        </option>
-                    ))}
-                </select>
-            </div>
-            <div className="card shadow-sm">
-
-                <div className="card-body table-responsive">
-                    {tasks.length === 0 ? (
-                        <p className="text-center text-muted">No tasks assigned yet.</p>
-                    ) : (
-                        <table className="table table-bordered table-hover align-middle">
-                            <thead className="table-light">
-                                <tr>
-                                    <th>#</th>
-                                    <th>Title</th>
-                                    <th>Description</th>
-                                    <th>Category</th>
-                                    <th>Output Image</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {tasks.map((task, index) => (
-                                    <tr key={task.id}>
-                                        <td>{index + 1}</td>
-
-                                        <td className="fw-semibold">
-                                            {task.title}
-                                        </td>
-
-                                        <td style={{ maxWidth: 300 }}>
-                                            {task.description}
-                                        </td>
-
-                                        <td>
-                                            <span className="badge bg-info text-dark">
-                                                {task.category?.name ?? 'N/A'}
-                                            </span>
-                                        </td>
-
-                                        <td className="text-center">
-                                            {task.image ? (
-                                                <img
-                                                    src={task.image}
-                                                    alt="Task Output"
-                                                    style={{ width: 60, height: 60, objectFit: 'cover' }}
-                                                    className="rounded border"
-                                                />
-                                            ) : (
-                                                <span className="text-muted">—</span>
-                                            )}
-                                        </td>
-
-                                        <td>
-                                            <span
-                                                className={`badge ${task.status === 'completed'
-                                                    ? 'bg-success'
-                                                    : task.status === 'pending'
-                                                        ? 'bg-warning text-dark'
-                                                        : 'bg-secondary'
-                                                    }`}
-                                            >
-                                                {task.status}
-                                            </span>
-                                        </td>
+                    <div className="table-responsive">
+                        {tasks.length === 0 ? (
+                            <div className="text-center py-5">
+                                <div className="text-muted opacity-50">
+                                    <i className="bi bi-clipboard-check fs-1 mb-3 d-block"></i>
+                                    <h6>No tasks available</h6>
+                                    <p className="mb-0 small">Tasks assigned to you will appear here</p>
+                                </div>
+                            </div>
+                        ) : (
+                            <table className="table" style={{ color: "white" }}>
+                                <thead>
+                                    <tr style={{ borderBottom: "2px solid rgba(255,255,255,0.1)" }}>
+                                        <th className="py-3 bg-transparent text-white border-0">#</th>
+                                        <th className="py-3 bg-transparent text-white border-0">Title</th>
+                                        <th className="py-3 bg-transparent text-white border-0">Description</th>
+                                        <th className="py-3 bg-transparent text-white border-0">Category</th>
+                                        <th className="py-3 bg-transparent text-white border-0 text-center">Output</th>
+                                        <th className="py-3 bg-transparent text-white border-0">Status</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    )}
+                                </thead>
+                                <tbody>
+                                    {tasks.map((task, index) => (
+                                        <tr key={task.id} style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.05)" }}>
+                                            <td className="py-3 bg-transparent text-white border-0 font-monospace text-white">
+                                                {index + 1}
+                                            </td>
+                                            <td className="py-3 bg-transparent text-white border-0 fw-semibold">
+                                                {task.title}
+                                            </td>
+                                            <td className="py-3 bg-transparent text-white border-0" style={{ maxWidth: "300px" }}>
+                                                <div className="text-truncate">{task.description}</div>
+                                            </td>
+                                            <td className="py-3 bg-transparent border-0">
+                                                <span
+                                                    className="badge px-3 py-2 rounded-pill"
+                                                    style={{
+                                                        background: "rgba(0,194,255,0.15)",
+                                                        color: "#00c2ff",
+                                                        border: "1px solid rgba(0,194,255,0.3)"
+                                                    }}
+                                                >
+                                                    {task.category?.name ?? 'General'}
+                                                </span>
+                                            </td>
+                                            <td className="py-3 bg-transparent border-0 text-center">
+                                                {task.image ? (
+                                                    <img
+                                                        src={task.image}
+                                                        alt="Task Output"
+                                                        style={{
+                                                            width: "50px",
+                                                            height: "50px",
+                                                            objectFit: "cover",
+                                                            border: "2px solid rgba(255,255,255,0.2)",
+                                                            boxShadow: "0 0 10px rgba(0,0,0,0.5)"
+                                                        }}
+                                                        className="rounded-3"
+                                                    />
+                                                ) : (
+                                                    <span className="text-white opacity-50 small">—</span>
+                                                )}
+                                            </td>
+                                            <td className="py-3 bg-transparent border-0">
+                                                <span
+                                                    className="badge px-3 py-2 rounded-pill"
+                                                    style={{
+                                                        background: task.status === 'completed' ? 'rgba(0,255,157,0.15)' :
+                                                            task.status === 'pending' ? 'rgba(255,193,7,0.15)' : 'rgba(255,255,255,0.1)',
+                                                        color: task.status === 'completed' ? '#00ff9d' :
+                                                            task.status === 'pending' ? '#ffc107' : '#fff',
+                                                        border: `1px solid ${task.status === 'completed' ? 'rgba(0,255,157,0.3)' :
+                                                            task.status === 'pending' ? 'rgba(255,193,7,0.3)' : 'rgba(255,255,255,0.2)'}`
+                                                    }}
+                                                >
+                                                    {task.status}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        )}
+                    </div>
                 </div>
             </div>
         </div>
