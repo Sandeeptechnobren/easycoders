@@ -86,10 +86,9 @@ export default function Navbar() {
       <div className={styles.container}>
         <div className={styles.logo}>
           <img src="/images/eclogo.png" alt="Easy Coders Logo" />
-          <span className={styles.brandText}>Easy Coders</span>
+          <span className={styles.brandText}> &nbsp;Easy Coders</span>
         </div>
 
-        {/* Desktop Menu */}
         <div className={styles.desktopMenu}>
           {navLinks.map((link) =>
             link.onClick ? (
