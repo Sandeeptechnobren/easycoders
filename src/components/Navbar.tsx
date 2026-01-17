@@ -6,12 +6,13 @@ import { usePathname, useRouter } from 'next/navigation';
 import styles from './Navbar.module.css';
 import { useAuth } from '@/context/AuthContext';
 type NavLink =
-  | {
+  {
     name: string;
     href: string;
     onClick?: undefined;
-  }
-  | {
+  }| 
+  
+  {
     name: string;
     href?: undefined;
     onClick: () => void;
@@ -84,7 +85,7 @@ export default function Navbar() {
   return (
     <nav className={`${styles.navbar} ${isScrolled ? styles.scrolled : ''}`}>
       <div className={styles.container}>
-        <div className={styles.logo}>
+        <div className={styles.logo} >
           <img src="/images/eclogo.png" alt="Easy Coders Logo" />
           <span className={styles.brandText}> &nbsp;Easy Coders</span>
         </div>

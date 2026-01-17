@@ -19,8 +19,8 @@ export default function LoginPage() {
     try {
       const response = await api.post('/login', { email, password });
 
-      const token = response.data.access_token;
-      const user = response.data.user;
+      const token = response.data.data.access_token;
+      const user = response.data.data.user;
       const role = user.role;
 
       // Save to localStorage
@@ -35,9 +35,9 @@ export default function LoginPage() {
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 
       // Redirect based on role
-      if (role === 'admin') router.push('/admin');
-      else if (role === 'trainer') router.push('/trainer');
-      else if (role === 'student') router.push('/student');
+      if (role === 1) router.push('/admin');
+      else if (role === 4) router.push('/trainer');
+      else if (role === 3) router.push('/student');
       else router.push('/');
 
     } catch (err: any) {
