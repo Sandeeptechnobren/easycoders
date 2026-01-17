@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 body {
-    color: #343a40;
+    /* color: #343a40; */
 
 }
 
@@ -60,4 +60,249 @@ body {
     justify-content: space-between;
     margin: 2%;
     padding: 2%;
+}
+
+/* .introSection {
+    margin: 0;
+    height: 400px;
+    background-image: url('/images/introSectionBackground.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    padding-top: 50px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    
+}
+
+.internalIntro{
+        margin: 0;
+    height: 400px;
+    display: flex;
+    justify-content: center;
+    align-items: center;   
+} */
+.introSection {
+    margin: 0;
+    height: 400px;
+
+    background-image: url('/images/introSectionBackground.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+
+    position: relative; /* REQUIRED for overlay */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Overlay that blurs the SAME background */
+.transparentDiv {
+    position: absolute;
+    inset: 0; /* top:0 right:0 bottom:0 left:0 */
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    background: rgba(0, 0, 0, 0.25); /* translucent layer */
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+
+    padding: 20px;
+}
+
+
+.internalIntro {
+    margin: 0;
+    height: 100%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    font-family:Arial, Helvetica, sans-serif;
+    font-weight: 900;
+    color: white;
+    
+    
+}
+
+.introImage{
+    background-image: url('/images/illustrations.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    margin: 100px;
+}
+.searchBox {
+    margin-top: 20px;
+    position: relative;
+    width: 300px;
+}
+
+.searchInput {
+    width: 100%;
+    padding: 12px 12px 12px 42px; /* left space for icon */
+    border-radius: 25px;
+    border: none;
+    outline: none;
+
+    font-size: 11px;
+    background: rgba(255, 255, 255, 0.9);
+}
+
+.searchIcon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 16px;
+    opacity: 0.7;
+    pointer-events: none;
+}
+.description {
+    min-height: 200px;
+    background-color: rgb(233, 243, 243);
+    padding: 30px;
+    margin-top: -20px;
+    position: relative;
+    z-index: 1;
+    border-radius: 40px 40px 0 0;
+    margin-left: 2%;
+    margin-right: 2%;
+}
+.mainInternalNav{
+    display: flex;
+    gap: 20px;
+    /* margin: 30px; */
+
+}
+.internalNav{
+    border: 1px solid #032c73;
+    border-radius: 40px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    padding-left: 20px;
+    padding-right: 20px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+.internalNav:hover {
+    background-color: #032c73;
+    color: white;
+}
+.sectionTitle {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    margin-top: 20px;
+}
+.cardGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 24px;
+}
+.courseCard {
+    background: #fff;
+    border-radius: 18px;
+    padding: 18px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.courseCard:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+}
+
+.badge {
+    background: #7969be;
+    color: #ff5c5c;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 999px;
+    display: inline-block;
+    margin-bottom: 12px;
+}
+.cardImage {
+    height: 140px;
+    border-radius: 14px;
+    overflow: hidden;
+    background: #eef1ff;
+    margin-bottom: 14px;
+}
+
+.cardImage img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.cardTitle {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+.rating {
+    font-size: 13px;
+    color: #ffb703;
+    margin-bottom: 14px;
+}
+
+.cardFooter {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.views {
+    font-size: 13px;
+    color: #777;
+}
+
+.enrollBtn {
+    background: #6b5cff;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 8px 14px;
+    font-size: 13px;
+    cursor: pointer;
+}
+/* Testimonial tweaks */
+.testimonialCard {
+    text-align: center;
+}
+
+.testimonialImage {
+    width: 90px;
+    height: 90px;
+    margin: 0 auto 14px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 3px solid #6b5cff;
+}
+
+.testimonialImage img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.testimonialRole {
+    font-size: 13px;
+    color: #777;
+    margin-bottom: 10px;
+}
+
+.testimonialText {
+    font-size: 14px;
+    color: #444;
+    line-height: 1.6;
+    margin-bottom: 12px;
+    font-style: italic;
 }

@@ -1,194 +1,145 @@
 'use client';
-
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import api from '@/lib/axios';
-
 export default function HomePage() {
   const [categories, setCategories] = useState<any[]>([]);
-
+  const [courses, setCourses] = useState<any[]>([]);
   useEffect(() => {
     api.get('/categories').then(res => setCategories(res.data));
+    setCourses([
+      {
+        id: 1,
+        level: 'Beginner',
+        title: 'Summer Training',
+        rating: 4.8,
+        views: '120k Views',
+        image:'https://netmax.co.in/wp-content/uploads/2022/03/Summer-training-in-Himachal-Pradesh-1-1.jpg'
+      },
+      {
+        id: 2,
+        level: 'Beginner',
+        title: 'Internship',
+        rating: 4.7,
+        views: '131k Views',
+        image:'https://images.shiksha.com/mediadata/images/articles/1575005482php2pK7B8.jpeg'
+      },
+      {
+        id: 3,
+        level: 'Intermediate',
+        title: 'Job Oriented Training',
+        rating: 4.9,
+        views: '150k Views',
+        image:'https://online.stanford.edu/sites/default/files/styles/embedded_large/public/2018-03/cs_programminglanguage_cs242.jpg?itok=OMscvbtw'
+      },
+      {
+        id: 4,
+        level: 'Beginner',
+        title: 'Language Training',
+        rating: 4.6,
+        views: '189k Views',
+        image:'https://5.imimg.com/data5/SELLER/Default/2022/2/HT/KM/QN/93804707/job-oriented-training1.png'
+      }
+    ]);
   }, []);
-
   return (
-    <div className="min-h-screen bg-black text-white">
-
-      {/* ================= HERO + CAROUSEL ================= */}
-      <section className="relative">
-
-        <div id="heroCarousel" className="carousel slide m-5" data-bs-ride="carousel">
-
-          {/* INDICATORS */}
-          <div className="carousel-indicators">
-            <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="0" className="active"></button>
-            <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="1"></button>
-            <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="2"></button>
-          </div>
-
-          {/* CAROUSEL ITEMS */}
-          <div className="carousel-inner">
-
-            {/* SLIDE 1 */}
-            <div className="carousel-item active" data-bs-interval="5000">
-              <img
-                src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1200&q=80"
-                className="d-block w-[100%] opacity-40"
-                alt="Coding Class"
-                height='300px'
+    <div className="min-h-screen homePage">
+      <section className="introSection">
+        <div className="transparentDiv">
+          <div className="internalIntro">
+            <h1 style={{ fontSize: '40px', fontWeight: 900 }}>
+              Level Up Your <br /> Coding Career
+            </h1>
+            <div className="searchBox">
+              <span className="searchIcon">🔍</span>
+              <input
+                type="search"
+                placeholder="Search courses, topics..."
+                className="searchInput"
               />
-              <div className="carousel-caption d-none d-md-block">
-                <h1 className="display-4 fw-bold text-[#00c2ff] text-shadow-lg">Learn From Experts</h1>
-                <p className="lead">Master real-world development with hands-on training.</p>
-              </div>
             </div>
-
-            {/* SLIDE 2 */}
-            <div className="carousel-item" data-bs-interval="5000">
-              <img
-                src="https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1200&q=80"
-                className="d-block w-100 opacity-40"
-                alt="Developers Working"
-                height='300px'
-
-              />
-              <div className="carousel-caption d-none d-md-block">
-                <h1 className="display-4 fw-bold text-[#14f4ff]">Build Live Projects</h1>
-                <p className="lead">Get industry experience before even stepping into a job.</p>
-              </div>
-            </div>
-
-            {/* SLIDE 3 */}
-            <div className="carousel-item">
-              <img
-                src="https://images.unsplash.com/photo-1551434678-e076c223a692?auto=format&fit=crop&w=1200&q=80"
-                className="d-block w-100 opacity-40"
-                alt="Students Coding"
-                height='300px'
-
-              />
-              <div className="carousel-caption d-none d-md-block text-center">
-                <h1 className="display-4 fw-bold text-[#00c2ff]">Become Job-Ready</h1>
-                <p className="lead">Crack interviews with confidence and skill.</p>
-              </div>
-            </div>
-
           </div>
-
-          {/* PREV/NEXT BUTTONS */}
-          <button className="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
-            <span className="carousel-control-prev-icon"></span>
-          </button>
-          <button className="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
-            <span className="carousel-control-next-icon"></span>
-          </button>
-
-        </div>
-
-        {/* Neon glows */}
-        <div className="absolute -top-20 -left-20 w-[400px] h-[400px] bg-[#00c2ff] opacity-20 blur-[120px]"></div>
-        <div className="absolute bottom-0 right-0 w-[450px] h-[450px] bg-[#14f4ff] opacity-20 blur-[150px]"></div>
-
-      </section>
-
-      {/* ================= FEATURES ================= */}
-      <section className="py-1 bg-black my-4">
-        <div className="container px-4">
-
-          <h2 className="text-center text-4xl fw-bold mb-5">
-            Why Choose <span className="text-[#00c2ff]">Easy Coders?</span>
-          </h2>
-
-          <div className="row g-4">
-
-            {/* CARD */}
-            <div className="col-md-4">
-              <div className="p-4 rounded-3 bg-[#0f0f0f] border border-[#1a1a1a] hover:border-[#00c2ff] shadow-sm hover-shadow-lg transition-all">
-                <div className="fs-1 mb-3 text-[#00c2ff]">🚀</div>
-                <h3 className="fw-bold mb-3">Real Live Projects</h3>
-                <p className="text-gray-400">Work on real production-level applications with hands-on guidance.</p>
-              </div>
-            </div>
-
-            {/* CARD */}
-            <div className="col-md-4">
-              <div className="p-4 rounded-3 bg-[#0f0f0f] border border-[#1a1a1a] hover:border-[#00c2ff] shadow-sm hover-shadow-lg transition-all">
-                <div className="fs-1 mb-3 text-[#00c2ff]">👨‍🏫</div>
-                <h3 className="fw-bold mb-3">Mentors From Industry</h3>
-                <p className="text-gray-400">Learn from expert engineers working in top IT companies.</p>
-              </div>
-            </div>
-
-            {/* CARD */}
-            <div className="col-md-4">
-              <div className="p-4 rounded-3 bg-[#0f0f0f] border border-[#1a1a1a] hover:border-[#00c2ff] shadow-sm hover-shadow-lg transition-all">
-                <div className="fs-1 mb-3 text-[#00c2ff]">💼</div>
-                <h3 className="fw-bold mb-3">Placement Assistance</h3>
-                <p className="text-gray-400">Mock interviews, resume preparation, referrals, and more.</p>
-              </div>
-            </div>
-
-          </div>
+          <div className="internalIntro introImage"></div>
         </div>
       </section>
-
-      {/* ================= TRAINING PROGRAMS ================= */}
-      {/* <section className="py-24 bg-black">
-        <div className="container px-4">
-
-          <h2 className="text-center text-4xl fw-bold mb-5">
-            Our Training Programs
-          </h2>
-
-          <div className="row g-4">
-
-            {categories.map((category) => (
-              <div key={category.id} className="col-md-4">
-                <div className="p-4 rounded-3 bg-[#0f0f0f] border border-[#1a1a1a] group hover:border-[#00c2ff] hover-shadow-lg transition-all">
-
-                  <h3 className="fw-bold fs-4 mb-3 group-hover:text-[#00c2ff]">{category.name}</h3>
-
-                  <ul className="list-unstyled mb-3">
-                    {category.children?.map((child: any) => (
-                      <li key={child.id} className="d-flex align-items-center text-gray-400 mb-2">
-                        <span className="me-2 w-2 h-2 rounded-circle bg-[#00c2ff]"></span>
-                        {child.name}
-                      </li>
-                    ))}
-                  </ul>
-
-                  <Link href={`/courses?category=${category.id}`} className="text-[#00c2ff] fw-semibold">
-                    View Courses →
-                  </Link>
-
-                </div>
-              </div>
-            ))}
-
-          </div>
-
+      <section className="description">
+        <div className="mainInternalNav">
+          <div className="internalNav">All</div>
+          <div className="internalNav">Beginner</div>
+          <div className="internalNav">Intermediate</div>
+          <div className="internalNav">Advanced</div>
         </div>
-      </section> */}
+        <h2 className="sectionTitle">Filters Spotlight</h2>
+        <div className="cardGrid">
+          {courses.map(course => (
+            <div className="courseCard" key={course.id}>
+              <span className="badge">{course.level}</span>
+              <div className="cardImage">
+                  <img
+                      src={course.image || '/images/fullnobackground.png'}
+                      alt={course.title}
+                    />
+              </div>
+              <h3 className="cardTitle">{course.title}</h3>
+              <div className="rating">★★★★★ {course.rating}</div>
+              <div className="cardFooter">
+                <span className="views">{course.views}</span>
+                <button className="enrollBtn">Explore</button>
+              </div>
+            </div>
+          ))}
+        </div>
+        <h2 className="sectionTitle">Testimonials</h2>
+        <div className="cardGrid">
+          {[
+            {
+              id: 1,
+              name: "Aarav Sharma",
+              role: "Frontend Developer",
+              feedback:
+                "Easy Coders helped me move from basics to building real-world projects confidently.",
+              rating: 5,
+              image: "https://randomuser.me/api/portraits/men/32.jpg",
+            },
+            {
+              id: 2,
+              name: "Priya Verma",
+              role: "Computer Science Student",
+              feedback:
+                "The learning approach is practical and industry-focused. Highly recommended!",
+              rating: 5,
+              image: "https://randomuser.me/api/portraits/women/44.jpg",
+            },
+            {
+              id: 3,
+              name: "Rahul Singh",
+              role: "Backend Developer",
+              feedback:
+                "Clear explanations, hands-on coding, and great mentorship throughout the journey.",
+              rating: 4.8,
+              image: "https://randomuser.me/api/portraits/men/76.jpg",
+            },
+          ].map(testimonial => (
+            <div className="courseCard testimonialCard" key={testimonial.id}>
 
-      {/* ================= CTA ================= */}
-      <section className="py-5 bg-[#080808] text-center">
-        <div className="container">
+              <div className="testimonialImage">
+                <img src={testimonial.image} alt={testimonial.name} />
+              </div>
 
-          <h2 className="text-4xl fw-bold mb-4 text-[#00c2ff]">Ready to Begin Your Journey?</h2>
-          <p className="fs-5 mb-5 text-gray-300">
-            Join thousands of learners already achieving success with TechnoBren.
-          </p>
+              <h3 className="cardTitle">{testimonial.name}</h3>
+              <p className="testimonialRole">{testimonial.role}</p>
 
-          <Link
-            href="/register"
-            className="btn px-5 py-3 fw-bold bg-[#00c2ff] text-black rounded-3 shadow-lg hover:bg-[#14f4ff]"
-          >
-            Register Now
-          </Link>
+              <p className="testimonialText">
+                “{testimonial.feedback}”
+              </p>
 
+              <div className="rating">
+                ★★★★★ {testimonial.rating}
+              </div>
+            </div>
+          ))}
         </div>
       </section>
-
     </div>
   );
 }
