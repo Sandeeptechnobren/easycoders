@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import api from "@/lib/axios";
 import { useRouter } from "next/navigation";
+import styles from './contactus.module.css'
 
 export default function ContactUs() {
     const [name, setName] = useState("");
@@ -32,120 +33,171 @@ export default function ContactUs() {
     };
 
     return (
-        <div
-            className="min-vh-100 py-5"
-            style={{ background: "#050505", color: "white" }}
-        >
-            <div className="container">
-                <div className="row g-4 align-items-stretch">
+        // <div
+        //     className="min-vh-100 py-5"
+        //     style={{ background: "#050505", color: "white" }}
+        // >
+        //     <div className="container">
+        //         <div className="row g-4 align-items-stretch">
 
-                    {/* LEFT COLUMN – MAP & ADDRESS */}
-                    <div className="col-lg-6">
-                        <div
-                            className="h-100 p-4 rounded-4"
-                            style={{
-                                background: "rgba(15,15,15,0.9)",
-                                border: "1px solid rgba(0,194,255,0.25)",
-                                boxShadow: "0 0 30px rgba(0,194,255,0.15)",
-                            }}
-                        >
-                            <h3
-                                className="fw-bold mb-3"
-                                style={{ color: "#00c2ff" }}
-                            >
-                                Our Location
-                            </h3>
+        //             {/* LEFT COLUMN – MAP & ADDRESS */}
+        //             <div className="col-lg-6">
+        //                 <div
+        //                     className="h-100 p-4 rounded-4"
+        //                     style={{
+        //                         background: "rgba(15,15,15,0.9)",
+        //                         border: "1px solid rgba(0,194,255,0.25)",
+        //                         boxShadow: "0 0 30px rgba(0,194,255,0.15)",
+        //                     }}
+        //                 >
+        //                     <h3
+        //                         className="fw-bold mb-3"
+        //                         style={{ color: "#00c2ff" }}
+        //                     >
+        //                         Our Location
+        //                     </h3>
 
-                            <p className="mb-3" style={{ color: "#c9d1d9" }}>
-                                Easy Coders- Technobren Infotech Pvt. Ltd<br />
-                                City Tower, Varanasi - Lucknow Rd, Wazidpur,<br /> Jaunpur, Uttar Pradesh<br /> 222002<br />
-                                ✉️ easycoders1@gmail.com
-                            </p>
+        //                     <p className="mb-3" style={{ color: "#c9d1d9" }}>
+        //                         Easy Coders- Technobren Infotech Pvt. Ltd<br />
+        //                         City Tower, Varanasi - Lucknow Rd, Wazidpur,<br /> Jaunpur, Uttar Pradesh<br /> 222002<br />
+        //                         ✉️ easycoders1@gmail.com
+        //                     </p>
 
-                            <div className="ratio ratio-16x9 rounded overflow-hidden">
-                                <iframe
-                                    src="https://www.google.com/maps?q=jaunpur&output=embed"
-                                    loading="lazy"
-                                    referrerPolicy="no-referrer-when-downgrade"
-                                ></iframe>
-                            </div>
-                        </div>
-                    </div>
+        //                     <div className="ratio ratio-16x9 rounded overflow-hidden">
+        //                         <iframe
+        //                             src="https://www.google.com/maps?q=jaunpur&output=embed"
+        //                             loading="lazy"
+        //                             referrerPolicy="no-referrer-when-downgrade"
+        //                         ></iframe>
+        //                     </div>
+        //                 </div>
+        //             </div>
 
-                    {/* RIGHT COLUMN – CONTACT FORM */}
-                    <div className="col-lg-6">
-                        <div
-                            className="h-100 p-4 p-md-5 rounded-4"
-                            style={{
-                                background: "rgba(15,15,15,0.9)",
-                                border: "1px solid rgba(0,194,255,0.25)",
-                                boxShadow: "0 0 30px rgba(0,194,255,0.15)",
-                            }}
-                        >
-                            <h3
-                                className="fw-bold mb-4 text-center"
-                                style={{ color: "#00c2ff" }}
-                            >
-                                Contact Us
-                            </h3>
+        //             {/* RIGHT COLUMN – CONTACT FORM */}
+        //             <div className="col-lg-6">
+        //                 <div
+        //                     className="h-100 p-4 p-md-5 rounded-4"
+        //                     style={{
+        //                         background: "rgba(15,15,15,0.9)",
+        //                         border: "1px solid rgba(0,194,255,0.25)",
+        //                         boxShadow: "0 0 30px rgba(0,194,255,0.15)",
+        //                     }}
+        //                 >
+        //                     <h3
+        //                         className="fw-bold mb-4 text-center"
+        //                         style={{ color: "#00c2ff" }}
+        //                     >
+        //                         Contact Us
+        //                     </h3>
 
-                            <form onSubmit={handleSubmit} className="row g-3">
-                                <div className="col-12">
-                                    <label className="form-label">Full Name</label>
-                                    <input
-                                        type="text"
-                                        className="form-control bg-dark text-white"
-                                        value={name}
-                                        onChange={(e) => setName(e.target.value)}
-                                        required
-                                    />
-                                </div>
+        //                     <form onSubmit={handleSubmit} className="row g-3">
+        //                         <div className="col-12">
+        //                             <label className="form-label">Full Name</label>
+        //                             <input
+        //                                 type="text"
+        //                                 className="form-control bg-dark text-white"
+        //                                 value={name}
+        //                                 onChange={(e) => setName(e.target.value)}
+        //                                 required
+        //                             />
+        //                         </div>
 
-                                <div className="col-12">
-                                    <label className="form-label">Email Address</label>
-                                    <input
-                                        type="email"
-                                        className="form-control bg-dark text-white"
-                                        value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
-                                        required
-                                    />
-                                </div>
+        //                         <div className="col-12">
+        //                             <label className="form-label">Email Address</label>
+        //                             <input
+        //                                 type="email"
+        //                                 className="form-control bg-dark text-white"
+        //                                 value={email}
+        //                                 onChange={(e) => setEmail(e.target.value)}
+        //                                 required
+        //                             />
+        //                         </div>
 
-                                <div className="col-12">
-                                    <label className="form-label">Message</label>
-                                    <textarea
-                                        className="form-control bg-dark text-white"
-                                        rows={5}
-                                        value={message}
-                                        onChange={(e) => setMessage(e.target.value)}
-                                        required
-                                    ></textarea>
-                                </div>
+        //                         <div className="col-12">
+        //                             <label className="form-label">Message</label>
+        //                             <textarea
+        //                                 className="form-control bg-dark text-white"
+        //                                 rows={5}
+        //                                 value={message}
+        //                                 onChange={(e) => setMessage(e.target.value)}
+        //                                 required
+        //                             ></textarea>
+        //                         </div>
 
-                                <div className="col-12 text-center mt-4">
-                                    <button
-                                        type="submit"
-                                        disabled={submitting}
-                                        className="btn fw-bold px-5 py-3"
-                                        style={{
-                                            background: submitting
-                                                ? "#555"
-                                                : "linear-gradient(135deg, #00c2ff, #00ff9d)",
-                                            color: "#000",
-                                            borderRadius: "12px",
-                                            fontSize: "1.05rem",
-                                        }}
-                                    >
-                                        {submitting ? "Submitting..." : "Send Message →"}
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
+        //                         <div className="col-12 text-center mt-4">
+        //                             <button
+        //                                 type="submit"
+        //                                 disabled={submitting}
+        //                                 className="btn fw-bold px-5 py-3"
+        //                                 style={{
+        //                                     background: submitting
+        //                                         ? "#555"
+        //                                         : "linear-gradient(135deg, #00c2ff, #00ff9d)",
+        //                                     color: "#000",
+        //                                     borderRadius: "12px",
+        //                                     fontSize: "1.05rem",
+        //                                 }}
+        //                             >
+        //                                 {submitting ? "Submitting..." : "Send Message →"}
+        //                             </button>
+        //                         </div>
+        //                     </form>
+        //                 </div>
+        //             </div>
 
-                </div>
-            </div>
-        </div>
+        //         </div>
+        //     </div>
+        // </div>
+<section className={styles.contactUs}>
+  <div className={styles.contactContainer}>
+<div className={styles.content}>
+
+  <h3 className={styles.contactTitle}>Contact Us</h3>
+
+  <div className={styles.contactInfo}>
+    <p>
+      <strong>Easy Coders</strong><br />
+      Technobren Infotech Pvt. Ltd<br />
+      City Tower, Varanasi - Lucknow Rd,<br />
+      Wazidpur, Jaunpur, Uttar Pradesh – 222002
+    </p>
+
+    <p className={styles.email}>
+      ✉️ easycoders1@gmail.com
+    </p>
+  </div>
+
+  <div className={styles.mapWrapper}>
+    <iframe
+      src="https://www.google.com/maps?q=jaunpur&output=embed"
+      loading="lazy"
+      referrerPolicy="no-referrer-when-downgrade"
+    ></iframe>
+  </div>
+
+</div>
+
+    <div className={styles.content}>
+<div className={styles.potential}>
+  <div className={styles.potentialInner}>
+    
+    <div className={styles.rocketBox}>
+      <img
+        src="https://cdn-icons-png.flaticon.com/512/3212/3212608.png"
+        alt="Rocket"
+      />
+    </div>
+
+    <div className={styles.potentialText}>
+      <h2>Unlock Your Potential.</h2>
+      <p>Learn to Code</p>
+    </div>
+
+  </div>
+</div>
+
+        Right Content</div>
+  </div>
+</section>
     );
 }

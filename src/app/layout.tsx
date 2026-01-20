@@ -27,7 +27,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
                     strategy="afterInteractive"
                 />
-                <NotificationPopup />
+                {/* <NotificationPopup /> */}
             </body>
         </html>
     );

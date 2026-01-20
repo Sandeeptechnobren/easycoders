@@ -1,193 +1,110 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import api from '@/lib/axios';
-import Loader from '../loader/page';
+import styles from './about.module.css';
+
+const trainersData = [
+  {
+    id: 1,
+    name: 'Rahul Sharma',
+    designation: 'Senior Web Development Trainer',
+    photo: 'https://randomuser.me/api/portraits/men/32.jpg',
+  },
+  {
+    id: 2,
+    name: 'Anjali Verma',
+    designation: 'React & Frontend Trainer',
+    photo: 'https://randomuser.me/api/portraits/women/44.jpg',
+  },
+  {
+    id: 3,
+    name: 'Amit Patel',
+    designation: 'Backend & Laravel Trainer',
+    photo: 'https://randomuser.me/api/portraits/men/56.jpg',
+  },
+];
 
 export default function AboutPage() {
-    const [about, setAbout] = useState<any>(null);
+  return (
+    <div className={styles.aboutPage}>
 
-    useEffect(() => {
-        api.get('/about').then(res => {
-            setAbout(res.data?.data ?? res.data);
-        });
-    }, []);
+      {/* ABOUT INTRO */}
+      <section className={styles.aboutSection}>
+        <h1 className={styles.mainTitle}>About Us</h1>
+        <p className={styles.subtitle}>
+          Building Skills. Shaping Careers. Empowering Futures.
+        </p>
 
-    if (!about) return <Loader />;
+        <p className={styles.description}>
+          We are a technology-focused training institute committed to transforming
+          beginners into confident, job-ready professionals. Our goal is not just
+          to teach tools or languages, but to build strong foundations,
+          problem-solving skills, and a real-world development mindset.
+        </p>
 
-    return (
-        <div
-            className="min-vh-100 py-5"
-            style={{ background: '#050505', color: 'white' }}
-        >
-            <div className="container">
-                <div
-                    className="rounded-4 mx-auto overflow-hidden"
-                    style={{
-                        maxWidth: '1000px',
-                        background: 'rgba(15,15,15,0.9)',
-                        border: '1px solid rgba(0,194,255,0.25)',
-                        boxShadow: '0 0 40px rgba(0,194,255,0.2)',
-                        backdropFilter: 'blur(6px)',
-                    }}
-                >
-                    {/* HERO IMAGE */}
-                    {about.image_url && (
-                        <div
-                            className="position-relative"
-                            style={{ height: '340px', overflow: 'hidden' }}
-                        >
-                            <img
-                                src={about.image_url}
-                                alt="About Easy Coders"
-                                className="w-100 h-100"
-                                style={{
-                                    objectFit: 'cover',
-                                    opacity: 0.85,
-                                }}
-                            />
-                            <div
-                                className="position-absolute top-0 start-0 w-100 h-100"
-                                style={{
-                                    background:
-                                        'linear-gradient(to bottom, rgba(0,0,0,0.4), rgba(0,0,0,0.9))',
-                                }}
-                            />
-                            <div className="position-absolute bottom-0 start-0 p-4 p-md-5">
-                                <h1
-                                    className="fw-bold"
-                                    style={{
-                                        color: '#14f4ff',
-                                        textShadow:
-                                            '0 0 20px rgba(20,244,255,0.6)',
-                                        fontSize: '2.6rem',
-                                    }}
-                                >
-                                    {about.title || 'About Easy Coders'}
-                                </h1>
-                            </div>
-                        </div>
-                    )}
+        <p className={styles.description}>
+          At our institute, learning goes beyond theory. Every concept is backed
+          by practical examples, live projects, and industry-oriented workflows
+          so that students understand how things actually work in real companies.
+        </p>
+      </section>
 
-                    {/* CONTENT */}
-                    <div className="p-4 p-md-5">
-                        {/* INTRO */}
-                        <p
-                            style={{
-                                fontSize: '1.15rem',
-                                lineHeight: '1.9',
-                                color: '#c9d1d9',
-                                whiteSpace: 'pre-line',
-                            }}
-                        >
-                            {about.content ||
-                                `Easy Coders is a future-focused training institute dedicated to transforming students into industry-ready professionals. 
-We believe that learning to code should be practical, structured, and aligned with real-world development workflows.`}
-                        </p>
+      {/* WHAT MAKES US DIFFERENT */}
+      <section className={styles.featuresSection}>
+        <h2 className={styles.sectionTitle}>What Makes Us Different</h2>
 
-                        {/* DIVIDER */}
-                        <div
-                            className="my-5"
-                            style={{
-                                height: '1px',
-                                background:
-                                    'linear-gradient(to right, transparent, #00c2ff, transparent)',
-                            }}
-                        />
+        <ul className={styles.featureList}>
+          <li>Industry-experienced trainers with real project exposure</li>
+          <li>Hands-on training with live coding and assignments</li>
+          <li>Structured learning paths from basics to advanced</li>
+          <li>Career-oriented approach aligned with industry needs</li>
+          <li>Personal mentoring and dedicated doubt-solving sessions</li>
+        </ul>
+      </section>
 
-                        {/* SECTIONS */}
-                        <div className="row g-4">
-                            {/* WHO WE ARE */}
-                            <div className="col-md-6">
-                                <h3 style={{ color: '#00c2ff' }}>
-                                    Who We Are
-                                </h3>
-                                <p
-                                    style={{
-                                        color: '#c9d1d9',
-                                        lineHeight: '1.8',
-                                    }}
-                                >
-                                    We are a team of passionate developers,
-                                    mentors, and industry professionals who
-                                    have worked on real production systems.
-                                    Our goal is to bridge the gap between
-                                    academic learning and professional
-                                    software development.
-                                </p>
-                            </div>
-
-                            {/* MISSION */}
-                            <div className="col-md-6">
-                                <h3 style={{ color: '#00c2ff' }}>
-                                    Our Mission
-                                </h3>
-                                <p
-                                    style={{
-                                        color: '#c9d1d9',
-                                        lineHeight: '1.8',
-                                    }}
-                                >
-                                    To empower students with practical coding
-                                    skills, strong fundamentals, and confidence
-                                    to build scalable applications, crack
-                                    interviews, and succeed in the tech
-                                    industry.
-                                </p>
-                            </div>
-
-                            {/* VISION */}
-                            <div className="col-md-6">
-                                <h3 style={{ color: '#00c2ff' }}>
-                                    Our Vision
-                                </h3>
-                                <p
-                                    style={{
-                                        color: '#c9d1d9',
-                                        lineHeight: '1.8',
-                                    }}
-                                >
-                                    We envision creating a learning ecosystem
-                                    where students don’t just learn languages,
-                                    but understand systems, architecture, and
-                                    real-world problem solving.
-                                </p>
-                            </div>
-
-                            {/* WHY US */}
-                            <div className="col-md-6">
-                                <h3 style={{ color: '#00c2ff' }}>
-                                    Why Choose Us
-                                </h3>
-                                <ul
-                                    style={{
-                                        color: '#c9d1d9',
-                                        lineHeight: '1.9',
-                                        paddingLeft: '1.2rem',
-                                    }}
-                                >
-                                    <li>Industry-oriented curriculum</li>
-                                    <li>Live project-based learning</li>
-                                    <li>Internship & job-ready training</li>
-                                    <li>Personal mentorship & guidance</li>
-                                    <li>Modern tools & best practices</li>
-                                </ul>
-                            </div>
-                        </div>
-
-                        {/* CTA */}
-                        <div className="text-center mt-5">
-                            <h4 style={{ color: '#14f4ff' }}>
-                                Learn. Build. Grow.
-                            </h4>
-                            <p style={{ color: '#c9d1d9' }}>
-                                Join Easy Coders and take the first step toward
-                                a successful tech career.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+      {/* MISSION & VISION */}
+      <section className={styles.missionVisionSection}>
+        <div className={styles.missionBox}>
+          <h3>Our Mission</h3>
+          <p>
+            To bridge the gap between academic learning and industry expectations
+            by delivering practical, affordable, and high-quality technical
+            education that prepares students for real-world challenges.
+          </p>
         </div>
-    );
+
+        <div className={styles.visionBox}>
+          <h3>Our Vision</h3>
+          <p>
+            To become a trusted learning partner for students and professionals
+            who want to build successful careers in technology through clarity,
+            consistency, and confidence.
+          </p>
+        </div>
+      </section>
+
+      {/* TRAINERS */}
+      <section className={styles.teamSection}>
+        <h2 className={styles.sectionTitle}> Our Team</h2>
+        <p className={styles.teamIntro}>
+          Our trainers are the backbone of our institute. Each trainer brings deep
+          technical expertise, industry exposure, and a passion for teaching.
+        </p>
+
+        {/* <div className={styles.trainerGrid}>
+          {trainersData.map(trainer => (
+            <div key={trainer.id} className={styles.trainerCard}>
+              <img
+                src={trainer.photo}
+                alt={trainer.name}
+                className={styles.trainerImage}
+              />
+              <h3 className={styles.trainerName}>{trainer.name}</h3>
+              <p className={styles.trainerRole}>{trainer.designation}</p>
+            </div>
+          ))}
+        </div> */}
+      </section>
+
+    </div>
+  );
 }

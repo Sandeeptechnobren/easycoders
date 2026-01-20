@@ -84,7 +84,7 @@ body {
     align-items: center;   
 } */
 .introSection {
-    margin: 0;
+    /* margin-top: 50px; */
     height: 400px;
 
     background-image: url('/images/introSectionBackground.png');
@@ -96,6 +96,8 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
+        border-radius: 0px 0px 40px 40px ;
+
 }
 
 /* Overlay that blurs the SAME background */
@@ -112,6 +114,9 @@ body {
     -webkit-backdrop-filter: blur(3px);
 
     padding: 20px;
+        border-radius: 0px 0px 40px 40px ;
+
+
 }
 
 
@@ -127,6 +132,8 @@ body {
     font-family:Arial, Helvetica, sans-serif;
     font-weight: 900;
     color: white;
+    border-radius: 0px 0px 40px 40px ;
+
     
     
 }
@@ -137,6 +144,8 @@ body {
     background-position: center;
     background-repeat: no-repeat;
     margin: 100px;
+    border-radius: 0px 0px 20px 20px ;
+
 }
 .searchBox {
     margin-top: 20px;
@@ -265,7 +274,7 @@ body {
 }
 
 .enrollBtn {
-    background: #6b5cff;
+    background: #8B5CF6;
     color: #fff;
     border: none;
     border-radius: 10px;

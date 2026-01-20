@@ -9,6 +9,7 @@
     backdrop-filter: blur(10px);
     border-bottom: 1px solid rgba(0, 194, 255, 0.1);
     border-radius: 0px 0px 20px 20px;
+    
 }
 
 .logoutBtn {

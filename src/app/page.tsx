@@ -30,7 +30,7 @@ export default function HomePage() {
         title: 'Job Oriented Training',
         rating: 4.9,
         views: '150k Views',
-        image:'https://online.stanford.edu/sites/default/files/styles/embedded_large/public/2018-03/cs_programminglanguage_cs242.jpg?itok=OMscvbtw'
+        image:'https://5.imimg.com/data5/SELLER/Default/2022/2/HT/KM/QN/93804707/job-oriented-training1.png'
       },
       {
         id: 4,
@@ -38,7 +38,7 @@ export default function HomePage() {
         title: 'Language Training',
         rating: 4.6,
         views: '189k Views',
-        image:'https://5.imimg.com/data5/SELLER/Default/2022/2/HT/KM/QN/93804707/job-oriented-training1.png'
+        image:'https://online.stanford.edu/sites/default/files/styles/embedded_large/public/2018-03/cs_programminglanguage_cs242.jpg?itok=OMscvbtw'
       }
     ]);
   }, []);
@@ -99,7 +99,7 @@ export default function HomePage() {
               feedback:
                 "Easy Coders helped me move from basics to building real-world projects confidently.",
               rating: 5,
-              image: "https://randomuser.me/api/portraits/men/32.jpg",
+              // image: "https://randomuser.me/api/portraits/men/32.jpg",
             },
             {
               id: 2,
@@ -108,7 +108,7 @@ export default function HomePage() {
               feedback:
                 "The learning approach is practical and industry-focused. Highly recommended!",
               rating: 5,
-              image: "https://randomuser.me/api/portraits/women/44.jpg",
+              // image: "https://randomuser.me/api/portraits/women/44.jpg",
             },
             {
               id: 3,
@@ -117,13 +117,13 @@ export default function HomePage() {
               feedback:
                 "Clear explanations, hands-on coding, and great mentorship throughout the journey.",
               rating: 4.8,
-              image: "https://randomuser.me/api/portraits/men/76.jpg",
+              // image: "https://randomuser.me/api/portraits/men/76.jpg",
             },
           ].map(testimonial => (
             <div className="courseCard testimonialCard" key={testimonial.id}>
 
               <div className="testimonialImage">
-                <img src={testimonial.image} alt={testimonial.name} />
+                {/* <img src={testimonial.image} alt={testimonial.name} /> */}
               </div>
 
               <h3 className="cardTitle">{testimonial.name}</h3>
