@@ -6,12 +6,13 @@ import { usePathname, useRouter } from 'next/navigation';
 import styles from './Navbar.module.css';
 import { useAuth } from '@/context/AuthContext';
 type NavLink =
-  | {
+  {
     name: string;
     href: string;
     onClick?: undefined;
-  }
-  | {
+  }| 
+  
+  {
     name: string;
     href?: undefined;
     onClick: () => void;
@@ -23,13 +24,13 @@ export default function Navbar() {
   const router = useRouter();
 
   const [isOpen, setIsOpen] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
+  // const [isScrolled, setIsScrolled] = useState(false);
 
-  useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 10);
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  // useEffect(() => {
+  //   const handleScroll = () => setIsScrolled(window.scrollY > 10);
+  //   window.addEventListener('scroll', handleScroll);
+  //   return () => window.removeEventListener('scroll', handleScroll);
+  // }, []);
 
   const handleLogout = () => {
     logout();
@@ -40,7 +41,7 @@ export default function Navbar() {
 
   const commonLinks: NavLink[] = [
     { name: 'Home', href: '/' },
-    { name: 'Courses', href: '/courses' },
+    // { name: 'Courses', href: '/courses' },
     { name: 'About Us', href: '/about' },
     { name: 'Contact Us', href: '/contactus' },
   ];
@@ -82,14 +83,13 @@ export default function Navbar() {
           : guestLinks;
 
   return (
-    <nav className={`${styles.navbar} ${isScrolled ? styles.scrolled : ''}`}>
+    <nav className={`${styles.navbar}`}>
       <div className={styles.container}>
-        <div className={styles.logo}>
-          <img src="/images/eclogo.png" alt="Easy Coders Logo" />
-          <span className={styles.brandText}>Easy Coders</span>
+        <div className={styles.logo} >
+          <img src="/images/fullnobackground.png" alt="Easy Coders Logo" />
+          {/* <span className={styles.brandText}> &nbsp;Easy Coders</span> */}
         </div>
 
-        {/* Desktop Menu */}
         <div className={styles.desktopMenu}>
           {navLinks.map((link) =>
             link.onClick ? (
