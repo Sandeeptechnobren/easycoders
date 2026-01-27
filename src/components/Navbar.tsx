@@ -24,13 +24,13 @@ export default function Navbar() {
   const router = useRouter();
 
   const [isOpen, setIsOpen] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
+  // const [isScrolled, setIsScrolled] = useState(false);
 
-  useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 10);
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  // useEffect(() => {
+  //   const handleScroll = () => setIsScrolled(window.scrollY > 10);
+  //   window.addEventListener('scroll', handleScroll);
+  //   return () => window.removeEventListener('scroll', handleScroll);
+  // }, []);
 
   const handleLogout = () => {
     logout();
@@ -83,11 +83,11 @@ export default function Navbar() {
           : guestLinks;
 
   return (
-    <nav className={`${styles.navbar} ${isScrolled ? styles.scrolled : ''}`}>
+    <nav className={`${styles.navbar}`}>
       <div className={styles.container}>
         <div className={styles.logo} >
-          <img src="/images/eclogo.png" alt="Easy Coders Logo" />
-          <span className={styles.brandText}> &nbsp;Easy Coders</span>
+          <img src="/images/fullnobackground.png" alt="Easy Coders Logo" />
+          {/* <span className={styles.brandText}> &nbsp;Easy Coders</span> */}
         </div>
 
         <div className={styles.desktopMenu}>

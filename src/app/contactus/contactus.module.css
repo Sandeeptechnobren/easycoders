@@ -1,0 +1,114 @@
+.contactUs {
+  background-color: #f3f4f6;
+  padding: 60px 40px;
+  min-height: 400px;
+  color: #fff;
+
+  display: flex;
+  justify-content: center;
+}
+
+.contactContainer {
+  max-width: 1200px;
+  width: 100%;
+
+  display: flex;
+  gap: 40px;
+}
+
+/* .content {
+  flex: 1;
+  background: aqua;
+  padding: 30px;
+  border-radius: 12px;
+} */
+.content {
+  flex: 1;
+  background: rgb(248, 250, 250);
+  padding: 30px;
+  border-radius: 14px;
+  color: #071625;
+
+}
+
+.contactTitle {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 18px;
+   color: #071625;
+
+}
+
+.contactInfo {
+  font-size: 15px;
+  line-height: 1.7;
+  margin-bottom: 20px;
+}
+
+.contactInfo strong {
+  font-size: 16px;
+  color: #071625;
+
+}
+
+.email {
+  margin-top: 10px;
+  font-weight: 500;
+  color: #9fd3ff;
+}
+
+/* Map */
+.mapWrapper {
+  width: 100%;
+  height: 220px; 
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.mapWrapper iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.potential {
+  padding: 20px;
+}
+
+.potentialInner {
+  height: 200px;
+  background: linear-gradient(135deg, #add2c6, #c7e2d3);
+  border-radius: 32px;
+
+  display: flex;
+  align-items: center;
+  padding: 0 50px;
+
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+}
+
+/* Rocket */
+.rocketBox {
+  flex-shrink: 0;
+  margin-right: 40px;
+}
+
+.rocketBox img {
+  width: 120px;
+  height: auto;
+}
+
+/* Text */
+.potentialText h2 {
+  font-size: 32px;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 6px;
+}
+
+.potentialText p {
+  font-size: 20px;
+  font-weight: 500;
+  color: #f3f1ff;
+}
