@@ -87,7 +87,7 @@ body {
     /* margin-top: 50px; */
     height: 400px;
 
-    background-image: url('/images/introSectionBackground.png');
+    background-image: url('/images/demo.jpeg');
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
@@ -100,7 +100,7 @@ body {
 
 }
 
-/* Overlay that blurs the SAME background */
+
 .transparentDiv {
     position: absolute;
     inset: 0; /* top:0 right:0 bottom:0 left:0 */
@@ -109,7 +109,7 @@ body {
     justify-content: center;
     align-items: center;
 
-    background: rgba(0, 0, 0, 0.25); /* translucent layer */
+    background: rgba(.1, .10, 0, 0.30); /* translucent layer */
     backdrop-filter: blur(3px);
     -webkit-backdrop-filter: blur(3px);
 
@@ -282,6 +282,57 @@ body {
     font-size: 13px;
     cursor: pointer;
 }
+/* ===== Premium Form System ===== */
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.formLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: #444;
+}
+
+.formInput {
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1.5px solid #d1d5db;
+  font-size: 14px;
+  outline: none;
+  transition: all 0.2s ease;
+  background: #fff;
+}
+
+.formInput:focus {
+  border-color: #8B5CF6;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
+}
+
+.formInput::placeholder {
+  color: #9ca3af;
+}
+
+.formButton {
+  margin-top: 10px;
+  background: linear-gradient(135deg, #8B5CF6, #6D28D9);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.formButton:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 20px rgba(139, 92, 246, 0.3);
+}
+
 /* Testimonial tweaks */
 .testimonialCard {
     text-align: center;

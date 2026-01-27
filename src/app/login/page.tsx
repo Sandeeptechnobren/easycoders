@@ -15,7 +15,6 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     try {
       const response = await api.post('/login', { email, password });
 
@@ -23,18 +22,13 @@ export default function LoginPage() {
       const user = response.data.data.user;
       const role = user.role;
 
-      // Save to localStorage
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
       localStorage.setItem('role', role);
 
-      // Update context so navbar reloads immediately
       login(role);
-
-      // Set Authorization header
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 
-      // Redirect based on role
       if (role === 1) router.push('/admin');
       else if (role === 4) router.push('/trainer');
       else if (role === 3) router.push('/student');
@@ -46,85 +40,139 @@ export default function LoginPage() {
   };
 
   return (
-    <div
-      className="min-vh-100 d-flex align-items-center justify-content-center"
-      style={{ background: "#050505", color: "white" }}
-    >
-      <div
-        className="p-4 p-md-5 rounded-4 shadow-lg"
-        style={{
-          width: "380px",
-          background: "rgba(15,15,15,0.85)",
-          border: "1px solid rgba(0,194,255,0.25)",
-          boxShadow: "0 0 25px rgba(0,194,255,0.15)",
-          backdropFilter: "blur(6px)",
-        }}
-      >
-        <h2
-          className="text-center fw-bold mb-4"
-          style={{
-            color: "#00c2ff",
-            textShadow: "0 0 12px rgba(0,194,255,0.5)",
-          }}
-        >
-          Login
-        </h2>
+    <div className="min-h-screen">
 
-        {error && (
-          <div className="alert alert-danger text-center py-2">
-            {error}
+      {/* HERO */}
+      <section className="introSection">
+        <div className="transparentDiv">
+          <div style={{ display: 'flex', width: '100%', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className="internalIntro" style={{ alignItems: 'flex-start', textAlign: 'left' }}>
+              <h1 style={{ fontSize: '42px', fontWeight: 900 }}>
+                Welcome Back 👋
+              </h1>
+              <p style={{ marginTop: 10, maxWidth: 450 }}>
+                Login to continue your learning journey with EasyCoders.
+              </p>
+            </div>
+
+            <div className="internalIntro introImage" />
           </div>
-        )}
+        </div>
+      </section>
 
-        <form onSubmit={handleSubmit}>
-          <div className="mb-3">
-            <label className="form-label">Email</label>
+      {/* <section className="description" style={{ display: 'flex', justifyContent: 'center' }}>
+
+        <div className="courseCard" style={{ width: 400 }}>
+          <h2 className="sectionTitle">Login</h2>
+
+          {error && (
+            <div style={{ color: 'red', marginBottom: 10, textAlign: 'center' }}>
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             <input
               type="email"
-              className="form-control bg-dark text-white border-secondary"
+              placeholder="Email Address"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              style={{ borderRadius: "8px" }}
+              className="searchInput"
             />
-          </div>
 
-          <div className="mb-4">
-            <label className="form-label">Password</label>
             <input
               type="password"
-              className="form-control bg-dark text-white border-secondary"
+              placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              style={{ borderRadius: "8px" }}
+              className="searchInput"
             />
-          </div>
 
-          <button
-            type="submit"
-            className="btn w-100 fw-bold py-2"
-            style={{
-              background: "#00c2ff",
-              color: "#000",
-              borderRadius: "10px",
-              boxShadow: "0 0 15px rgba(0,194,255,0.5)",
-            }}
-          >
-            Login
-          </button>
-        </form>
+            <button
+              type="submit"
+              className="enrollBtn"
+              style={{ marginTop: 10 }}
+            >
+              Login →
+            </button>
+          </form>
 
-        <p className="mt-3 text-center">
-          Don't have an account?{" "}
-          <Link
-            href="/contactus"
-            style={{ color: "#14f4ff", textDecoration: "none" }}
-          >
-            Contact Us
-          </Link>
-        </p>
+          <p style={{ marginTop: 20, textAlign: 'center' }}>
+            Don’t have an account?{' '}
+            <Link href="/contactus" style={{ color: '#8B5CF6', fontWeight: 600 }}>
+              Contact Us
+            </Link>
+          </p>
+        </div>
+
+      </section> */}
+      <section className="description" style={{ display: 'flex', justifyContent: 'center' }}>
+  <div className="courseCard" style={{ width: 420 }}>
+    
+    <h2 className="sectionTitle" style={{ textAlign: 'center' }}>
+      Welcome Back
+    </h2>
+
+    <p style={{ textAlign: 'center', color: '#666', marginBottom: 20 }}>
+      Login to continue your learning journey
+    </p>
+
+    {error && (
+      <div style={{ 
+        color: '#b91c1c', 
+        background: '#fee2e2', 
+        padding: '8px 12px', 
+        borderRadius: 8,
+        marginBottom: 12,
+        textAlign: 'center',
+        fontSize: 13
+      }}>
+        {error}
       </div>
+    )}
+
+    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+      
+      <div className="formGroup">
+        <label className="formLabel">Email Address</label>
+        <input
+          type="email"
+          placeholder="you@example.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+          className="formInput"
+        />
+      </div>
+
+      <div className="formGroup">
+        <label className="formLabel">Password</label>
+        <input
+          type="password"
+          placeholder="Enter your password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+          className="formInput"
+        />
+      </div>
+
+      <button type="submit" className="formButton">
+        Login →
+      </button>
+    </form>
+
+    <p style={{ marginTop: 20, textAlign: 'center', fontSize: 14 }}>
+      Don’t have an account?{' '}
+      <Link href="/contactus" style={{ color: '#8B5CF6', fontWeight: 600 }}>
+        Contact Us
+      </Link>
+    </p>
+  </div>
+</section>
+
     </div>
   );
 }

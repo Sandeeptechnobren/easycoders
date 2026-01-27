@@ -41,7 +41,7 @@ export default function Navbar() {
 
   const commonLinks: NavLink[] = [
     { name: 'Home', href: '/' },
-    // { name: 'Courses', href: '/courses' },
+    { name: 'Courses', href: '/courses' },
     { name: 'About Us', href: '/about' },
     { name: 'Contact Us', href: '/contactus' },
   ];

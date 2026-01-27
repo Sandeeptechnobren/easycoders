@@ -6,200 +6,128 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import Loader from '../loader/page';
 
+const COURSE_IMAGES = [
+  'https://images.unsplash.com/photo-1517694712202-14dd9538aa97', // coding
+  'https://images.unsplash.com/photo-1555066931-4365d14bab8c', // laptop
+  'https://images.unsplash.com/photo-1587620962725-abab7fe55159', // dev
+  'https://images.unsplash.com/photo-1522202176988-66273c2fd55f', // teamwork
+  'https://images.unsplash.com/photo-1498050108023-c5249f4df085', // programming
+  'https://images.unsplash.com/photo-1531482615713-2afd69097998', // ai
+  'https://images.unsplash.com/photo-1519389950473-47ba0277781c', // tech
+];
+
 function CoursesList() {
-    const [courses, setCourses] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
+  const [courses, setCourses] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-    const searchParams = useSearchParams();
-    const categoryId = searchParams.get('category');
+  const searchParams = useSearchParams();
+  const categoryId = searchParams.get('category');
 
-    useEffect(() => {
-        setLoading(true);
+  useEffect(() => {
+    setLoading(true);
+    const endpoint = categoryId
+      ? `/courses?category_id=${categoryId}`
+      : '/courses';
 
-        const endpoint = categoryId
-            ? `/courses?category_id=${categoryId}`
-            : '/courses';
+    api.get(endpoint)
+      .then(res => setCourses(res.data?.data ?? res.data))
+      .catch(() => setCourses([]))
+      .finally(() => setLoading(false));
+  }, [categoryId]);
 
-        api.get(endpoint)
-            .then(res => {
-                setCourses(res.data?.data ?? res.data);
-            })
-            .catch(() => setCourses([]))
-            .finally(() => setLoading(false));
-    }, [categoryId]);
+  if (loading) return <Loader />;
 
-    if (loading) return <Loader />;
+  const groupedCourses = courses.reduce((acc: any, course: any) => {
+    const categoryName = course.category?.name || 'Other';
+    if (!acc[categoryName]) acc[categoryName] = [];
+    acc[categoryName].push(course);
+    return acc;
+  }, {});
 
-    /* ============================
-       GROUP COURSES BY CATEGORY
-    ============================ */
-    const groupedCourses = courses.reduce((acc: any, course: any) => {
-        const categoryName = course.category?.name || 'Other';
-        if (!acc[categoryName]) acc[categoryName] = [];
-        acc[categoryName].push(course);
-        return acc;
-    }, {});
+  return (
+    <div className="d-flex flex-column gap-5">
+      {Object.entries(groupedCourses).map(
+        ([categoryName, categoryCourses]: any) => (
+          <div key={categoryName}>
 
-    return (
-        <div className="d-flex flex-column gap-5">
-            {Object.entries(groupedCourses).map(
-                ([categoryName, categoryCourses]: any) => (
-                    <div key={categoryName}>
-                        {/* CATEGORY HEADER */}
-                        <div
-                            className="mb-4 px-4 py-3 rounded-3"
-                            style={{
-                                background: 'rgba(0,194,255,0.12)',
-                                borderLeft: '5px solid #00c2ff',
-                                boxShadow: '0 0 12px rgba(0,194,255,0.15)',
-                            }}
-                        >
-                            <h2
-                                className="mb-0 fw-bold"
-                                style={{
-                                    color: '#00c2ff',
-                                    letterSpacing: '0.5px',
-                                }}
-                            >
-                                {categoryName}
-                                <span
-                                    className="ms-3"
-                                    style={{
-                                        fontSize: '0.9rem',
-                                        color: '#9ca3af',
-                                    }}
-                                >
-                                    ({categoryCourses.length} Courses)
-                                </span>
-                            </h2>
-                        </div>
+            <h2 className="sectionTitle">
+              {categoryName} ({categoryCourses.length})
+            </h2>
 
-                        {/* COURSES GRID */}
-                        <div className="row g-4">
-                            {categoryCourses.map((course: any) => (
-                                <div
-                                    key={course.id}
-                                    className="col-12 col-md-4"
-                                >
-                                    <div
-                                        className="rounded-4 h-100 position-relative"
-                                        style={{
-                                            background:
-                                                'rgba(15, 15, 15, 0.85)',
-                                            border:
-                                                '1px solid rgba(0,194,255,0.18)',
-                                            boxShadow:
-                                                '0 0 20px rgba(0,194,255,0.1)',
-                                            backdropFilter: 'blur(6px)',
-                                            transition: '0.3s ease',
-                                            padding: '1.5rem',
-                                            paddingTop: course.offer
-                                                ? '3.2rem'
-                                                : '1.5rem', // ✅ SPACE FOR BADGE
-                                        }}
-                                    >
-                                        {/* OFFER BADGE */}
-                                        {course.offer && (
-                                            <span
-                                                style={{
-                                                    position: 'absolute',
-                                                    top: '12px',
-                                                    right: '12px',
-                                                    zIndex: 2,
-                                                    background:
-                                                        'linear-gradient(135deg, #ff9800, #ff5722)',
-                                                    color: '#000',
-                                                    padding:
-                                                        '6px 12px',
-                                                    fontSize:
-                                                        '0.7rem',
-                                                    fontWeight: 700,
-                                                    borderRadius:
-                                                        '20px',
-                                                    boxShadow:
-                                                        '0 0 12px rgba(255,152,0,0.6)',
-                                                    textTransform:
-                                                        'uppercase',
-                                                    whiteSpace:
-                                                        'nowrap',
-                                                }}
-                                            >
-                                                {course.offer}
-                                            </span>
-                                        )}
+            <div className="cardGrid">
+              {categoryCourses.map((course: any, index: number) => (
+                <div className="courseCard" key={course.id}>
+                  
+                  {course.offer && (
+                    <span className="badge">{course.offer}</span>
+                  )}
 
-                                        {/* COURSE TITLE */}
-                                        <h4 className="fw-bold mb-2">
-                                            {course.title}
-                                        </h4>
+                  <div className="cardImage">
+                    <img
+                      src={
+                        course.image ||
+                        COURSE_IMAGES[index % COURSE_IMAGES.length] + '?w=400&h=300&fit=crop'
+                      }
+                      alt={course.title}
+                    />
+                  </div>
 
-                                        {/* DESCRIPTION */}
-                                        <p
-                                            style={{
-                                                fontSize: '0.95rem',
-                                                color: '#c9d1d9',
-                                            }}
-                                        >
-                                            {course.description?.length >
-                                                120
-                                                ? course.description.slice(
-                                                    0,
-                                                    120
-                                                ) + '...'
-                                                : course.description}
-                                        </p>
+                  <h3 className="cardTitle">{course.title}</h3>
 
-                                        {/* ACTION */}
-                                        <div className="mt-4">
-                                            <Link
-                                                href={`/courses/${course.id}`}
-                                                className="btn fw-bold px-3 py-2"
-                                                style={{
-                                                    background:
-                                                        '#00c2ff',
-                                                    color: '#000',
-                                                    borderRadius:
-                                                        '8px',
-                                                    boxShadow:
-                                                        '0 0 15px rgba(0,194,255,0.4)',
-                                                }}
-                                            >
-                                                View Details →
-                                            </Link>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )
-            )}
-        </div>
-    );
+                  <p className="testimonialText">
+                    {course.description?.length > 90
+                      ? course.description.slice(0, 90) + '...'
+                      : course.description}
+                  </p>
+
+                  <div className="cardFooter">
+                    <span className="views">
+                      {course.duration || 'Self paced'}
+                    </span>
+
+                    <Link href={`/courses/${course.id}`}>
+                      <button className="enrollBtn">
+                        Explore →
+                      </button>
+                    </Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )
+      )}
+    </div>
+  );
 }
 
 export default function CoursesPage() {
-    return (
-        <div
-            className="min-vh-100 py-5"
-            style={{ background: '#050505', color: 'white' }}
-        >
-            <div className="container">
-                <h1
-                    className="fw-bold mb-5 text-center"
-                    style={{
-                        color: '#00c2ff',
-                        textShadow:
-                            '0 0 12px rgba(0,194,255,0.4)',
-                    }}
-                >
-                    Available Courses
-                </h1>
+  return (
+    <div className="min-h-screen">
 
-                <Suspense fallback={<div>Loading...</div>}>
-                    <CoursesList />
-                </Suspense>
+      <section className="introSection">
+        <div className="transparentDiv">
+          <div style={{ display: 'flex', width: '100%', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className="internalIntro" style={{ alignItems: 'flex-start', textAlign: 'left' }}>
+              <h1 style={{ fontSize: '42px', fontWeight: 900 }}>
+                Explore Our Courses
+              </h1>
+              <p style={{ marginTop: 10, maxWidth: 450 }}>
+                Learn industry-ready skills with practical,
+                project-based training.
+              </p>
             </div>
+
+            <div className="internalIntro introImage" />
+          </div>
         </div>
-    );
+      </section>
+
+      <section className="description">
+        <Suspense fallback={<Loader />}>
+          <CoursesList />
+        </Suspense>
+      </section>
+    </div>
+  );
 }

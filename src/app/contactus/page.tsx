@@ -1,203 +1,206 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import api from "@/lib/axios";
 import { useRouter } from "next/navigation";
-import styles from './contactus.module.css'
 
 export default function ContactUs() {
-    const [name, setName] = useState("");
-    const [email, setEmail] = useState("");
-    const [message, setMessage] = useState("");
-    const [submitting, setSubmitting] = useState(false);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [message, setMessage] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-    const router = useRouter();
+  const router = useRouter();
 
-    useEffect(() => {
-        document.title = "Contact Us";
-    }, []);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      setSubmitting(true);
+      await api.post("/contact", { name, email, message });
+      alert("Thank you! We will contact you shortly.");
+      router.push("/");
+    } catch {
+      alert("Something went wrong.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        try {
-            setSubmitting(true);
-            await api.post("/contact", { name, email, message });
-            alert("Thank you! We will contact you shortly.");
-            router.push("/");
-        } catch (error) {
-            console.error(error);
-            alert("Something went wrong. Please try again.");
-        } finally {
-            setSubmitting(false);
-        }
-    };
+  return (
+    <div className="min-h-screen">
 
-    return (
-        // <div
-        //     className="min-vh-100 py-5"
-        //     style={{ background: "#050505", color: "white" }}
-        // >
-        //     <div className="container">
-        //         <div className="row g-4 align-items-stretch">
+      {/* HERO */}
+      <section className="introSection">
+        <div className="transparentDiv">
+          <div style={{ display: "flex", width: "100%", justifyContent: "space-between", alignItems: "center" }}>
+            <div className="internalIntro" style={{ alignItems: "flex-start", textAlign: "left" }}>
+              <h1 style={{ fontSize: "42px", fontWeight: 900 }}>
+                Let’s Talk 👋
+              </h1>
+              <p style={{ marginTop: 10, maxWidth: 450 }}>
+                Have questions about courses, training or careers?  
+                Our team is here to help you.
+              </p>
+            </div>
 
-        //             {/* LEFT COLUMN – MAP & ADDRESS */}
-        //             <div className="col-lg-6">
-        //                 <div
-        //                     className="h-100 p-4 rounded-4"
-        //                     style={{
-        //                         background: "rgba(15,15,15,0.9)",
-        //                         border: "1px solid rgba(0,194,255,0.25)",
-        //                         boxShadow: "0 0 30px rgba(0,194,255,0.15)",
-        //                     }}
-        //                 >
-        //                     <h3
-        //                         className="fw-bold mb-3"
-        //                         style={{ color: "#00c2ff" }}
-        //                     >
-        //                         Our Location
-        //                     </h3>
+            <div className="internalIntro introImage" />
+          </div>
+        </div>
+      </section>
 
-        //                     <p className="mb-3" style={{ color: "#c9d1d9" }}>
-        //                         Easy Coders- Technobren Infotech Pvt. Ltd<br />
-        //                         City Tower, Varanasi - Lucknow Rd, Wazidpur,<br /> Jaunpur, Uttar Pradesh<br /> 222002<br />
-        //                         ✉️ easycoders1@gmail.com
-        //                     </p>
+      {/* CONTENT */}
+      <section className="description">
 
-        //                     <div className="ratio ratio-16x9 rounded overflow-hidden">
-        //                         <iframe
-        //                             src="https://www.google.com/maps?q=jaunpur&output=embed"
-        //                             loading="lazy"
-        //                             referrerPolicy="no-referrer-when-downgrade"
-        //                         ></iframe>
-        //                     </div>
-        //                 </div>
-        //             </div>
+        <div className="cardGrid">
 
-        //             {/* RIGHT COLUMN – CONTACT FORM */}
-        //             <div className="col-lg-6">
-        //                 <div
-        //                     className="h-100 p-4 p-md-5 rounded-4"
-        //                     style={{
-        //                         background: "rgba(15,15,15,0.9)",
-        //                         border: "1px solid rgba(0,194,255,0.25)",
-        //                         boxShadow: "0 0 30px rgba(0,194,255,0.15)",
-        //                     }}
-        //                 >
-        //                     <h3
-        //                         className="fw-bold mb-4 text-center"
-        //                         style={{ color: "#00c2ff" }}
-        //                     >
-        //                         Contact Us
-        //                     </h3>
+          {/* LEFT – INFO */}
+          <div className="courseCard">
+            <h3 className="cardTitle">Our Office</h3>
 
-        //                     <form onSubmit={handleSubmit} className="row g-3">
-        //                         <div className="col-12">
-        //                             <label className="form-label">Full Name</label>
-        //                             <input
-        //                                 type="text"
-        //                                 className="form-control bg-dark text-white"
-        //                                 value={name}
-        //                                 onChange={(e) => setName(e.target.value)}
-        //                                 required
-        //                             />
-        //                         </div>
+            <p className="testimonialText">
+              <strong>Easy Coders</strong><br />
+              Technobren Infotech Pvt. Ltd<br />
+              City Tower, Varanasi - Lucknow Rd,<br />
+              Wazidpur, Jaunpur, Uttar Pradesh – 222002
+            </p>
 
-        //                         <div className="col-12">
-        //                             <label className="form-label">Email Address</label>
-        //                             <input
-        //                                 type="email"
-        //                                 className="form-control bg-dark text-white"
-        //                                 value={email}
-        //                                 onChange={(e) => setEmail(e.target.value)}
-        //                                 required
-        //                             />
-        //                         </div>
+            <p className="testimonialText">
+              ✉️ easycoders1@gmail.com
+            </p>
 
-        //                         <div className="col-12">
-        //                             <label className="form-label">Message</label>
-        //                             <textarea
-        //                                 className="form-control bg-dark text-white"
-        //                                 rows={5}
-        //                                 value={message}
-        //                                 onChange={(e) => setMessage(e.target.value)}
-        //                                 required
-        //                             ></textarea>
-        //                         </div>
+            <div style={{ borderRadius: 14, overflow: "hidden", marginTop: 15 }}>
+              <iframe
+                src="https://www.google.com/maps?q=jaunpur&output=embed"
+                height="220"
+                style={{ border: 0, width: "100%" }}
+                loading="lazy"
+              />
+            </div>
+          </div>
 
-        //                         <div className="col-12 text-center mt-4">
-        //                             <button
-        //                                 type="submit"
-        //                                 disabled={submitting}
-        //                                 className="btn fw-bold px-5 py-3"
-        //                                 style={{
-        //                                     background: submitting
-        //                                         ? "#555"
-        //                                         : "linear-gradient(135deg, #00c2ff, #00ff9d)",
-        //                                     color: "#000",
-        //                                     borderRadius: "12px",
-        //                                     fontSize: "1.05rem",
-        //                                 }}
-        //                             >
-        //                                 {submitting ? "Submitting..." : "Send Message →"}
-        //                             </button>
-        //                         </div>
-        //                     </form>
-        //                 </div>
-        //             </div>
+          {/* RIGHT – FORM */}
+          {/* <div className="courseCard">
+            <h3 className="cardTitle">Send Us a Message</h3>
 
-        //         </div>
-        //     </div>
-        // </div>
-<section className={styles.contactUs}>
-  <div className={styles.contactContainer}>
-<div className={styles.content}>
+            <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              <input
+                placeholder="Full Name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                className="searchInput"
+              />
 
-  <h3 className={styles.contactTitle}>Contact Us</h3>
+              <input
+                placeholder="Email Address"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="searchInput"
+              />
 
-  <div className={styles.contactInfo}>
-    <p>
-      <strong>Easy Coders</strong><br />
-      Technobren Infotech Pvt. Ltd<br />
-      City Tower, Varanasi - Lucknow Rd,<br />
-      Wazidpur, Jaunpur, Uttar Pradesh – 222002
-    </p>
+              <textarea
+                placeholder="Your Message"
+                rows={4}
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                required
+                className="searchInput"
+                style={{ borderRadius: 14 }}
+              />
 
-    <p className={styles.email}>
-      ✉️ easycoders1@gmail.com
-    </p>
-  </div>
+              <button
+                type="submit"
+                disabled={submitting}
+                className="enrollBtn"
+                style={{ alignSelf: "flex-end", padding: "10px 20px" }}
+              >
+                {submitting ? "Sending..." : "Send Message"}
+              </button>
+            </form>
+          </div> */}
+          <div className="courseCard">
+  <h3 className="cardTitle" style={{ textAlign: "center" }}>
+    Send Us a Message
+  </h3>
 
-  <div className={styles.mapWrapper}>
-    <iframe
-      src="https://www.google.com/maps?q=jaunpur&output=embed"
-      loading="lazy"
-      referrerPolicy="no-referrer-when-downgrade"
-    ></iframe>
-  </div>
+  <p style={{ textAlign: "center", color: "#666", marginBottom: 20 }}>
+    Have a question? Fill the form and our team will reach out.
+  </p>
 
-</div>
-
-    <div className={styles.content}>
-<div className={styles.potential}>
-  <div className={styles.potentialInner}>
-    
-    <div className={styles.rocketBox}>
-      <img
-        src="https://cdn-icons-png.flaticon.com/512/3212/3212608.png"
-        alt="Rocket"
+  <form
+    onSubmit={handleSubmit}
+    style={{ display: "flex", flexDirection: "column", gap: 18 }}
+  >
+    <div className="formGroup">
+      <label className="formLabel">Full Name</label>
+      <input
+        placeholder="Enter your full name"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        required
+        className="formInput"
       />
     </div>
 
-    <div className={styles.potentialText}>
-      <h2>Unlock Your Potential.</h2>
-      <p>Learn to Code</p>
+    <div className="formGroup">
+      <label className="formLabel">Email Address</label>
+      <input
+        type="email"
+        placeholder="you@example.com"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        required
+        className="formInput"
+      />
     </div>
 
-  </div>
+    <div className="formGroup">
+      <label className="formLabel">Message</label>
+      <textarea
+        placeholder="Write your message here..."
+        rows={4}
+        value={message}
+        onChange={(e) => setMessage(e.target.value)}
+        required
+        className="formInput"
+        style={{ resize: "none" }}
+      />
+    </div>
+
+    <button
+      type="submit"
+      disabled={submitting}
+      className="formButton"
+      style={{ alignSelf: "flex-end", padding: "10px 24px" }}
+    >
+      {submitting ? "Sending..." : "Send Message →"}
+    </button>
+  </form>
 </div>
 
-        Right Content</div>
-  </div>
-</section>
-    );
+        </div>
+
+        {/* CTA STRIP */}
+        <div
+          className="courseCard"
+          style={{
+            marginTop: 40,
+            textAlign: "center",
+            background: "linear-gradient(135deg, #8B5CF6, #6D28D9)",
+            color: "white"
+          }}
+        >
+          <h2 style={{ fontSize: 24, fontWeight: 800 }}>
+            Ready to start your coding journey?
+          </h2>
+          <p style={{ opacity: 0.9, marginTop: 8 }}>
+            Explore our courses and become job-ready.
+          </p>
+        </div>
+
+      </section>
+    </div>
+  );
 }
