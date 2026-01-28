@@ -1,201 +1,138 @@
 'use client';
-
+import RoleGuard from '@/components/RoleGuard';
 import { useEffect, useState } from 'react';
 import api from '@/lib/axios';
 import { useRouter } from 'next/navigation';
-import AdminAttendanceSettings from '@/components/AdminAttendanceSettings';
+import './adminDashboard.css';
+import {
+  LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell
+} from 'recharts';
+
+const enrollmentData = [
+  { day: 'Mon', value: 12 },
+  { day: 'Tue', value: 19 },
+  { day: 'Wed', value: 8 },
+  { day: 'Thu', value: 24 },
+  { day: 'Fri', value: 18 },
+  { day: 'Sat', value: 30 },
+  { day: 'Sun', value: 22 },
+];
+
+const categoryData = [
+  { name: 'Web Dev', value: 45 },
+  { name: 'AI/ML', value: 25 },
+  { name: 'Java', value: 15 },
+  { name: 'Python', value: 15 },
+];
+
+const COLORS = ['#8b5cf6', '#10b981', '#f59e0b', '#ef4444'];
 
 export default function AdminDashboard() {
-    const [categories, setCategories] = useState<any[]>([]);
-    const router = useRouter();
+  const [categories, setCategories] = useState<any[]>([]);
+  const router = useRouter();
 
-    useEffect(() => {
-        api.get('/categories').then(res => setCategories(res.data));
-    }, []);
+  useEffect(() => {
+    api.get('/categories').then(res => setCategories(res.data));
+  }, []);
 
-    const handleLogout = async () => {
-        await api.post('/logout');
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        router.push('/login');
-    };
+  return (
+    <RoleGuard allowedRoles={[1]}>
+    <div className="adminWrapper">
+      <div className="adminGrid">
 
-    return (
-        <div
-            className="min-vh-100 py-5"
-            style={{ background: "#050505", color: "white" }}
-        >
-            <div className="container">
-
-                {/* HEADER */}
-                <div className="d-flex justify-content-between align-items-center mb-5">
-                    <h1
-                        className="fw-bold"
-                        style={{
-                            color: "#00c2ff",
-                            textShadow: "0 0 12px rgba(0,194,255,0.5)"
-                        }}
-                    >
-                        Admin Dashboard
-                    </h1>
-                </div>
-
-                {/* MAIN GRID */}
-                <div className="row g-4">
-
-                    {/* CATEGORIES CARD */}
-                    <div className="col-md-6">
-                        <div
-                            className="p-4 rounded-4 h-100"
-                            style={{
-                                background: "rgba(15,15,15,0.85)",
-                                border: "1px solid rgba(0,194,255,0.25)",
-                                boxShadow: "0 0 20px rgba(0,194,255,0.15)",
-                                backdropFilter: "blur(6px)"
-                            }}
-                        >
-                            <h3
-                                className="fw-bold mb-3"
-                                style={{ color: "#14f4ff" }}
-                            >
-                                Categories
-                            </h3>
-
-                            <ul className="list-unstyled">
-                                {categories.map((cat) => (
-                                    <li
-                                        key={cat.id}
-                                        className="py-2 border-bottom border-secondary"
-                                    >
-                                        <strong className="text-white">{cat.name}</strong>
-
-                                        {cat.children && cat.children.length > 0 && (
-                                            <ul className="list-unstyled ms-3 mt-1 text-muted">
-                                                {cat.children.map((child: any) => (
-                                                    <li key={child.id}>• {child.name}</li>
-                                                ))}
-                                            </ul>
-                                        )}
-                                    </li>
-                                ))}
-                            </ul>
-
-                        </div>
-                    </div>
-
-                    {/* QUICK ACTIONS + UPDATE ABOUT SECTION */}
-                    <div className="col-md-6">
-                        <div
-                            className="p-4 rounded-4 h-100"
-                            style={{
-                                background: "rgba(15,15,15,0.85)",
-                                border: "1px solid rgba(0,194,255,0.25)",
-                                boxShadow: "0 0 20px rgba(0,194,255,0.15)",
-                                backdropFilter: "blur(6px)"
-                            }}
-                        >
-                            {/* QUICK ACTIONS */}
-                            <h3
-                                className="fw-bold mb-3"
-                                style={{ color: "#14f4ff" }}
-                            >
-                                Quick Actions
-                            </h3>
-
-                            <div className="d-grid gap-2 mb-4">
-                                <button onClick={() => router.push('/admin/addCourse')}
-                                    className="btn fw-bold py-2"
-                                    style={{
-                                        background: "#00c2ff",
-                                        color: "#000",
-                                        borderRadius: "10px",
-                                        boxShadow: "0 0 12px rgba(0,194,255,0.4)"
-                                    }}
-                                >
-                                    Add Course
-                                </button>
-                                <button onClick={() => router.push('/admin/addcategory')}
-                                    className="btn fw-bold py-2"
-                                    style={{
-                                        background: "#00ff9d",
-                                        color: "#000",
-                                        borderRadius: "10px",
-                                        boxShadow: "0 0 12px rgba(0,255,157,0.4)"
-                                    }}
-                                >
-                                    Add Category
-                                </button>
-                            </div>
-
-                            {/* UPDATE ABOUT US */}
-                            <h3
-                                className="fw-bold mb-3 mt-4"
-                                style={{ color: "#14f4ff" }}
-                            >
-                                Update About Us
-                            </h3>
-
-                            <form
-                                onSubmit={(e) => {
-                                    e.preventDefault();
-                                    const formData = new FormData(e.currentTarget);
-                                    api
-                                        .post('/about', {
-                                            title: formData.get('title'),
-                                            content: formData.get('content'),
-                                            image_url: formData.get('image_url'),
-                                        })
-                                        .then(() => alert('Updated successfully!'));
-                                }}
-                                className="d-grid gap-3"
-                            >
-                                <input
-                                    name="title"
-                                    placeholder="Title"
-                                    className="form-control bg-dark text-white border-secondary"
-                                    required
-                                    style={{ borderRadius: "8px" }}
-                                />
-
-                                <textarea
-                                    name="content"
-                                    placeholder="Content"
-                                    className="form-control bg-dark text-white border-secondary"
-                                    rows={5}
-                                    required
-                                    style={{ borderRadius: "8px" }}
-                                />
-
-                                <input
-                                    name="image_url"
-                                    placeholder="Image URL (Optional)"
-                                    className="form-control bg-dark text-white border-secondary"
-                                    style={{ borderRadius: "8px" }}
-                                />
-
-                                <button
-                                    type="submit"
-                                    className="btn fw-bold py-2"
-                                    style={{
-                                        background: "#14f4ff",
-                                        color: "#000",
-                                        borderRadius: "10px",
-                                        boxShadow: "0 0 15px rgba(20,244,255,0.4)"
-                                    }}
-                                >
-                                    Update Content
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-
-                {/* ATTENDANCE SETTINGS COMPONENT */}
-                <div className="mt-5">
-                    <AdminAttendanceSettings />
-                </div>
-
+        {/* SIDEBAR */}
+        <div className="adminSidebar">
+          <h3>Admin Panel</h3>
+          <div className="adminMenu">
+            <div className="adminMenuItem" onClick={() => router.push('/admin')}>
+              Dashboard
             </div>
+            <div className="adminMenuItem" onClick={() => router.push('/admin/addCourse')}>
+              Add Course
+            </div>
+            <div className="adminMenuItem" onClick={() => router.push('/admin/studentManagement')}>
+              Students
+            </div>
+          </div>
         </div>
-    );
+
+        {/* MAIN */}
+        <div className="adminMain">
+
+          {/* HERO */}
+          <div className="adminHero">
+            <div>
+              <h1>Welcome Admin 👋</h1>
+              <p>Here’s what’s happening on EasyCoders today</p>
+            </div>
+          </div>
+
+          {/* KPI CARDS */}
+          <div className="adminCards">
+            <div className="adminCard">
+              <h3>Total Students</h3>
+              <div className="adminStat">1,240</div>
+            </div>
+            <div className="adminCard">
+              <h3>Total Courses</h3>
+              <div className="adminStat">28</div>
+            </div>
+            <div className="adminCard">
+              <h3>New Enrollments</h3>
+              <div className="adminStat">+76</div>
+            </div>
+            <div className="adminCard">
+              <h3>Active Today</h3>
+              <div className="adminStat">312</div>
+            </div>
+          </div>
+
+          {/* LINE CHART */}
+          <div className="adminCard">
+            <h3>Enrollments This Week</h3>
+            <ResponsiveContainer width="100%" height={250}>
+              <LineChart data={enrollmentData}>
+                <XAxis dataKey="day" />
+                <YAxis />
+                <Tooltip />
+                <Line type="monotone" dataKey="value" stroke="#8b5cf6" strokeWidth={3} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* PIE + ACTIVITY */}
+          <div className="adminCards">
+
+            <div className="adminCard">
+              <h3>Students by Category</h3>
+              <ResponsiveContainer width="100%" height={220}>
+                <PieChart>
+                  <Pie data={categoryData} dataKey="value" innerRadius={60} outerRadius={90}>
+                    {categoryData.map((_, i) => (
+                      <Cell key={i} fill={COLORS[i]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div className="adminCard">
+              <h3>Recent Activity</h3>
+              <ul style={{ marginTop: 10, fontSize: 14 }}>
+                <li>🟢 Rahul enrolled in Web Dev</li>
+                <li>🟣 New course added: AI Bootcamp</li>
+                <li>🔵 5 students completed Java</li>
+                <li>🟡 Priya submitted assignment</li>
+              </ul>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+    </RoleGuard>
+  );
 }

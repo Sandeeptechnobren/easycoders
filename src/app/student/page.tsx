@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import RoleGuard from '@/components/RoleGuard';
 import api from '@/lib/axios';
 import { useRouter } from 'next/navigation';
 import PunchInButton from '@/components/PunchInButton';
@@ -35,6 +36,7 @@ export default function StudentDashboard() {
     };
     if (loading) return <Loader />;
     return (
+        <RoleGuard allowedRoles={[3]}>
         <div
             className="min-vh-100 py-5"
             style={{ background: "#050505", color: "white" }}
@@ -226,5 +228,6 @@ export default function StudentDashboard() {
                 </div> */}
             </div>
         </div>
+        </RoleGuard>
     );
 }

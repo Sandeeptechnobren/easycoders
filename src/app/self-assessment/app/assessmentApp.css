@@ -1,0 +1,252 @@
+/* ================================
+   THEME VARIABLES
+================================ */
+:root {
+  --bg: #f9fafb;
+  --card: #ffffff;
+  --text: #111827;
+  --muted: #6b7280;
+  --accent: #8b5cf6;
+  --border: #e5e7eb;
+  --sidebar-bg: #ffffff;
+}
+
+[data-theme='dark'] {
+  --bg: #0f172a;
+  --card: #020617;
+  --text: #e5e7eb;
+  --muted: #94a3b8;
+  --border: #1e293b;
+  --sidebar-bg: #020617;
+}
+
+/* ================================
+   APP LAYOUT
+================================ */
+.assessmentApp {
+  min-height: 100vh;
+  display: flex;
+  background: var(--bg);
+  color: var(--text);
+  transition: background 0.3s ease;
+}
+
+/* ================================
+   SIDEBAR
+================================ */
+.sidebar {
+  width: 260px;
+  background: var(--sidebar-bg);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 18px;
+  border-right: 1px solid var(--border);
+  transition: width 0.3s ease;
+}
+
+.assessmentApp.collapsed .sidebar {
+  width: 80px;
+}
+
+/* LOGO */
+.sidebarLogo {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 28px;
+}
+
+.sidebarLogo img {
+  width: 150px;
+  transition: width 0.3s ease;
+}
+
+.assessmentApp.collapsed .sidebarLogo img {
+  width: 42px;
+}
+
+/* NAV ITEMS */
+.navItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--text);
+  transition: all 0.2s ease;
+}
+
+.navItem:hover {
+  background: rgba(139, 92, 246, 0.12);
+  color: var(--accent);
+}
+
+.navItem.active {
+  background: rgba(139, 92, 246, 0.18);
+  color: var(--accent);
+}
+
+/* ================================
+   SIDEBAR FOOTER
+================================ */
+.sidebarFooter {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* THEME TOGGLE */
+.themeToggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+/* SLIDER */
+.toggleTrack {
+  width: 44px;
+  height: 22px;
+  background: #d1d5db;
+  border-radius: 999px;
+  position: relative;
+}
+
+[data-theme='dark'] .toggleTrack {
+  background: var(--accent);
+}
+
+.toggleThumb {
+  width: 18px;
+  height: 18px;
+  background: white;
+  border-radius: 50%;
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  transition: left 0.3s ease;
+}
+
+[data-theme='dark'] .toggleThumb {
+  left: 24px;
+}
+
+/* COLLAPSE BUTTON */
+.collapseBtn {
+  background: transparent;
+  border: none;
+  padding: 10px;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--text);
+}
+
+.collapseBtn:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+/* LOGOUT */
+.logoutBtn {
+  padding: 12px;
+  border-radius: 12px;
+  border: none;
+  background: #fee2e2;
+  color: #b91c1c;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.logoutBtn:hover {
+  background: #fecaca;
+  transform: translateY(-1px);
+}
+
+/* ================================
+   MAIN CONTENT
+================================ */
+.main {
+  flex: 1;
+  padding: 32px;
+  background: var(--bg);
+}
+
+/* ================================
+   ASSESSMENT CARDS
+================================ */
+.assessmentGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 20px;
+}
+
+.assessmentCard {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.assessmentCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+}
+
+.assessmentCard h3 {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.assessmentDesc {
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+
+.assessmentMeta {
+  font-size: 13px;
+  color: var(--muted);
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+/* START BUTTON */
+.startBtn {
+  border: none;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: white;
+  padding: 10px;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.startBtn:hover {
+  opacity: 0.9;
+}
+
+/* LOAD MORE */
+.loadMoreBtn {
+  background: transparent;
+  border: 2px solid var(--accent);
+  color: var(--accent);
+  padding: 10px 24px;
+  border-radius: 999px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.loadMoreBtn:hover {
+  background: var(--accent);
+  color: white;
+}
