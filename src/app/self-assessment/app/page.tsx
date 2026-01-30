@@ -41,7 +41,7 @@ export default function AssessmentDashboard() {
   const [userName, setUserName] = useState('');
 
   useEffect(() => {
-    const storedName = localStorage.getItem('name');
+    const storedName = localStorage.getItem('logged_in_user');
     const storedEmail = localStorage.getItem('assessment_user');
     console.log(storedName);
     if (storedName) {

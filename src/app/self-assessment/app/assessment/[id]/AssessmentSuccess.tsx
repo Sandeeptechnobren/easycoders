@@ -5,10 +5,11 @@ import { useRouter, useSearchParams } from 'next/navigation';
 export default function AssessmentSuccess() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const score = searchParams.get('score') || '0'; // Get score from URL
+  const score = localStorage.getItem('score') || '0'; // Get score from URL
 
   useEffect(() => {
     const colors = ['#22c55e', '#6366f1', '#f59e0b', '#ef4444', '#ec4899'];
+    
     for (let i = 0; i < 100; i++) {
       setTimeout(() => {
         const confetti = document.createElement('div');
