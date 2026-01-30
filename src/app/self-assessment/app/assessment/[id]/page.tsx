@@ -66,7 +66,7 @@ export default function AssessmentPage() {
       }
     );
     setSubmitted(true);
-    setTimeout(() => router.replace('/self-assessment'), 4000);
+    setTimeout(() => router.replace('/self-assessment/app'), 4000);
   };
   if (submitted) return <AssessmentSuccess />;
   if (!assessment) return null;
@@ -81,13 +81,10 @@ export default function AssessmentPage() {
         timeLeft={timeLeft}
         onSubmit={submitAssessment}
       />
-
       <ProgressBar
         current={Object.keys(answers).length}
         total={totalQuestions}
       />
-
-      {/* QUESTION TYPE TABS */}
       <div style={{ display: 'flex', paddingBottom: 10, paddingLeft:10 }}>
         {questionTypes.map((t, i) => (
           <button
@@ -107,14 +104,14 @@ export default function AssessmentPage() {
           </button>
         ))}
       </div>
-<QuestionRenderer
-  questions={questionTypes[activeTab]?.questions || []}
-  answers={answers}
-  setAnswers={setAnswers}
-  onSubmit={submitAssessment} // Pass the API function here
-  isLastTab={activeTab === questionTypes.length - 1} // Check if we are in the last category
-  onNextTab={() => setActiveTab(activeTab + 1)} // Ability to switch tabs from buttons
-/>
+    <QuestionRenderer
+      questions={questionTypes[activeTab]?.questions || []}
+      answers={answers}
+      setAnswers={setAnswers}
+      onSubmit={submitAssessment}
+      isLastTab={activeTab === questionTypes.length - 1}
+      onNextTab={() => setActiveTab(activeTab + 1)}
+    />
       {/* <div style={{ textAlign: 'right', padding: 24 }}>
         <button
           onClick={submitAssessment}
