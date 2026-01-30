@@ -44,7 +44,7 @@ export default function AssessmentHeader({ title, timeLeft, onSubmit }: any) {
 
       <div>
         ⏱ {min}:{sec.toString().padStart(2, '0')}
-        <button
+        {/* <button
           onClick={onSubmit}
           style={{
             marginLeft: 20,
@@ -57,7 +57,7 @@ export default function AssessmentHeader({ title, timeLeft, onSubmit }: any) {
           }}
         >
           Submit
-        </button>
+        </button> */}
       </div>
     </div>
   );
