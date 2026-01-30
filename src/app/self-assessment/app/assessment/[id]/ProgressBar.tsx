@@ -35,11 +35,11 @@ export default function ProgressBar({ current, total }: any) {
   const percent = Math.round((current / total) * 100);
 
   return (
-    <div style={{ padding: '0 16px' , marginTop:'5px'}}>
+    <div style={{ padding:'5px' , marginTop:'5px'}}>
       <div
         style={{
           height: 10,
-          background: '#e5e7eb',
+          background: '#6683bb',
           borderRadius: 999,
           overflow: 'hidden',
         }}

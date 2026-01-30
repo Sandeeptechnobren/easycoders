@@ -117,7 +117,7 @@ export default function AssessmentSignup() {
   return (
     <div className="sa-auth-wrapper">
       <div className="sa-auth-card">
-        <h2 className="sa-auth-title">Self Assessment</h2>
+        <h2 className="sa-auth-title">Sign Up</h2>
         <p className="sa-auth-subtitle">
           Verify your email and complete your profile
         </p>
