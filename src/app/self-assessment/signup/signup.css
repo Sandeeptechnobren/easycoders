@@ -1,7 +1,4 @@
-/* ===============================
-   SELF ASSESSMENT – SIGNUP CSS
-================================ */
-
+/* 
 .sa-auth-wrapper {
   min-height: 100vh;
   display: flex;
@@ -145,4 +142,124 @@
   font-size: 13px;
   text-align: center;
   margin-bottom: 16px;
+} */
+.sa-auth-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: #f3f4f6;
+  padding: 20px;
+}
+
+.sa-auth-card {
+  background: #ffffff;
+  padding: 40px;
+  border-radius: 20px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+  width: 100%;
+  max-width: 450px;
+}
+
+.sa-auth-title {
+  font-size: 24px;
+  font-weight: 800;
+  color: #111827;
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.sa-auth-subtitle {
+  font-size: 14px;
+  color: #6b7280;
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.sa-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sa-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  font-size: 15px;
+  transition: all 0.2s;
+  outline: none;
+}
+
+.sa-input:focus {
+  border-color: #8b5cf6;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+}
+
+.sa-date-field {
+  cursor: pointer;
+}
+
+.sa-date-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sa-hint {
+  font-size: 11px;
+  color: #9ca3af;
+  margin-left: 4px;
+}
+
+.sa-primary-btn {
+  background: #8b5cf6;
+  color: white;
+  padding: 14px;
+  border: none;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.sa-primary-btn:disabled {
+  opacity: 0.6;
+}
+
+.sa-step-divider {
+  height: 1px;
+  background: #f3f4f6;
+  margin: 10px 0;
+}
+
+.sa-otp-row {
+  display: flex;
+  gap: 10px;
+}
+
+.sa-secondary-btn {
+  background: #111827;
+  color: white;
+  padding: 0 20px;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.sa-error {
+  background: #fee2e2;
+  color: #b91c1c;
+  padding: 12px;
+  border-radius: 10px;
+  font-size: 13px;
+  margin-bottom: 20px;
+  font-weight: 600;
+}
+
+/* Custom Calendar Icon Color (Chrome/Safari) */
+.sa-date-field::-webkit-calendar-picker-indicator {
+  filter: invert(45%) sepia(85%) saturate(1500%) hue-rotate(230deg) brightness(95%) contrast(90%);
 }
