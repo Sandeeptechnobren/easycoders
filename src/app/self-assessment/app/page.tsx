@@ -44,7 +44,6 @@ export default function AssessmentDashboard() {
     const storedName = localStorage.getItem('name');
     const storedEmail = localStorage.getItem('assessment_user');
     console.log(storedName);
-    // if (storedName && storedName !== 'undefined' && storedName !== '') {
     if (storedName) {
       setUserName(storedName);
     } else if (storedEmail) {

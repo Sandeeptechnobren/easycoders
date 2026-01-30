@@ -48,6 +48,26 @@ export default function AssessmentPage() {
     const t = setInterval(() => setTimeLeft(t => t - 1), 1000);
     return () => clearInterval(t);
   }, [timeLeft, submitted]);
+  // const submitAssessment = async () => {
+  //   if (!assessment || submitted) return;
+  //   const payload = {
+  //     answers: Object.entries(answers).map(([qid, v]) => ({
+  //       question_id: Number(qid),
+  //       ...v,
+  //     })),
+  //   };
+  //   await api.post(
+  //     `/assessment/${assessment.id}/submit`,
+  //     payload,
+  //     {
+  //       headers: {
+  //         Authorization: `Bearer ${localStorage.getItem('assessment_token')}`,
+  //       },
+  //     }
+  //   );
+  //   setSubmitted(true);
+  //   setTimeout(() => router.replace('/self-assessment/app'), 4000);
+  // };
   const submitAssessment = async () => {
     if (!assessment || submitted) return;
     const payload = {
@@ -56,17 +76,26 @@ export default function AssessmentPage() {
         ...v,
       })),
     };
-    await api.post(
-      `/assessment/${assessment.id}/submit`,
-      payload,
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('assessment_token')}`,
-        },
+    try {
+      const res = await api.post(
+        `/assessment/${assessment.id}/submit`,
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('assessment_token')}`,
+          },
+        }
+      );
+      if (res.data.status) {
+        setSubmitted(true);
+        console.log(res.data);
+        const finalScore = res.data.score || 0;
+        router.push(`/self-assessment/app/assessment/success?score=${finalScore}`);
       }
-    );
-    setSubmitted(true);
-    setTimeout(() => router.replace('/self-assessment/app'), 4000);
+    } catch (error) {
+      console.error("Submission failed", error);
+      alert("Failed to submit assessment. Please try again.");
+    }
   };
   if (submitted) return <AssessmentSuccess />;
   if (!assessment) return null;
