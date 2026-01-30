@@ -39,33 +39,25 @@ export default function AssessmentPage() {
       setTimeLeft(d.assessment.duration * 60);
     });
   }, [id]);
-
-  /* TIMER */
   useEffect(() => {
     if (!timeLeft || submitted) return;
-
     if (timeLeft <= 0) {
       submitAssessment();
       return;
     }
-
     const t = setInterval(() => setTimeLeft(t => t - 1), 1000);
     return () => clearInterval(t);
   }, [timeLeft, submitted]);
-
-  /* FINAL SUBMIT */
   const submitAssessment = async () => {
     if (!assessment || submitted) return;
-
     const payload = {
       answers: Object.entries(answers).map(([qid, v]) => ({
         question_id: Number(qid),
         ...v,
       })),
     };
-
     await api.post(
-      `/assessment/${assessment.id}/answer`,
+      `/assessment/${assessment.id}/submit`,
       payload,
       {
         headers: {
@@ -73,20 +65,15 @@ export default function AssessmentPage() {
         },
       }
     );
-
     setSubmitted(true);
     setTimeout(() => router.replace('/self-assessment'), 4000);
   };
-
   if (submitted) return <AssessmentSuccess />;
-
   if (!assessment) return null;
-
   const totalQuestions = questionTypes.reduce(
     (a, t) => a + t.questions.length,
     0
   );
-
   return (
     <div style={{ minHeight: '100vh', background: '#e4e6e9', margin:'0px' }}>
       <AssessmentHeader
@@ -120,14 +107,14 @@ export default function AssessmentPage() {
           </button>
         ))}
       </div>
-
-      <QuestionRenderer
-        questions={questionTypes[activeTab]?.questions || []}
-        answers={answers}
-        setAnswers={setAnswers}
-      />
-
-      {/* FINAL SUBMIT */}
+<QuestionRenderer
+  questions={questionTypes[activeTab]?.questions || []}
+  answers={answers}
+  setAnswers={setAnswers}
+  onSubmit={submitAssessment} // Pass the API function here
+  isLastTab={activeTab === questionTypes.length - 1} // Check if we are in the last category
+  onNextTab={() => setActiveTab(activeTab + 1)} // Ability to switch tabs from buttons
+/>
       <div style={{ textAlign: 'right', padding: 24 }}>
         <button
           onClick={submitAssessment}
