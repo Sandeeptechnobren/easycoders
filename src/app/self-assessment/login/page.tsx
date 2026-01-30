@@ -140,6 +140,7 @@ export default function AssessmentLogin() {
       localStorage.setItem('assessment_token', token);
       localStorage.setItem('assessment_user', email);
       const displayName = userData?.name || email.split('@')[0];
+      localStorage.setItem('logged_in_user', displayName);
       
       router.replace('/self-assessment/app');
     } catch (err: any) {

@@ -88,9 +88,8 @@ export default function AssessmentPage() {
       );
       if (res.data.status) {
         setSubmitted(true);
-        console.log(res.data);
-        const finalScore = res.data.score || 0;
-        router.push(`/self-assessment/app/assessment/success?score=${finalScore}`);
+        localStorage.setItem('score', res.data.score);
+        console.log(res.data.score);
       }
     } catch (error) {
       console.error("Submission failed", error);
