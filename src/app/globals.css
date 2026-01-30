@@ -86,8 +86,7 @@ body {
 .introSection {
     /* margin-top: 50px; */
     height: 400px;
-
-    background-image: url('/images/demo.jpeg');
+    background-image: url('/images/backgroundimage2.jpg');
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;

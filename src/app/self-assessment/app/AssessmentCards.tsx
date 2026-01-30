@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import api from '@/lib/axios';
 
 type Assessment = {
@@ -12,46 +13,44 @@ type Assessment = {
 };
 
 export default function AssessmentCards() {
+  const router = useRouter();
+
   const [assessments, setAssessments] = useState<Assessment[]>([]);
   const [visibleCount, setVisibleCount] = useState(8);
   const [loading, setLoading] = useState(true);
 
-  // useEffect(() => {
-  //   api
-  //     .get('/assessment/list',{
+  useEffect(() => {
+    const token = localStorage.getItem('assessment_token');
 
-  //     })
-  //     .then(res => {
-  //       setAssessments(res.data?.data || res.data);
-  //     })
-  //     .catch(() => setAssessments([]))
-  //     .finally(() => setLoading(false));
-  // }, []);
-useEffect(() => {
-  const token = localStorage.getItem('assessment_token');
+    // 🔐 No token → force login
+    if (!token) {
+      router.replace('/self-assessment/login');
+      return;
+    }
 
-  api
-    .get('/assessment/list', {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-    .then(res => {
-      setAssessments(res.data?.data || res.data);
-    })
-    .catch(err => {
-      console.error(err);
+    api
+      .get('/assessment/list', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then(res => {
+        setAssessments(res.data?.data || []);
+      })
+      .catch(err => {
+        console.error(err);
 
-      // 🔐 Handle token expiry / invalid token
-      if (err.response?.status === 401) {
-        localStorage.removeItem('assessment_token');
-        window.location.href = '/self-assessment/login';
-      }
+        // 🔐 Token invalid / expired
+        if (err.response?.status === 401) {
+          localStorage.removeItem('assessment_token');
+          router.replace('/self-assessment/login');
+        }
 
-      setAssessments([]);
-    })
-    .finally(() => setLoading(false));
-}, []);
+        setAssessments([]);
+      })
+      .finally(() => setLoading(false));
+  }, [router]);
+
   if (loading) {
     return <p>Loading assessments…</p>;
   }
@@ -74,17 +73,22 @@ useEffect(() => {
 
             <div className="assessmentMeta">
               {item.level && <span>Level: {item.level}</span>}
-              {item.duration && <span>Duration: {item.duration}</span>}
+              {item.duration && <span>Duration: {item.duration} mins</span>}
             </div>
 
-            <button className="startBtn">
-              Start Assessment →
+            <button
+              className="startBtn"
+              onClick={() =>
+                router.push(`/self-assessment/app/assessment/${item.id}`)
+              }
+            >
+              Start Assessment
             </button>
           </div>
         ))}
       </div>
 
-      {/* MORE BUTTON */}
+      {/* LOAD MORE */}
       {visibleCount < assessments.length && (
         <div style={{ textAlign: 'center', marginTop: 30 }}>
           <button

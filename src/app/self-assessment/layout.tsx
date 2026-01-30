@@ -5,7 +5,6 @@ export default function SelfAssessmentLayout({
 }) {
   return (
     <>
-      {/* ❌ NO MAIN NAVBAR HERE */}
       {children}
     </>
   );
