@@ -90,7 +90,7 @@ export default function AssessmentAppLayout({
           </div>
         </div>
         <div className="sidebarFooter">
-          <button
+          {/* <button
             className="navItem"
             onClick={() =>
               setTheme(theme === 'light' ? 'dark' : 'light')
@@ -104,7 +104,7 @@ export default function AssessmentAppLayout({
                   : 'Light Mode'}
               </span>
             )}
-          </button>
+          </button> */}
           <button
             className="navItem ghost"
             onClick={() => setCollapsed(!collapsed)}
