@@ -1,0 +1,107 @@
+/* ===== THEME VARIABLES ===== */
+:root {
+  --bg: #f9fafb;
+  --card: #ffffff;
+  --text: #111827;
+  --muted: #6b7280;
+  --accent: #8B5CF6;
+  --border: #e5e7eb;
+}
+
+[data-theme='dark'] {
+  --bg: #0f172a;
+  --card: #020617;
+  --text: #e5e7eb;
+  --muted: #94a3b8;
+  --border: #1e293b;
+}
+
+/* ===== LAYOUT ===== */
+.assessmentApp {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* ===== SIDEBAR ===== */
+.sidebar {
+  padding: 24px;
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.logo {
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.navItem {
+  padding: 12px 14px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 500;
+  color: var(--muted);
+  transition: 0.2s;
+}
+
+.navItem:hover {
+  background: rgba(139, 92, 246, 0.1);
+  color: var(--accent);
+}
+
+.navActive {
+  background: rgba(139, 92, 246, 0.15);
+  color: var(--accent);
+}
+
+/* ===== MAIN CONTENT ===== */
+.main {
+  padding: 32px;
+}
+
+/* ===== CARD GRID ===== */
+.cardsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 20px;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 20px;
+  transition: 0.25s;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+}
+
+.cardTitle {
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.cardDesc {
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+/* ===== MORE BUTTON ===== */
+.moreBtn {
+  margin-top: 30px;
+  padding: 12px 20px;
+  border-radius: 14px;
+  border: none;
+  background: var(--accent);
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+}

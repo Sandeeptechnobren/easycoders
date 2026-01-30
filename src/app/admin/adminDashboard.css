@@ -1,0 +1,156 @@
+/* =========================
+   ADMIN DASHBOARD THEME
+   ========================= */
+
+.adminWrapper {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #b8e1e8, #9fd6c2);
+  padding: 40px 30px;
+  padding-top: 120px; /* space for navbar */
+  font-family: "Inter", system-ui, sans-serif;
+}
+
+/* Main grid */
+.adminGrid {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 24px;
+  max-width: 1400px;
+  margin: auto;
+}
+
+/* Sidebar */
+.adminSidebar {
+  background: rgba(255,255,255,0.6);
+  backdrop-filter: blur(12px);
+  border-radius: 24px;
+  padding: 24px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+}
+
+.adminSidebar h3 {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+.adminMenu {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.adminMenuItem {
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 14px;
+  cursor: pointer;
+  color: #333;
+  transition: 0.2s;
+}
+
+.adminMenuItem:hover {
+  background: #8b5cf6;
+  color: white;
+}
+
+/* Main content */
+.adminMain {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Hero card */
+.adminHero {
+  background: rgba(255,255,255,0.75);
+  backdrop-filter: blur(12px);
+  border-radius: 28px;
+  padding: 30px 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+}
+
+.adminHero h1 {
+  font-size: 32px;
+  font-weight: 800;
+}
+
+.adminHero p {
+  color: #555;
+  margin-top: 6px;
+}
+
+/* Cards grid */
+.adminCards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+}
+
+.adminCard {
+  background: rgba(255,255,255,0.75);
+  backdrop-filter: blur(10px);
+  border-radius: 22px;
+  padding: 22px;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.08);
+  transition: 0.25s;
+}
+
+.adminCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 25px 45px rgba(0,0,0,0.12);
+}
+
+.adminCard h3 {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+/* Stats pill */
+.adminStat {
+  font-size: 28px;
+  font-weight: 800;
+  color: #8b5cf6;
+}
+
+/* Buttons */
+.adminBtn {
+  background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.adminBtn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 20px rgba(139,92,246,0.3);
+}
+
+/* Forms */
+.adminForm {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.adminInput {
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid #ddd;
+  font-size: 14px;
+  outline: none;
+}
+
+.adminInput:focus {
+  border-color: #8b5cf6;
+  box-shadow: 0 0 0 3px rgba(139,92,246,0.15);
+}

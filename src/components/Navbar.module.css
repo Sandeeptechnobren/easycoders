@@ -3,49 +3,14 @@
     position: fixed;
     top: 0;
     z-index: 999;
-    /* padding: 12px 0; */
     transition: all 0.3s ease;
-    background: rgba(246, 246, 246, 0.7);
+    background: rgba(255, 255, 255, 0.934);
     backdrop-filter: blur(10px);
     border-bottom: 1px solid rgba(0, 194, 255, 0.1);
     border-radius: 0px 0px 20px 20px;
-    
 }
 
-.logoutBtn {
-    color: #ff4a4a !important;
-    border: 1px solid rgba(255, 74, 74, 0.4);
-    border-radius: 999px;
-    padding: 6px 16px;
-    background: rgba(255, 74, 74, 0.08);
-    transition: all 0.25s ease;
-}
-
-.logoutBtn:hover {
-    background: rgba(255, 74, 74, 0.18);
-    box-shadow: 0 0 12px rgba(255, 74, 74, 0.5);
-    transform: translateY(-1px);
-}
-
-.logoutBtn .underline {
-    display: none;
-}
-
-.logoutBtnMobile {
-    color: #ff4a4a !important;
-    font-weight: 600;
-    border: 1px solid rgba(255, 74, 74, 0.35);
-    border-radius: 12px;
-    margin-top: 10px;
-    background: rgba(255, 74, 74, 0.12);
-}
-
-.logoutBtnMobile:hover {
-    background: rgba(255, 74, 74, 0.22);
-}
-
-
-
+/* ================= CORE LAYOUT ================= */
 
 .container {
     max-width: 1300px;
@@ -59,7 +24,6 @@
 .logo {
     display: flex;
     align-items: center;
-    /* gap: 10px; */
 }
 
 .logo img {
@@ -68,25 +32,32 @@
     border-radius: 8px;
 }
 
-.brandText {
-    font-size: 1.4rem;
-    font-weight: 700;
-    color: #054d63;
-    /* text-shadow: 0 0 12px rgba(0, 194, 255, 0.6); */
-}
+/* ================= DESKTOP MENU ================= */
 
 .desktopMenu {
     display: flex;
     gap: 28px;
+    align-items: center;
 }
 
+/* This is the SINGLE SOURCE OF TRUTH for nav items */
 .navLink {
-    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 8px 16px;
     font-size: 0.9rem;
     font-weight: 500;
     color: #032c73;
     text-decoration: none;
-    transition: color 0.3s ease;
+
+    background: none;
+    border: none;
+    cursor: pointer;
+
+    position: relative;
+    transition: all 0.25s ease;
 }
 
 .navLink:hover {
@@ -97,13 +68,13 @@
     color: #a207c8 !important;
 }
 
+/* underline animation */
 .underline {
     content: '';
     position: absolute;
     left: 0;
     bottom: -4px;
     width: 0%;
-    /* height: 2px; */
     background: #00c2ff;
     box-shadow: 0 0 6px #00c2ff;
     transition: width 0.3s ease;
@@ -114,9 +85,30 @@
     width: 100%;
 }
 
+/* ================= LOGOUT (ONLY VISUAL DIFF) ================= */
+
+.logoutBtn {
+    color: #ff4a4a !important;
+    border: 1px solid rgba(255, 74, 74, 0.4);
+    border-radius: 999px;
+    background: rgba(255, 74, 74, 0.08);
+}
+
+.logoutBtn:hover {
+    background: rgba(255, 74, 74, 0.18);
+    box-shadow: 0 0 12px rgba(255, 74, 74, 0.4);
+    transform: translateY(-1px);
+}
+
+.logoutBtn .underline {
+    display: none;
+}
+
+/* ================= MOBILE ================= */
+
 .menuButton {
     font-size: 2rem;
-    color: #fff;
+    color: #032c73;
     background: none;
     border: none;
     display: none;
@@ -142,9 +134,17 @@
 }
 
 .mobileLink {
-    font-size: 1.4rem;
-    padding: 15px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 14px;
+    font-size: 1.2rem;
+    background: none;
+    border: none;
     color: #ccc;
+    text-decoration: none;
+
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -155,6 +155,17 @@
 .mobileActive {
     color: #00c2ff !important;
 }
+
+.logoutBtnMobile {
+    color: #ff4a4a !important;
+    font-weight: 600;
+    border: 1px solid rgba(255, 74, 74, 0.35);
+    border-radius: 12px;
+    margin-top: 10px;
+    background: rgba(255, 74, 74, 0.12);
+}
+
+/* ================= RESPONSIVE ================= */
 
 @media (max-width: 900px) {
     .desktopMenu {
