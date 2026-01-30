@@ -1,84 +1,3 @@
-// 'use client';
-
-// import { useEffect, useState } from 'react';
-// import { useRouter } from 'next/navigation';
-// import './assessmentApp.css';
-
-// export default function AssessmentAppLayout({
-//   children,
-// }: {
-//   children: React.ReactNode;
-// }) {
-//   const router = useRouter();
-//   const [theme, setTheme] = useState<'light' | 'dark'>('light');
-//   const [collapsed, setCollapsed] = useState(false);
-
-//   useEffect(() => {
-//     const user = localStorage.getItem('assessment_user');
-//     if (!user) {
-//       router.replace('/');
-//     }
-//   }, [router]);
-
-//   const handleLogout = () => {
-//     localStorage.removeItem('assessment_user');
-//     router.replace('/self-assessment/login');
-//   };
-
-//   return (
-//     <div
-//       className={`assessmentApp ${collapsed ? 'collapsed' : ''}`}
-//       data-theme={theme}
-//     >
-//       {/* SIDEBAR */}
-//       <aside className="sidebar">
-//         {/* TOP */}
-//         <div className="sidebarTop">
-//           <div className="sidebarLogo">
-//             <img src="/images/ec_logo.png" alt="Easy Coders" />
-//           </div>
-
-//           <div className="navItem active">
-//             <span className="navIcon">📊</span>
-//             {!collapsed && <span>Assessments</span>}
-//           </div>
-//         </div>
-
-//         {/* FOOTER */}
-//         <div className="sidebarFooter">
-//           {/* THEME TOGGLE */}
-//           <div
-//             className="themeToggle"
-//             onClick={() =>
-//               setTheme(theme === 'light' ? 'dark' : 'light')
-//             }
-//           >
-//             <span>{theme === 'light' ? '☀️' : '🌙'}</span>
-//             {/* <div className={`toggleTrack ${theme}`}>
-//               <div className="toggleThumb" />
-//             </div> */}
-//           </div>
-
-//           {/* SIDEBAR TOGGLE */}
-//           <button
-//             className="collapseBtn"
-//             onClick={() => setCollapsed(!collapsed)}
-//           >
-//             ☰ {!collapsed && 'Collapse'}
-//           </button>
-
-//           {/* LOGOUT */}
-//           <button className="logoutBtn" onClick={handleLogout}>
-//             ⎋ {!collapsed && 'Logout'}
-//           </button>
-//         </div>
-//       </aside>
-
-//       {/* MAIN */}
-//       <main className="main">{children}</main>
-//     </div>
-//   );
-// }
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -172,7 +91,7 @@ export default function AssessmentAppLayout({
         </div>
         <div className="sidebarFooter">
           <button
-            className="navItem ghost"
+            className="navItem"
             onClick={() =>
               setTheme(theme === 'light' ? 'dark' : 'light')
             }
@@ -204,3 +123,91 @@ export default function AssessmentAppLayout({
     </div>
   );
 }
+// 'use client';
+
+// import { useEffect, useState } from 'react';
+// import { useRouter } from 'next/navigation';
+// import './assessmentApp.css';
+
+// export default function AssessmentAppLayout({ children }: { children: React.ReactNode }) {
+//   const router = useRouter();
+//   const [theme, setTheme] = useState<'light' | 'dark'>('light');
+//   const [collapsed, setCollapsed] = useState(false);
+//   const [isMobile, setIsMobile] = useState(false);
+
+//   useEffect(() => {
+//     const user = localStorage.getItem('assessment_user');
+//     if (!user) router.replace('/self-assessment/login');
+    
+//     const handleResize = () => {
+//       const mobile = window.innerWidth <= 768;
+//       setIsMobile(mobile);
+//       if (mobile) setCollapsed(true);
+//     };
+
+//     handleResize();
+//     window.addEventListener('resize', handleResize);
+//     return () => window.removeEventListener('resize', handleResize);
+//   }, [router]);
+
+//   const handleLogout = () => {
+//     localStorage.removeItem('assessment_user');
+//     localStorage.removeItem('assessment_token');
+//     router.replace('/self-assessment/login');
+//   };
+
+//   return (
+//     <div className={`appContainer ${collapsed ? 'collapsed' : ''}`} data-theme={theme}>
+//       {/* Mobile Overlay */}
+//       {isMobile && !collapsed && (
+//         <div className="sidebarOverlay" onClick={() => setCollapsed(true)} />
+//       )}
+
+//       <aside className="sidebar">
+//         <div className="sidebarContent">
+//           <div className="sidebarLogoContainer">
+//             <img
+//               src={collapsed ? '/images/eclogo.png' : '/images/ec_logo.png'}
+//               alt="Logo"
+//               className="logoImg"
+//             />
+//           </div>
+
+//           <nav className="navSection">
+//             <div className="navItem active">
+//               <span className="navIcon">📊</span>
+//               <span className="navText">Assessments</span>
+//             </div>
+//           </nav>
+
+//           <div className="sidebarFooter">
+//             <button className="navItem ghost" onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}>
+//               <span className="navIcon">{theme === 'light' ? '🌙' : '☀️'}</span>
+//               <span className="navText">{theme === 'light' ? 'Dark Mode' : 'Light Mode'}</span>
+//             </button>
+            
+//             <button className="navItem ghost" onClick={() => setCollapsed(!collapsed)}>
+//               <span className="navIcon">☰</span>
+//               <span className="navText">Minimize</span>
+//             </button>
+
+//             <button className="logoutBtn" onClick={handleLogout}>
+//               <span className="navIcon">⎋</span>
+//               <span className="navText">Logout</span>
+//             </button>
+//           </div>
+//         </div>
+//       </aside>
+
+//       <main className="mainContent">
+//         <header className="mobileHeader">
+//            <button onClick={() => setCollapsed(false)}>☰</button>
+//            <span>Easy Coders</span>
+//         </header>
+//         <div className="pageContainer">
+//           {children}
+//         </div>
+//       </main>
+//     </div>
+//   );
+// }

@@ -88,7 +88,7 @@ export default function AssessmentPage() {
       />
 
       {/* QUESTION TYPE TABS */}
-      <div style={{ display: 'flex', gap: 10, padding: 16 }}>
+      <div style={{ display: 'flex', paddingBottom: 10, paddingLeft:10 }}>
         {questionTypes.map((t, i) => (
           <button
             key={t.type_id}
@@ -115,7 +115,7 @@ export default function AssessmentPage() {
   isLastTab={activeTab === questionTypes.length - 1} // Check if we are in the last category
   onNextTab={() => setActiveTab(activeTab + 1)} // Ability to switch tabs from buttons
 />
-      <div style={{ textAlign: 'right', padding: 24 }}>
+      {/* <div style={{ textAlign: 'right', padding: 24 }}>
         <button
           onClick={submitAssessment}
           style={{
@@ -130,7 +130,7 @@ export default function AssessmentPage() {
         >
           Submit Assessment
         </button>
-      </div>
+      </div> */}
     </div>
   );
 }

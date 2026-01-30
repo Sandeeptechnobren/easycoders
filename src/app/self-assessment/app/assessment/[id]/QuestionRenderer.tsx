@@ -197,20 +197,20 @@ export default function QuestionRenderer({
   if (!currentQuestion) return null;
 
   return (
-    <div style={{ padding: '0 24px 24px 24px', maxWidth: 800, margin: '0 auto' }}>
+    <div style={{ padding: '10px', maxWidth: 800, margin: '0 auto' }}>
       <div
         key={currentQuestion.id}
         style={{
           background: '#fff',
           padding: 30,
-          borderRadius: 16,
+          borderRadius: 10,
           boxShadow: '0 8px 20px rgba(0,0,0,0.08)',
         }}
       >
         <span style={{ color: '#666', fontSize: '0.8rem', fontWeight: 600 }}>
           QUESTION {currentIndex + 1} OF {questions.length}
         </span>
-        <h3 style={{ marginTop: 10, marginBottom: 20, color: '#16316b' }}>
+        <h3 style={{ marginTop: 5, marginBottom: 20, color: '#16316b' }}>
           {currentQuestion.question_text}
         </h3>
 
@@ -223,7 +223,7 @@ export default function QuestionRenderer({
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  padding: '14px 20px',
+                  padding: '10px 10px',
                   borderRadius: 12,
                   border: isSelected ? '2px solid #16316b' : '1px solid #e5e7eb',
                   background: isSelected ? '#f0f4ff' : '#fff',
@@ -250,8 +250,6 @@ export default function QuestionRenderer({
             );
           })}
         </div>
-
-        {/* NAVIGATION BUTTONS */}
         <div style={{ marginTop: 40, display: 'flex', justifyContent: 'space-between' }}>
           <button
             onClick={handleBack}
