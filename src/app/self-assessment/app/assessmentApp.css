@@ -170,7 +170,7 @@
 ================================ */
 .main {
   flex: 1;
-  padding: 32px;
+  /* padding: 32px; */
   background: var(--bg);
 }
 
