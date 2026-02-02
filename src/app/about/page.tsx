@@ -5,7 +5,7 @@ export default function AboutPage() {
     <div className="min-h-screen">
 
       {/* HERO */}
-      <section className="introSection">
+      <section className="introSection global-header-bg">
         <div className="transparentDiv">
           <div style={{ display: 'flex', width: '100%', justifyContent: 'space-between', alignItems: 'center' }}>
 

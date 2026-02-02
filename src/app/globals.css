@@ -2,8 +2,31 @@
 @tailwind components;
 @tailwind utilities;
 
+:root{
+    --header-bg-image:url('/images/backgroundimage2.jpg');
+    --header-gradient:linear-gradient(135deg, #00c2ff 0%, #8B5CF6 100%);
+}
+.global-header-bg {
+  position: relative;
+  overflow: hidden;
+}
+
+.global-header-bg::before {
+  content: "";
+  position: absolute;
+  top: 0; 
+  left: 0; 
+  right: 0; 
+  bottom: 0;
+  background-image: var(--header-bg-image);
+  background-size: cover;
+  background-position: center;
+  filter: blur(8px); 
+  transform: scale(1.1); 
+  z-index: -1;
+}
+
 body {
-    /* color: #343a40; */
 
 }
 
@@ -62,60 +85,45 @@ body {
     padding: 2%;
 }
 
-/* .introSection {
-    margin: 0;
-    height: 400px;
-    background-image: url('/images/introSectionBackground.png');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    padding-top: 50px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    
-}
-
-.internalIntro{
+/* .internalIntro{
         margin: 0;
     height: 400px;
     display: flex;
     justify-content: center;
     align-items: center;   
-} */
-.introSection {
-    /* margin-top: 50px; */
+}  */
+/* .introSection {
     height: 400px;
     background-image: url('/images/backgroundimage2.jpg');
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-
-    position: relative; /* REQUIRED for overlay */
+    position: relative;
     display: flex;
     justify-content: center;
     align-items: center;
-        border-radius: 0px 0px 40px 40px ;
-
+    border-radius: 0px 0px 40px 40px ;
+} */
+.introSection {
+    height: 400px;
+    border-radius: 0px 0px 40px 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative; 
+    overflow: hidden; 
 }
-
-
 .transparentDiv {
     position: absolute;
     inset: 0; /* top:0 right:0 bottom:0 left:0 */
-
     display: flex;
     justify-content: center;
     align-items: center;
-
     background: rgba(.1, .10, 0, 0.30); /* translucent layer */
     backdrop-filter: blur(3px);
     -webkit-backdrop-filter: blur(3px);
-
     padding: 20px;
-        border-radius: 0px 0px 40px 40px ;
-
-
+    border-radius: 0px 0px 40px 40px ;
 }
 
 
@@ -132,9 +140,6 @@ body {
     font-weight: 900;
     color: white;
     border-radius: 0px 0px 40px 40px ;
-
-    
-    
 }
 
 .introImage{

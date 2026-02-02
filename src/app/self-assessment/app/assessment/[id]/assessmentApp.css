@@ -27,18 +27,18 @@
 }
 
 .sidebar {
-  width: 260px;
+  width: 200px;
   background: var(--sidebar-bg);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 18px;
+  padding: 8px;
   border-right: 1px solid var(--border);
   transition: width 0.3s ease;
 }
 
 .assessmentApp.collapsed .sidebar {
-  width: 80px;
+  width: 60px;
 }
 
 .sidebarLogo {
@@ -60,12 +60,13 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 12px;
-  border-radius: 12px;
+  padding: 7px;
+  border-radius: 8px;
   cursor: pointer;
   font-weight: 600;
   color: var(--text);
   transition: all 0.2s ease;
+  text-decoration: none;
 }
 
 .navItem:hover {
@@ -73,9 +74,15 @@
   color: var(--accent);
 }
 
-.navItem.active {
+/* .navItem.active {
   background: rgba(139, 92, 246, 0.18);
   color: var(--accent);
+} */
+.navItem.active {
+  background: rgba(139, 92, 246, 0.15); /* Light purple background */
+  color: var(--accent);                /* Solid purple text/icon */
+  border-left: 4px solid var(--accent); /* Optional: Vertical line indicator */
+  font-weight: 700;
 }
 
 .sidebarFooter {
