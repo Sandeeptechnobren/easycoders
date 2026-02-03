@@ -30,7 +30,7 @@ export default function ContactUs() {
     <div className="min-h-screen">
 
       {/* HERO */}
-      <section className="introSection">
+      <section className="introSection global-header-bg">
         <div className="transparentDiv">
           <div style={{ display: "flex", width: "100%", justifyContent: "space-between", alignItems: "center" }}>
             <div className="internalIntro" style={{ alignItems: "flex-start", textAlign: "left" }}>
@@ -180,9 +180,7 @@ export default function ContactUs() {
   </form>
 </div>
 
-        </div>
-
-        {/* CTA STRIP */}
+    </div>
         <div
           className="courseCard"
           style={{
@@ -199,7 +197,6 @@ export default function ContactUs() {
             Explore our courses and become job-ready.
           </p>
         </div>
-
       </section>
     </div>
   );

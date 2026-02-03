@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@monaco-editor/react": "^4.7.0",
     "@types/bootstrap": "^5.2.10",
     "axios": "^1.13.2",
     "bootstrap": "^5.3.8",
