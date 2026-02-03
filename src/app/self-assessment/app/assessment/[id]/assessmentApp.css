@@ -4,7 +4,7 @@
   --card: #ffffff;
   --text: #111827;
   --muted: #6b7280;
-  --accent: #8b5cf6;
+  --accent: #137175;
   --border: #e5e7eb;
   --sidebar-bg: #ffffff;
 }
@@ -67,10 +67,11 @@
   color: var(--text);
   transition: all 0.2s ease;
   text-decoration: none;
+  margin-bottom: 10px;
 }
 
 .navItem:hover {
-  background: rgba(139, 92, 246, 0.12);
+  background-color: 06494f;
   color: var(--accent);
 }
 
@@ -79,7 +80,7 @@
   color: var(--accent);
 } */
 .navItem.active {
-  background: rgba(139, 92, 246, 0.15); /* Light purple background */
+  background: 06494f; /* Light purple background */
   color: var(--accent);                /* Solid purple text/icon */
   border-left: 4px solid var(--accent); /* Optional: Vertical line indicator */
   font-weight: 700;

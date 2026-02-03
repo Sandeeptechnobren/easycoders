@@ -1,55 +1,36 @@
 'use client';
-
-interface EditorHeaderProps {
-  title: string;
+const languages = [
+  { id: 62, name: 'java', label: 'Java (OpenJDK 13)' },
+  { id: 63, name: 'javascript', label: 'JavaScript (Node.js 12)' },
+  { id: 71, name: 'python', label: 'Python (3.8.1)' },
+  { id: 68, name: 'php', label: 'PHP (7.4.1)' },
+];
+interface HeaderProps {
   onRun: () => void;
-  isSaving?: boolean;
+  isRunning: boolean;
+  onLanguageChange: (lang: any) => void;
+  currentLangId: number;
 }
-
-export default function EditorHeader({ title, onRun, isSaving }: EditorHeaderProps) {
+export default function EditorHeader({ onRun, isRunning, onLanguageChange, currentLangId }: HeaderProps) {
   return (
-    <div className="areaHeader">
-      <div className="headerInfo">
-        <h2>{title}</h2>
-        <span className={`badge ${isSaving ? 'saving' : ''}`}>
-          {isSaving ? 'Saving...' : 'Draft Saved'}
-        </span>
+    <div className="editorHeader">
+      <div className="langSelectorGroup">
+        <label htmlFor="langSelect">Language:</label>
+        <select 
+          id="langSelect"
+          value={currentLangId}
+          onChange={(e) => {
+            const lang = languages.find(l => l.id === parseInt(e.target.value));
+            onLanguageChange(lang);
+          }}
+          className="langDropdown"
+        >
+          {languages.map(l => <option key={l.id} value={l.id}>{l.label}</option>)}
+        </select>
       </div>
-      
-      <div className="headerActions">
-        <button className="runBtn" onClick={onRun}>
-          <span className="icon">▶</span> Run Code
-        </button>
-      </div>
-
-      <style jsx>{`
-        .areaHeader {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 15px;
-          background: #fff;
-          padding: 10px 15px;
-          border-radius: 12px;
-          border: 1px solid var(--border);
-        }
-        .headerInfo { display: flex; align-items: center; gap: 15px; }
-        .headerInfo h2 { font-size: 1.2rem; margin: 0; font-weight: 700; }
-        .runBtn {
-          background: #22c55e;
-          color: white;
-          border: none;
-          padding: 8px 18px;
-          border-radius: 8px;
-          font-weight: 700;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          transition: background 0.2s;
-        }
-        .runBtn:hover { background: #16a34a; }
-      `}</style>
+      <button className="runCodeBtn" onClick={onRun} disabled={isRunning}>
+        {isRunning ? 'Running...' : '▶ Run Program'}
+      </button>
     </div>
   );
 }
