@@ -1,4 +1,5 @@
 'use client';
+import QuestionStatement from "./QuestionStatement";
 
 export default function OutputWindow({ output }: { output: string }) {
   return (
@@ -9,6 +10,8 @@ export default function OutputWindow({ output }: { output: string }) {
           {output || '> Output will appear here after running your code...'}
         </pre>
       </div>
+
     </div>
+        
   );
 }
