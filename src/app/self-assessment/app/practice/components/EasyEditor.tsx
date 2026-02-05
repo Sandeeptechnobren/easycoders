@@ -20,7 +20,7 @@ export default function EasyEditor({ code, onChange, language = 'java' }: EasyEd
           fontSize: 14,
           minimap: { enabled: false },
           automaticLayout: true,
-          padding: { top: 20 }
+          padding: { top: 10 }
         }}
       />
     </div>
