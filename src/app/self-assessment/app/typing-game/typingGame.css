@@ -1,4 +1,4 @@
-.race-mobile-container {
+/* .race-mobile-container {
   display: flex;
   flex-direction: column;
   gap: 15px;
@@ -29,7 +29,6 @@
   text-transform: uppercase;
 }
 
-/* Source link styling */
 .source-link {
   color: #06494f;
   text-decoration: underline;
@@ -67,7 +66,7 @@
   border: 2px solid #137175;
   border-radius: 16px;
   padding: 15px;
-  font-size: 16px; /* Prevents iOS zoom */
+  font-size: 16px;
 }
 
 .race-success-overlay {
@@ -99,4 +98,111 @@
   border-radius: 10px;
   margin-top: 15px;
   font-weight: bold;
+} */
+
+.typing-wrapper{
+  max-width:900px;
+  margin:auto;
+  padding:30px;
+  font-family:Inter, sans-serif;
+}
+
+.title{
+  text-align:center;
+  margin-bottom:20px;
+}
+
+.time-selector{
+  display:flex;
+  justify-content:center;
+  gap:10px;
+  margin-bottom:20px;
+}
+
+.time-selector button{
+  padding:8px 18px;
+  border:none;
+  border-radius:20px;
+  background:#e6f4f1;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.time-selector .active{
+  background:#137175;
+  color:white;
+}
+
+.stats{
+  display:flex;
+  justify-content:space-between;
+  font-size:18px;
+  margin-bottom:15px;
+}
+
+.text-box{
+  background:#06494f;
+  color:#9ca3af;
+  padding:25px;
+  border-radius:14px;
+  min-height:180px;
+  line-height:1.7;
+  font-family:monospace;
+}
+
+.correct{
+  color:white;
+}
+
+.incorrect{
+  color:#ef4444;
+  background:rgba(239,68,68,0.2);
+}
+
+textarea{
+  width:100%;
+  height:140px;
+  margin-top:15px;
+  padding:15px;
+  border-radius:12px;
+  border:2px solid #137175;
+  font-size:16px;
+}
+
+.result-card{
+  margin-top:25px;
+  padding:25px;
+  background:white;
+  border-radius:16px;
+  text-align:center;
+  box-shadow:0 10px 30px rgba(0,0,0,0.1);
+}
+
+.result-stats{
+  display:flex;
+  justify-content:space-around;
+  margin:20px 0;
+}
+
+.result-stats span{
+  display:block;
+  font-size:40px;
+  font-weight:900;
+  color:#10b981;
+}
+
+.result-card button{
+  padding:12px 26px;
+  border:none;
+  border-radius:10px;
+  background:#137175;
+  color:white;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.bonus{
+  margin-bottom:10px;
+  color:#137175;
+  font-weight:700;
 }

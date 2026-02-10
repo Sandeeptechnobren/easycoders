@@ -121,7 +121,7 @@ export default function AssessmentAppLayout({
             onClick={() => setCollapsed(!collapsed)}
           >
             <span>☰</span>
-            {!collapsed && <span>Toggle Menu</span>}
+            {!collapsed && <span>Hide</span>}
           </button>
           <button className="logoutBtn" onClick={handleLogout}>
             ⎋ {!collapsed && 'Logout'}
