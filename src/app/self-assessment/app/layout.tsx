@@ -90,7 +90,7 @@ export default function AssessmentAppLayout({
             </span>
             {!collapsed && <span>Leader Board</span>}
           </Link>
-          <Link 
+          {/* <Link 
               href="/self-assessment/app/practice" 
               className={`navItem ${isActive('/self-assessment/app/practice') ? 'active' : ''}`}
             >
@@ -100,7 +100,7 @@ export default function AssessmentAppLayout({
                 </svg>
               </span>
               {!collapsed && <span>Code Practice</span>}
-          </Link>
+          </Link> */}
           <Link 
             href="/self-assessment/app/typing-game" 
             className={`navItem ${isActive('/self-assessment/app/typing-game') ? 'active' : ''}`}
