@@ -24,7 +24,6 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen">
-      {/* Internal CSS for Responsiveness */}
       <style jsx>{`
         .introSection { padding: 40px 20px; text-align: center; }
         .transparentDiv { display: flex; flex-direction: column; align-items: center; max-width: 1200px; margin: 0 auto; gap: 20px; }
