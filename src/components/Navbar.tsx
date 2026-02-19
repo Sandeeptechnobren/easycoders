@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import styles from './Navbar.module.css';
 import { useAuth } from '@/context/AuthContext';
+import Registration from './Registration';
 
 type NavLink = {
   name: string;
@@ -16,6 +17,7 @@ export default function Navbar() {
   const { role, logout } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
+const [showRegistration, setShowRegistration] = useState(false);
 
   const [isOpen, setIsOpen] = useState(false);
 
@@ -98,51 +100,62 @@ export default function Navbar() {
           <path d="M15.834 12.244c0 1.168-.577 2.025-1.587 2.025-.503 0-1.002-.228-1.12-.648h-.043c-.118.416-.543.643-1.015.643-.77 0-1.259-.542-1.259-1.434v-.529c0-.844.481-1.4 1.26-1.4.585 0 .87.333.953.63h.03v-.568h.905v2.19c0 .272.18.42.411.42.315 0 .639-.415.639-1.39v-.118c0-1.277-.95-2.326-2.484-2.326h-.04c-1.582 0-2.64 1.067-2.64 2.724v.157c0 1.867 1.237 2.654 2.57 2.654h.045c.507 0 .935-.07 1.18-.18v.731c-.219.1-.643.175-1.237.175h-.044C10.438 16 9 14.82 9 12.646v-.214C9 10.36 10.421 9 12.485 9h.035c2.12 0 3.314 1.43 3.314 3.034zm-4.04.21v.227c0 .586.227.8.581.8.31 0 .564-.17.564-.743v-.367c0-.516-.275-.708-.572-.708-.346 0-.573.245-.573.791"/>
         </svg>
         &nbsp;
-
       hr@technobren.com
       </div>
       <div className={styles.container}>
-        <div className={styles.logo}>
-          <img src="/images/fullnobackground.png" alt="Easy Coders Logo" />
-        </div>
-        <div className={styles.desktopMenu}>
-          {navLinks.map((link) => (
-            <Link
-              key={link.name}
-              href={link.href || '#'}
-              onClick={link.onClick}
-              className={`${styles.navLink} ${
-                link.name === 'Logout' ? styles.logoutBtn : ''
-              } ${pathname === link.href ? styles.active : ''}`}
-            >
-              {link.name}
-              {link.href && <span className={styles.underline}></span>}
-            </Link>
-          ))}
-        </div>
-        <button
-          className={styles.menuButton}
-          onClick={() => setIsOpen(!isOpen)}
+        <div className={styles.logo} style={{ display: 'flex', alignItems: 'center'}}>
+  <div style={{ display: 'flex', flexDirection: 'column' }}>
+  <img
+    src="/images/fullnobackground.png"
+    alt="Easy Coders Logo"
+    style={{ height: 45, margin:'0px' }}
+  />
+
+    <span style={{ fontSize: 11, color: '#666', marginTop: '-10px' }}>
+      An Initiative by <b style={{color:'#8e0000'}}>Technobren InfoTech Pvt. Ltd.</b>
+    </span>
+
+  </div>
+
+</div>
+      <div className={styles.desktopMenu}>
+      {navLinks.map((link) => (
+        <Link
+          key={link.name}
+          href={link.href || '#'}
+          onClick={link.onClick}
+          className={`${styles.navLink} ${
+            link.name === 'Logout' ? styles.logoutBtn : ''
+          } ${pathname === link.href ? styles.active : ''}`}
         >
-          {isOpen ? '✖' : '☰'}
-        </button>
+          {link.name}
+          {link.href && <span className={styles.underline}></span>}
+        </Link>
+      ))}
+      </div>
+      <button
+      className={styles.menuButton}
+      onClick={() => setIsOpen(!isOpen)}
+      >
+      {isOpen ? '✖' : '☰'}
+      </button>
       </div>
       <div className={`${styles.mobileMenu} ${isOpen ? styles.open : ''}`}>
-        {navLinks.map((link) => (
-          <Link
-            key={link.name}
-            href={link.href || '#'}
-            onClick={() => {
-              link.onClick?.();
-              setIsOpen(false);
-            }}
-            className={`${styles.mobileLink} ${
-              link.name === 'Logout' ? styles.logoutBtnMobile : ''
-            } ${pathname === link.href ? styles.mobileActive : ''}`}
-          >
-            {link.name}
-          </Link>
-        ))}
+      {navLinks.map((link) => (
+      <Link
+        key={link.name}
+        href={link.href || '#'}
+        onClick={() => {
+          link.onClick?.();
+          setIsOpen(false);
+        }}
+        className={`${styles.mobileLink} ${
+          link.name === 'Logout' ? styles.logoutBtnMobile : ''
+        } ${pathname === link.href ? styles.mobileActive : ''}`}
+      >
+        {link.name}
+      </Link>
+      ))}
       </div>
     </nav>
   );

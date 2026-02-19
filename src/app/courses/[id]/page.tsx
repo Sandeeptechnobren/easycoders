@@ -61,84 +61,36 @@ export default function CourseDetailsPage() {
           </div>
         </div>
       </section>
-      {/* <section className="description">
-        <div className="courseCard" style={{ marginBottom: 40 }}>
-          {course.offer && (
-            <span className="badge">{course.offer}</span>
-          )}
-          <h2 className="sectionTitle">Course Overview</h2>
-          <p className="testimonialText">
-            {course.description}
-          </p>
-          <div className="cardGrid" style={{ marginTop: 20 }}>
-            <div className="courseCard">
-              <h3 className="cardTitle">Duration</h3>:
-              <p className="testimonialText">{course.duration}</p>
-               <h3 className="cardTitle">Level</h3>:
-              <p className="testimonialText">{course.level}</p>
-               <h3 className="cardTitle">Fees</h3>:
-              <p className="testimonialText">
-                <del>₹{course.original_price}</del><br />
-                <strong>₹{course.discounted_price}</strong>
-              </p>
-            </div>
-            <div>
-               {course.category?.features?.length > 0 && (
-                  <div className="courseCard" style={{ marginBottom: 40 }}>
-                    <h2 className="sectionTitle">What You Will Get</h2>
-                    <ul>
-                      {course.category.features.map((f: any) => (
-                        <li key={f.id} className="testimonialText">
-                          {f.feature}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-            </div>
-
-          </div>
-          {!showEnrollForm && (
-            <div style={{ marginTop: 30 }}>
-              <button
-                onClick={() => setShowEnrollForm(true)}
-                className="enrollBtn"
-                style={{ padding: '12px 24px', fontSize: 15 }}
-              >
-                Enroll Now →
-              </button>
-            </div>
-          )}
-        </div>
-      </section> */}
       <section className="description">
   <div className="courseCard mainCard">
-
     {course.offer && (
       <span className="badge">{course.offer}</span>
     )}
-
-    <h2 className="sectionTitle">Course Overview</h2>
-
+<div style={{display: 'flex',alignItems: 'center',flexWrap: 'wrap'}}>
+  <h2 className="sectionTitle">Course Overview</h2>
+  {!showEnrollForm && (
+    <button
+      onClick={() => setShowEnrollForm(true)}
+      className="enrollBtn"
+      style={{ marginLeft: 'auto' }}
+    >
+      Enroll Now →
+    </button>
+  )}
+</div>
     <p className="testimonialText">
       {course.description}
     </p>
-
-    {/* GRID SECTION */}
     <div className="cardGrid">
-
-      {/* LEFT CARD */}
       <div className="courseCard infoCard">
         <div className="infoRow">
           <h3>Duration</h3>
           <p>{course.duration}</p>
         </div>
-
         <div className="infoRow">
           <h3>Level</h3>
           <p>{course.level}</p>
         </div>
-
         <div className="infoRow">
           <h3>Fees</h3>
           <p>
@@ -148,8 +100,6 @@ export default function CourseDetailsPage() {
           </p>
         </div>
       </div>
-
-      {/* RIGHT CARD */}
       {course.category?.features?.length > 0 && (
         <div className="courseCard featureCard">
           <h3 className="sectionTitle">What You Will Get</h3>
@@ -160,120 +110,174 @@ export default function CourseDetailsPage() {
           </ul>
         </div>
       )}
-
     </div>
-
-    {!showEnrollForm && (
-      <div style={{ marginTop: 30 }}>
-        <button
-          onClick={() => setShowEnrollForm(true)}
-          className="enrollBtn"
-        >
-          Enroll Now →
-        </button>
-      </div>
-    )}
-
   </div>
 </section>
 
-      {showEnrollForm && (
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100vw',
-            height: '100vh',
-            backgroundColor: 'rgba(0,0,0,0.6)',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            zIndex: 9999,
-          }}
-          onClick={() => setShowEnrollForm(false)}
-        >
+  {showEnrollForm && (
+    
+    <div style={{ position: 'fixed', top: 0,left: 0,width: '100vw',height: '100vh',backgroundColor: 'rgba(0,0,0,0.6)',display: 'flex',justifyContent: 'center',alignItems: 'center',zIndex: 9999,}}
+      onClick={() => setShowEnrollForm(false)}
+    >
+      <div
+        style={{
+          background: '#ffffff',
+          padding: '35px',
+          borderRadius: '12px 0px 0px 12px',
+          width: '80%',
+          height: '90%',
+          maxWidth: '520px',
+          position: 'relative',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '20px',
+          overflowY: 'auto'
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div>
+          <h2 style={{ marginBottom: 5, fontWeight: 700 }}>
+            {course.title}
+          </h2>
+
+          <p style={{ color: '#555', fontSize: 14 }}>
+            {course.category?.name}
+          </p>
+        </div>
+        {course.offer && (
           <div
             style={{
-              background: '#fff',
-              padding: '40px',
-              borderRadius: '12px',
-              width: '90%',
-              maxWidth: '500px',
-              position: 'relative',
+              background: '#e6f7ee',
+              color: '#008a4e',
+              padding: '8px 14px',
+              borderRadius: '6px',
+              fontWeight: 600,
+              width: 'fit-content',
+              fontSize: 13
             }}
-            onClick={(e) => e.stopPropagation()}
           >
-            <button
-              onClick={() => setShowEnrollForm(false)}
-              style={{
-                position: 'absolute',
-                top: 10,
-                right: 15,
-                border: 'none',
-                background: 'none',
-                fontSize: 20,
-                cursor: 'pointer',
-              }}
-            >
-              ✕
-            </button>
-
-            <h2 style={{ textAlign: 'center', marginBottom: 20 }}>
-              Enroll for this Course
-            </h2>
-
-            <form
-              onSubmit={handleSubmit}
-              style={{ display: 'flex', flexDirection: 'column', gap: 18 }}
-            >
-              <input
-                name="name"
-                placeholder="Full Name"
-                value={formData.name}
-                onChange={handleChange}
-                required
-                className="formInput"
-              />
-
-              <input
-                type="email"
-                name="email"
-                placeholder="Email Address"
-                value={formData.email}
-                onChange={handleChange}
-                required
-                className="formInput"
-              />
-
-              <input
-                name="phone_number"
-                placeholder="Phone Number"
-                value={formData.phone_number}
-                onChange={handleChange}
-                required
-                className="formInput"
-              />
-
-              <input
-                name="college"
-                placeholder="College (Optional)"
-                value={formData.college}
-                onChange={handleChange}
-                className="formInput"
-              />
-
-              <button
-                type="submit"
-                disabled={submitting}
-                className="formButton"
-              >
-                {submitting ? 'Submitting...' : 'Submit Enrollment →'}
-              </button>
-            </form>
+            🎉 {course.offer}
+          </div>
+        )}
+        <div
+          style={{
+            border: '1px solid #eee',
+            borderRadius: 8,
+            padding: '15px',
+            background: '#fafafa'
+          }}
+        >
+          <div style={{ marginBottom: 10 }}>
+            <span style={{ color: '#888' }}>Level:</span>
+            <b style={{ marginLeft: 6 }}>{course.level}</b>
+          </div>
+          <div>
+            <span style={{ color: '#888' }}>Duration:</span>
+            <b style={{ marginLeft: 6 }}>{course.duration}</b>
           </div>
         </div>
-      )}
+        {course.category?.features?.length > 0 && (
+          <div>
+            <h3 style={{ marginBottom: 10, fontWeight: 600 }}>
+              What You Will Get
+            </h3>
+            <ul style={{ paddingLeft: 18 }}>
+              {course.category.features.map((f: any) => (
+                <li
+                  key={f.id}
+                  style={{
+                    marginBottom: 6,
+                    fontSize: 14,
+                    lineHeight: 1.5
+                  }}
+                >
+                  ✔ {f.feature}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+      <div
+        style={{
+          background: '#fff',
+          padding: '40px',
+          borderRadius: '0px 12px 12px 0px',
+          width: '80%',
+          height: '90%',
+          maxWidth: '500px',
+          position: 'relative',
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          onClick={() => setShowEnrollForm(false)}
+          style={{
+            position: 'absolute',
+            top: 10,
+            right: 15,
+            border: 'none',
+            background: 'none',
+            fontSize: 20,
+            cursor: 'pointer',
+          }}
+        >
+          ✕
+        </button>
+        <h2 style={{ textAlign: 'center', marginBottom: 20 }}>
+          Enrollment Form
+        </h2>
+        <form
+          onSubmit={handleSubmit}
+          style={{ display: 'flex', flexDirection: 'column', gap: 18 }}
+        >
+          <input
+            name="name"
+            placeholder="Full Name"
+            value={formData.name}
+            onChange={handleChange}
+            required
+            className="formInput"
+          />
+
+          <input
+            type="email"
+            name="email"
+            placeholder="Email Address"
+            value={formData.email}
+            onChange={handleChange}
+            required
+            className="formInput"
+          />
+
+          <input
+            name="phone_number"
+            placeholder="Phone Number"
+            value={formData.phone_number}
+            onChange={handleChange}
+            required
+            className="formInput"
+          />
+
+          <input
+            name="college"
+            placeholder="College (Optional)"
+            value={formData.college}
+            onChange={handleChange}
+            className="formInput"
+          />
+
+          <button
+            type="submit"
+            disabled={submitting}
+            className="formButton"
+          >
+            {submitting ? 'Submitting...' : 'Submit →'}
+          </button>
+        </form>
+      </div>
     </div>
+  )}
+</div>
   );
 }
