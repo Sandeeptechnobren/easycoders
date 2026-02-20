@@ -1,8 +1,6 @@
 'use client';
-
 import api from '@/lib/axios';
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
-
 export default function Registration() {
   const [show, setShow] = useState(false);
   const [courses, setCourses] = useState<any[]>([]);
