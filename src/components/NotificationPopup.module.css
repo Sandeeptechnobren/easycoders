@@ -33,17 +33,14 @@
 
 .close:hover {
     color: #000;
-}
-
-/* Banner image */
+} 
 .image {
     width: 100%;
     height: auto;
     border-radius: 12px;
     margin-bottom: 16px;
 }
-
-/* Title */
+ 
 .title {
     font-size: 22px;
     font-weight: 700;
@@ -74,8 +71,7 @@
     transform: translateY(-2px);
     box-shadow: 0 8px 20px rgba(239, 68, 68, 0.5);
 }
-
-/* Animation */
+ 
 @keyframes popupIn {
     from {
         opacity: 0;
@@ -86,9 +82,7 @@
         opacity: 1;
         transform: scale(1) translateY(0);
     }
-}
-
-/* Mobile friendly */
+} 
 @media (max-width: 480px) {
     .popup {
         width: 90%;
