@@ -1,0 +1,355 @@
+/* student-details.module.css */
+
+.wrap {
+  min-height: 100vh;
+  padding: 24px 16px;
+  padding-top: 96px;
+  color: #0f172a;
+  background:
+    radial-gradient(1200px 600px at 20% 10%, rgba(255, 0, 0, 0.06), transparent 55%),
+    radial-gradient(900px 500px at 95% 5%, rgba(99, 102, 241, 0.08), transparent 52%),
+    #f6f7fb;
+}
+
+/* Header */
+.topbar {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 16px;
+  padding: 18px;
+  border-radius: 18px;
+  border: 1px solid rgba(15, 23, 42, 0.10);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 20px 35px rgba(15, 23, 42, 0.08);
+}
+
+.left {
+  min-width: 0;
+}
+
+.crumbs {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: rgba(15, 23, 42, 0.72);
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.crumbLink {
+  color: rgba(15, 23, 42, 0.92);
+  text-decoration: none;
+  font-weight: 900;
+}
+
+.crumbLink:hover {
+  text-decoration: underline;
+}
+
+.crumbSep {
+  opacity: 0.55;
+}
+
+.crumbNow {
+  opacity: 0.85;
+  font-weight: 900;
+}
+
+.title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 950;
+  letter-spacing: 0.2px;
+  color: #0f172a;
+}
+
+.subtitle {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: rgba(15, 23, 42, 0.70);
+  line-height: 1.45;
+  max-width: 650px;
+}
+
+.right {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* Buttons */
+.btn {
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-weight: 900;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  background: rgba(255, 255, 255, 0.95);
+  color: #0f172a;
+  transition: transform 150ms ease, background 150ms ease, box-shadow 150ms ease;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+  background: #ffffff;
+  box-shadow: 0 14px 24px rgba(15, 23, 42, 0.10);
+}
+
+.primary {
+  background: #8e0000;
+  border-color: rgba(142, 0, 0, 0.28);
+  color: #ffffff;
+}
+
+.primary:hover {
+  background: #7a0000;
+}
+
+.small {
+  padding: 8px 12px;
+  font-size: 12px;
+  border-radius: 10px;
+}
+
+/* Card */
+.card {
+  max-width: 1200px;
+  margin: 16px auto 0;
+  border-radius: 18px;
+  border: 1px solid rgba(15, 23, 42, 0.10);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 18px 35px rgba(15, 23, 42, 0.08);
+  padding: 14px;
+}
+
+/* Skeleton */
+.skeletonWrap {
+  display: grid;
+  gap: 10px;
+}
+
+.skRow {
+  height: 54px;
+  border-radius: 14px;
+  border: 1px solid rgba(15, 23, 42, 0.10);
+  background: linear-gradient(
+    90deg,
+    rgba(15, 23, 42, 0.04),
+    rgba(15, 23, 42, 0.08),
+    rgba(15, 23, 42, 0.04)
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.2s infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* States */
+.state {
+  padding: 24px;
+  border-radius: 16px;
+  border: 1px solid rgba(15, 23, 42, 0.10);
+  background: rgba(248, 250, 252, 0.9);
+  text-align: center;
+}
+
+.error {
+  border-color: rgba(239, 68, 68, 0.25);
+  background: rgba(239, 68, 68, 0.08);
+}
+
+.stateTitle {
+  font-weight: 950;
+  font-size: 15px;
+  color: #0f172a;
+}
+
+.stateText {
+  margin-top: 6px;
+  font-size: 13px;
+  color: rgba(15, 23, 42, 0.72);
+}
+
+.stateActions {
+  margin-top: 14px;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* Details card */
+.detailsCard {
+  padding: 10px;
+}
+
+.topRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.identity {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  min-width: 0;
+}
+
+.avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  font-weight: 950;
+  color: #0f172a;
+  background: rgba(142, 0, 0, 0.06);
+  border: 1px solid rgba(142, 0, 0, 0.18);
+  flex: 0 0 auto;
+}
+
+.identityText {
+  min-width: 0;
+}
+
+.name {
+  font-weight: 950;
+  font-size: 18px;
+  color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 720px;
+}
+
+.idLine {
+  margin-top: 4px;
+  font-size: 12px;
+  color: rgba(15, 23, 42, 0.65);
+}
+
+/* Pills */
+.pill {
+  font-size: 12px;
+  font-weight: 950;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(15, 23, 42, 0.10);
+  background: rgba(15, 23, 42, 0.03);
+  white-space: nowrap;
+}
+
+.ok {
+  border-color: rgba(16, 185, 129, 0.25);
+  background: rgba(16, 185, 129, 0.12);
+  color: #065f46;
+}
+
+.bad {
+  border-color: rgba(239, 68, 68, 0.25);
+  background: rgba(239, 68, 68, 0.10);
+  color: #7f1d1d;
+}
+
+.divider {
+  height: 1px;
+  background: rgba(15, 23, 42, 0.10);
+  margin: 16px 0;
+}
+
+/* Details grid */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.field {
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: rgba(248, 250, 252, 0.9);
+  border-radius: 14px;
+  padding: 12px;
+  min-width: 0;
+}
+
+.k {
+  display: block;
+  font-weight: 950;
+  font-size: 12px;
+  color: rgba(15, 23, 42, 0.60);
+  margin-bottom: 6px;
+}
+
+.v {
+  display: block;
+  font-weight: 900;
+  font-size: 13px;
+  color: rgba(15, 23, 42, 0.92);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Notes */
+.notesTitle {
+  font-weight: 950;
+  color: #0f172a;
+  margin-bottom: 8px;
+}
+
+.notesText {
+  margin: 0;
+  color: rgba(15, 23, 42, 0.78);
+  line-height: 1.6;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .topbar {
+    grid-template-columns: 1fr;
+  }
+  .right {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 720px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+  .name {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .wrap {
+    padding: 18px 12px;
+    padding-top: 84px;
+  }
+  .topbar {
+    padding: 14px;
+  }
+  .title {
+    font-size: 20px;
+  }
+}
+.tableWrap { width: 100%; overflow-x: auto; }
+.table { width: 100%; border-collapse: collapse; }

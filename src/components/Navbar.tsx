@@ -1,29 +1,26 @@
 'use client';
-
 import Link from 'next/link';
 import { useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import styles from './Navbar.module.css';
 import { useAuth } from '@/context/AuthContext';
 import Registration from './Registration';
-
 type NavLink = {
   name: string;
   href?: string;
   onClick?: () => void;
 };
-
 export default function Navbar() {
   const { role, logout } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
-const [showRegistration, setShowRegistration] = useState(false);
-
+  const [showRegistration, setShowRegistration] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-
   const handleLogout = () => {
     logout();
     localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    localStorage.removeItem('role');
     setIsOpen(false);
     router.replace('/');
   };
@@ -43,6 +40,12 @@ const [showRegistration, setShowRegistration] = useState(false);
     { name: 'Home', href: '/trainer' },
     { name: 'Logout', onClick: handleLogout },
   ];
+  const hrLinks: NavLink[] = [
+    { name: 'Home', href: '/hr' },
+    { name: 'Students', href: '/hr/students' },
+    { name: 'Logout', onClick: handleLogout },
+  ];
+
   const adminLinks: NavLink[] = [
     { name: 'Home', href: '/admin' },
     { name: 'Tasks', href: '/admin/tasks' },
@@ -59,6 +62,8 @@ const [showRegistration, setShowRegistration] = useState(false);
   const navLinks: NavLink[] =
     role === 1
       ? adminLinks
+      : role === 2
+      ? hrLinks
       : role === 4
       ? trainerLinks
       : role === 3
