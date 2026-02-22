@@ -1,44 +1,72 @@
 'use client';
+
 import RoleGuard from '@/components/RoleGuard';
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import styles from './hr-home.module.css';
+
 type Student = {
   id: string | number;
   name: string;
   email: string;
   phone?: string;
   course?: string;
-  status: 'Active' | 'Inactive' | string | number;
+  status: 'Active' | 'Inactive' | string | number; // backend may send 1/0 or strings
   score?: number;
   joinedAt?: string;
   created_at?: string;
 };
+
 type College = {
   id: string | number;
   college_name: string;
   address?: string;
 };
+
 function normalizeStatus(s: Student['status']): 'Active' | 'Inactive' {
   if (s === 'Active' || s === 1 || s === '1') return 'Active';
   return 'Inactive';
 }
+
 function getJoinedDate(s: Student): string {
   return s.joinedAt || (s as any).created_at || '';
 }
+
 export default function HrHomePage() {
   const [students, setStudents] = useState<Student[]>([]);
   const [colleges, setColleges] = useState<College[]>([]);
-  const [selectedCollegeID, setSelectedCollegeID] = useState<string>();
-  const [loadingStudents, setLoadingStudents] = useState(true);
-  const [loadingColleges, setLoadingColleges] = useState(true);
+
+  // ✅ NEVER keep undefined here for select value
+  const [selectedCollegeID, setSelectedCollegeID] = useState<string>('');
+
+  const [loadingStudents, setLoadingStudents] = useState(false);
+  const [loadingColleges, setLoadingColleges] = useState(false);
   const [error, setError] = useState('');
+
   const [userData, setUserData] = useState<any>(null);
-  useEffect(()=>{
-    setUserData(localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')!) : null);
-  })
+  const [token, setToken] = useState<string | null>(null);
+
+  // ✅ Read localStorage ONLY on mount
+  useEffect(() => {
+    try {
+      const u = localStorage.getItem('user');
+      setUserData(u ? JSON.parse(u) : null);
+
+      const savedCollegeId = localStorage.getItem('college_id') || '';
+      setSelectedCollegeID(savedCollegeId);
+
+      setToken(localStorage.getItem('token'));
+    } catch {
+      setUserData(null);
+      setSelectedCollegeID('');
+      setToken(null);
+    }
+  }, []);
+
+  // ✅ Fetch colleges once
   useEffect(() => {
     const controller = new AbortController();
+
     const fetchColleges = async () => {
       try {
         setLoadingColleges(true);
@@ -46,30 +74,40 @@ export default function HrHomePage() {
           'https://api.easycoders.in/projects/backend/public/api/collegeList',
           { signal: controller.signal }
         );
+
         if (!res.ok) throw new Error('Failed to fetch colleges');
+
         const json = await res.json();
         setColleges(json.data || []);
-      } catch (e) {
+      } catch (e: any) {
+        if (e?.name === 'AbortError') return;
+        // You can set an error if you want:
+        // setError('Failed to load colleges.');
       } finally {
         setLoadingColleges(false);
       }
     };
+
     fetchColleges();
     return () => controller.abort();
   }, []);
+
+  // ✅ Fetch students whenever college changes AND token exists
   useEffect(() => {
+    if (!token) return; // wait until token is loaded from localStorage
+
     const controller = new AbortController();
+
     const fetchStudents = async () => {
       try {
         setLoadingStudents(true);
         setError('');
-        const token = localStorage.getItem('token');
-        if (!token) throw new Error('Unauthorized');
-        const url =
-          'https://api.easycoders.in/projects/backend/public/api/hr/students' +
-          (selectedCollegeID
-            ? `?college_id=${encodeURIComponent(selectedCollegeID)}`
-            : '');
+
+        const base = 'https://api.easycoders.in/projects/backend/public/api/hr/students';
+        const url = selectedCollegeID
+          ? `${base}?college_id=${encodeURIComponent(selectedCollegeID)}`
+          : base;
+
         const res = await fetch(url, {
           method: 'GET',
           signal: controller.signal,
@@ -78,12 +116,15 @@ export default function HrHomePage() {
             Authorization: `Bearer ${token}`,
           },
         });
+
         if (res.status === 401 || res.status === 403) throw new Error('Unauthorized');
         if (!res.ok) throw new Error('Failed to load students');
+
         const json = await res.json();
         setStudents(json.data || []);
       } catch (e: any) {
         if (e?.name === 'AbortError') return;
+
         setStudents([]);
         setError(
           e?.message === 'Unauthorized'
@@ -94,20 +135,29 @@ export default function HrHomePage() {
         setLoadingStudents(false);
       }
     };
+
     fetchStudents();
     return () => controller.abort();
-  }, [selectedCollegeID]);
+  }, [selectedCollegeID, token]);
+
   const loading = loadingStudents || loadingColleges;
+
   const stats = useMemo(() => {
     const total = students.length;
     const active = students.filter((s) => normalizeStatus(s.status) === 'Active').length;
     const inactive = total - active;
-    const scores = students.map((s) => Number(s.score ?? 0)).filter((n) => Number.isFinite(n));
+
+    const scores = students
+      .map((s) => Number(s.score ?? 0))
+      .filter((n) => Number.isFinite(n));
+
     const avgScore = scores.length
       ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
       : 0;
+
     return { total, active, inactive, avgScore };
   }, [students]);
+
   const recent = useMemo(() => {
     return [...students]
       .sort((a, b) => {
@@ -118,12 +168,14 @@ export default function HrHomePage() {
       })
       .slice(0, 6);
   }, [students]);
-  const greeting = (() => {
-      const h = new Date().getHours(); // user local time
-      if (h < 12) return 'Good morning';
-      if (h < 17) return 'Good afternoon';
-      return 'Good evening';
-    })();
+
+  const greeting = useMemo(() => {
+    const h = new Date().getHours();
+    if (h < 12) return 'Good morning';
+    if (h < 17) return 'Good afternoon';
+    return 'Good evening';
+  }, []);
+
   return (
     <RoleGuard allowedRoles={[2]}>
       <div className={styles.wrap}>
@@ -136,11 +188,14 @@ export default function HrHomePage() {
               <span className={styles.crumbSep}>/</span>
               <span className={styles.crumbNow}>Dashboard</span>
             </div>
+
             <h1 className={styles.title}>
               Hi {userData?.name || 'User'}, {greeting}
             </h1>
+
             <p className={styles.subtitle}>Student & operations overview</p>
           </div>
+
           <div className={styles.right}>
             <Link href="/hr/students" className={`${styles.btn} ${styles.primary}`}>
               Students Directory
@@ -150,10 +205,12 @@ export default function HrHomePage() {
             </Link>
           </div>
         </header>
+
         <section className={styles.filters}>
           <label className={styles.filterLabel} htmlFor="college-select">
             College
           </label>
+
           <select
             id="college-select"
             className={styles.select}
@@ -185,6 +242,7 @@ export default function HrHomePage() {
             </button>
           )}
         </section>
+
         {loading && (
           <section className={styles.card}>
             <div className={styles.skeletonWrap}>
@@ -195,6 +253,7 @@ export default function HrHomePage() {
             </div>
           </section>
         )}
+
         {!loading && error && (
           <section className={styles.card}>
             <div className={`${styles.state} ${styles.error}`}>
@@ -212,6 +271,7 @@ export default function HrHomePage() {
             </div>
           </section>
         )}
+
         {!loading && !error && (
           <>
             <section className={styles.kpis}>
@@ -220,22 +280,26 @@ export default function HrHomePage() {
                 <div className={styles.kpiValue}>{stats.total}</div>
                 <div className={styles.kpiHint}>All enrolled students</div>
               </div>
+
               <div className={styles.kpi}>
                 <div className={styles.kpiLabel}>Active</div>
                 <div className={styles.kpiValue}>{stats.active}</div>
                 <div className={styles.kpiHint}>Currently learning</div>
               </div>
+
               <div className={styles.kpi}>
                 <div className={styles.kpiLabel}>Inactive</div>
                 <div className={styles.kpiValue}>{stats.inactive}</div>
                 <div className={styles.kpiHint}>Needs follow-up</div>
               </div>
+
               <div className={styles.kpi}>
                 <div className={styles.kpiLabel}>Avg Score</div>
                 <div className={styles.kpiValue}>{stats.avgScore}</div>
                 <div className={styles.kpiHint}>Across available scores</div>
               </div>
             </section>
+
             <section className={styles.grid}>
               <section className={styles.card}>
                 <div className={styles.cardHead}>
@@ -244,6 +308,7 @@ export default function HrHomePage() {
                     <div className={styles.cardSub}>Frequently used HR workflows</div>
                   </div>
                 </div>
+
                 <div className={styles.quickGrid}>
                   <Link href="/hr/students" className={styles.quick}>
                     <div className={styles.quickIcon}>👥</div>
@@ -253,6 +318,7 @@ export default function HrHomePage() {
                     </div>
                     <div className={styles.chev}>→</div>
                   </Link>
+
                   <button
                     className={styles.quick}
                     type="button"
@@ -265,6 +331,7 @@ export default function HrHomePage() {
                     </div>
                     <div className={styles.chev}>→</div>
                   </button>
+
                   <button
                     className={styles.quick}
                     type="button"
@@ -277,6 +344,7 @@ export default function HrHomePage() {
                     </div>
                     <div className={styles.chev}>→</div>
                   </button>
+
                   <button
                     className={styles.quick}
                     type="button"
@@ -291,32 +359,45 @@ export default function HrHomePage() {
                   </button>
                 </div>
               </section>
+
               <section className={styles.card}>
                 <div className={styles.cardHead}>
                   <div>
                     <div className={styles.cardTitle}>Recent Students</div>
                     <div className={styles.cardSub}>Latest joined / updated profiles</div>
                   </div>
+
                   <Link className={styles.link} href="/hr/students">
                     View all
                   </Link>
                 </div>
+
                 <div className={styles.list}>
                   {recent.length ? (
                     recent.map((s) => {
                       const st = normalizeStatus(s.status);
                       return (
-                        <Link key={String(s.id)} href={`/hr/students/${s.id}`} className={styles.row}>
+                        <Link
+                          key={String(s.id)}
+                          href={`/hr/students/${s.id}`}
+                          className={styles.row}
+                        >
                           <div className={styles.avatar}>
                             {(s.name?.[0] || 'S').toUpperCase()}
                           </div>
+
                           <div className={styles.rowMid}>
                             <div className={styles.rowTitle}>{s.name}</div>
                             <div className={styles.rowSub}>
                               {(s.course || '—')} • {s.email}
                             </div>
                           </div>
-                          <span className={`${styles.pill} ${st === 'Active' ? styles.ok : styles.bad}`}>
+
+                          <span
+                            className={`${styles.pill} ${
+                              st === 'Active' ? styles.ok : styles.bad
+                            }`}
+                          >
                             {st}
                           </span>
                         </Link>
