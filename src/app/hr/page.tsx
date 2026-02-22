@@ -29,13 +29,14 @@ function getJoinedDate(s: Student): string {
 export default function HrHomePage() {
   const [students, setStudents] = useState<Student[]>([]);
   const [colleges, setColleges] = useState<College[]>([]);
-  const [selectedCollegeID, setSelectedCollegeID] = useState<string>(() => {
-    return localStorage.getItem('college_id') || '';
-  });
+  const [selectedCollegeID, setSelectedCollegeID] = useState<string>();
   const [loadingStudents, setLoadingStudents] = useState(true);
   const [loadingColleges, setLoadingColleges] = useState(true);
   const [error, setError] = useState('');
-  const userData = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')!) : null;
+  const [userData, setUserData] = useState<any>(null);
+  useEffect(()=>{
+    setUserData(localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')!) : null);
+  })
   useEffect(() => {
     const controller = new AbortController();
     const fetchColleges = async () => {
