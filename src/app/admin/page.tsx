@@ -40,8 +40,6 @@ export default function AdminDashboard() {
     <RoleGuard allowedRoles={[1]}>
     <div className="adminWrapper">
       <div className="adminGrid">
-
-        {/* SIDEBAR */}
         <div className="adminSidebar">
           <h3>Admin Panel</h3>
           <div className="adminMenu">
@@ -56,19 +54,13 @@ export default function AdminDashboard() {
             </div>
           </div>
         </div>
-
-        {/* MAIN */}
         <div className="adminMain">
-
-          {/* HERO */}
           <div className="adminHero">
             <div>
               <h1>Welcome Admin 👋</h1>
               <p>Here’s what’s happening on EasyCoders today</p>
             </div>
           </div>
-
-          {/* KPI CARDS */}
           <div className="adminCards">
             <div className="adminCard">
               <h3>Total Students</h3>

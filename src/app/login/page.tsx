@@ -17,21 +17,18 @@ export default function LoginPage() {
     e.preventDefault();
     try {
       const response = await api.post('/login', { email, password });
-
       const token = response.data.data.access_token;
       const user = response.data.data.user;
       const role = user.role;
-
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
       localStorage.setItem('role', role);
-
       login(role);
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-
       if (role === 1) router.push('/admin');
-      else if (role === 4) router.push('/trainer');
+      else if (role === 2) router.push('/hr');
       else if (role === 3) router.push('/student');
+      else if (role === 4) router.push('/trainer');
       else router.push('/');
 
     } catch (err: any) {
@@ -41,8 +38,6 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen">
-
-      {/* HERO */}
       <section className="introSection global-header-bg">
         <div className="transparentDiv">
           <div style={{ display: 'flex', width: '100%', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -59,55 +54,7 @@ export default function LoginPage() {
           </div>
         </div>
       </section>
-
-      {/* <section className="description" style={{ display: 'flex', justifyContent: 'center' }}>
-
-        <div className="courseCard" style={{ width: 400 }}>
-          <h2 className="sectionTitle">Login</h2>
-
-          {error && (
-            <div style={{ color: 'red', marginBottom: 10, textAlign: 'center' }}>
-              {error}
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <input
-              type="email"
-              placeholder="Email Address"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="searchInput"
-            />
-
-            <input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="searchInput"
-            />
-
-            <button
-              type="submit"
-              className="enrollBtn"
-              style={{ marginTop: 10 }}
-            >
-              Login →
-            </button>
-          </form>
-
-          <p style={{ marginTop: 20, textAlign: 'center' }}>
-            Don’t have an account?{' '}
-            <Link href="/contactus" style={{ color: '#8B5CF6', fontWeight: 600 }}>
-              Contact Us
-            </Link>
-          </p>
-        </div>
-
-      </section> */}
+      
       <section className="description" style={{ display: 'flex', justifyContent: 'center' }}>
   <div className="courseCard" style={{ width: 420 }}>
     
