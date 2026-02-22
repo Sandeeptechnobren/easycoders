@@ -5,12 +5,15 @@ import { usePathname, useRouter } from 'next/navigation';
 import styles from './Navbar.module.css';
 import { useAuth } from '@/context/AuthContext';
 import Registration from './Registration';
+import {} from 'react-icons/fa';
+import { useEffect } from 'react';
 type NavLink = {
   name: string;
   href?: string;
   onClick?: () => void;
 };
 export default function Navbar() {
+
   const { role, logout } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
@@ -24,6 +27,14 @@ export default function Navbar() {
     setIsOpen(false);
     router.replace('/');
   };
+    useEffect(() => {
+    if (!isOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [isOpen]);
   const commonLinks: NavLink[] = [
     { name: 'Home', href: '/' },
     { name: 'Courses', href: '/courses' },
@@ -261,6 +272,7 @@ export default function Navbar() {
       {isOpen ? '✖' : '☰'}
       </button>
       </div>
+      <div className={`${styles.overlay} ${isOpen ? styles.overlayOpen : ''}`} onClick={() => setIsOpen(false)}/>
       <div className={`${styles.mobileMenu} ${isOpen ? styles.open : ''}`}>
       {navLinks.map((link) => (
       <Link
@@ -278,6 +290,7 @@ export default function Navbar() {
       </Link>
       ))}
       </div>
+      
     </nav>
   );
 }

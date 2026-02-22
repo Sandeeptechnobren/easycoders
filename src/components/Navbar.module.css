@@ -10,8 +10,6 @@
     border-radius: 0px 0px 20px 20px;
 }
 
-/* ================= CORE LAYOUT ================= */
-
 .container {
     max-width: 1300px;
     margin: auto;
@@ -32,15 +30,10 @@
     border-radius: 8px;
 }
 
-/* ================= DESKTOP MENU ================= */
-
 .desktopMenu {
     display: flex;
-    /* gap: 10px; */
     align-items: center;
 }
-
-/* This is the SINGLE SOURCE OF TRUTH for nav items */
 .navLink {
     display: inline-flex;
     align-items: center;
@@ -67,8 +60,6 @@
 .active {
     color: #a207c8 !important;
 }
-
-/* underline animation */
 .underline {
     content: '';
     position: absolute;
@@ -84,9 +75,6 @@
 .active .underline {
     width: 100%;
 }
-
-/* ================= LOGOUT (ONLY VISUAL DIFF) ================= */
-
 .logoutBtn {
     color: #ff4a4a !important;
     border: 1px solid rgba(255, 74, 74, 0.4);
@@ -103,9 +91,6 @@
 .logoutBtn .underline {
     display: none;
 }
-
-/* ================= MOBILE ================= */
-
 .menuButton {
     font-size: 2rem;
     color: #032c73;
@@ -164,9 +149,6 @@
     margin-top: 10px;
     background: rgba(255, 74, 74, 0.12);
 }
-
-/* ================= RESPONSIVE ================= */
-
 @media (max-width: 900px) {
     .desktopMenu {
         display: none;
@@ -175,4 +157,123 @@
     .menuButton {
         display: block;
     }
+}
+/* ===== Mobile improvements ONLY ===== */
+.overlay {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  /* your current desktopMenu hidden + menuButton shown stays as-is */
+
+  /* Make navbar height stable on mobile */
+  .navbar {
+    border-radius: 0 0 16px 16px;
+  }
+
+  .container {
+    padding: 10px 14px;
+    gap: 10px;
+  }
+
+  .logo img {
+    width: 125px;
+    height: auto;
+  }
+
+  /* ===== Overlay ===== */
+  .overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 200ms ease;
+    z-index: 998; /* below menu, above page */
+  }
+
+  .overlayOpen {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* ===== Convert mobile menu into right-side drawer ===== */
+  .mobileMenu {
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: auto;
+    height: 100vh;
+    width: min(85vw, 360px);
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(10px);
+    border-left: 1px solid rgba(0, 0, 0, 0.08);
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    /* start hidden */
+    transform: translateX(110%);
+    transition: transform 260ms ease;
+    z-index: 999;
+  }
+
+  .open {
+    transform: translateX(0);
+  }
+
+  /* Mobile links should look like list buttons */
+  .mobileLink {
+    justify-content: flex-start;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #111;
+    border-bottom: none;
+
+    padding: 14px 12px;
+    border-radius: 14px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    background: rgba(0, 0, 0, 0.02);
+    transition: transform 160ms ease, background 160ms ease;
+  }
+
+  .mobileLink:hover {
+    background: rgba(0, 194, 255, 0.10);
+    color: #032c73;
+    transform: translateY(-1px);
+  }
+
+  .mobileActive {
+    color: #00c2ff !important;
+    border-color: rgba(0, 194, 255, 0.35);
+    background: rgba(0, 194, 255, 0.08);
+  }
+
+  .logoutBtnMobile {
+    margin-top: 6px;
+    border-radius: 14px;
+  }
+}
+
+/* Extra small screens: make upper nav not overflow */
+@media (max-width: 520px) {
+  /* upperNav is inline style in your code; fix by targeting its children */
+  .navbar :global(.upperNav) {
+    padding: 8px 10px !important;
+    gap: 10px !important;
+  }
+
+  .navbar :global(.navLink) {
+    padding: 6px 8px !important;
+  }
+
+  .navbar :global(.linkText) {
+    font-size: 12px !important;
+  }
+
+  .navbar :global(.dot) {
+    margin: 0 10px !important;
+  }
 }
