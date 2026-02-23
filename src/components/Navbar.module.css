@@ -158,15 +158,11 @@
         display: block;
     }
 }
-/* ===== Mobile improvements ONLY ===== */
 .overlay {
   display: none;
 }
 
 @media (max-width: 900px) {
-  /* your current desktopMenu hidden + menuButton shown stays as-is */
-
-  /* Make navbar height stable on mobile */
   .navbar {
     border-radius: 0 0 16px 16px;
   }
@@ -180,8 +176,6 @@
     width: 125px;
     height: auto;
   }
-
-  /* ===== Overlay ===== */
   .overlay {
     display: block;
     position: fixed;
@@ -190,15 +184,13 @@
     opacity: 0;
     pointer-events: none;
     transition: opacity 200ms ease;
-    z-index: 998; /* below menu, above page */
+    z-index: 998;
   }
 
   .overlayOpen {
     opacity: 1;
     pointer-events: auto;
   }
-
-  /* ===== Convert mobile menu into right-side drawer ===== */
   .mobileMenu {
     position: fixed;
     top: 0;
@@ -213,8 +205,6 @@
     display: flex;
     flex-direction: column;
     gap: 10px;
-
-    /* start hidden */
     transform: translateX(110%);
     transition: transform 260ms ease;
     z-index: 999;
@@ -223,8 +213,6 @@
   .open {
     transform: translateX(0);
   }
-
-  /* Mobile links should look like list buttons */
   .mobileLink {
     justify-content: flex-start;
     font-size: 1rem;
@@ -256,10 +244,7 @@
     border-radius: 14px;
   }
 }
-
-/* Extra small screens: make upper nav not overflow */
 @media (max-width: 520px) {
-  /* upperNav is inline style in your code; fix by targeting its children */
   .navbar :global(.upperNav) {
     padding: 8px 10px !important;
     gap: 10px !important;

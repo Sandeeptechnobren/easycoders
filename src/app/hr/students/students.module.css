@@ -482,3 +482,34 @@
     width: 100%;
   }
 }
+
+/* Interest Color Codes */
+.notSet {
+  border-color: rgba(107, 114, 128, 0.35);
+  background: rgba(107, 114, 128, 0.12);
+  color: #374151;
+}
+
+.interested {
+  border-color: rgba(16, 185, 129, 0.4);
+  background: rgba(16, 185, 129, 0.14);
+  color: #065f46;
+}
+
+.notInterested {
+  border-color: rgba(239, 68, 68, 0.4);
+  background: rgba(239, 68, 68, 0.14);
+  color: #7f1d1d;
+}
+
+.callBackLater {
+  border-color: rgba(245, 158, 11, 0.45);
+  background: rgba(245, 158, 11, 0.16);
+  color: #78350f;
+}
+
+.notReachable {
+  border-color: rgba(99, 102, 241, 0.45);
+  background: rgba(99, 102, 241, 0.14);
+  color: #312e81;
+}

@@ -265,10 +265,7 @@ export default function Navbar() {
         </Link>
       ))}
       </div>
-      <button
-      className={styles.menuButton}
-      onClick={() => setIsOpen(!isOpen)}
-      >
+      <button className={styles.menuButton} onClick={() => setIsOpen(!isOpen)}>
       {isOpen ? '✖' : '☰'}
       </button>
       </div>
