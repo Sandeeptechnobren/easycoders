@@ -579,6 +579,7 @@ export default function AssessmentSignup() {
     name: '', email: '', otp: '', phone: '', password: '',
     password_confirmation: '', gender: '', date_of_birth: '',
     level: '', goal: '', college_id: undefined as number | undefined,
+    course:'',year:undefined as number|undefined,
   });
 
   const [otpSent, setOtpSent] = useState(false);
@@ -640,7 +641,6 @@ export default function AssessmentSignup() {
   return (
     <div className="sa-wrapper">
       <div className="sa-container">
-        {/* Left Side: Branding */}
         <div className="sa-branding">
           <div className="sa-glass">
             <div className="sa-logo-circle">EC</div>
@@ -653,8 +653,6 @@ export default function AssessmentSignup() {
             </div>
           </div>
         </div>
-
-        {/* Right Side: Form */}
         <div className="sa-content">
           <div className="sa-progress-container">
             <div className="sa-progress-bar" style={{ width: `${progress}%` }}></div>
@@ -744,7 +742,32 @@ export default function AssessmentSignup() {
                       <input name="password_confirmation" type="password" className="sa-input" placeholder="••••••••" value={form.password_confirmation} onChange={handleChange} required />
                     </div>
                   </div>
-
+                  <div className="sa-grid">
+                    <div className="sa-field">
+                      <label>Course</label>
+                      <Dropdown options={[{label:'B Tech (CSE)',value:'b_tech'},{label:'BCA',value:'bca'},{label:'MCA',value:'mca'},{label:'Polytechnic',value:'polytechnic'}]} placeholder="Course" value={form.course} onChange={v => setForm(p=>({...p, course: v as string}))} />
+                    </div>
+                   
+                    <div className="sa-field">
+                      <label>Year</label>
+                      <Dropdown
+                        options={[
+                          { label: '1st Year', value: 1 },
+                          { label: '2nd Year', value: 2 },
+                          { label: '3rd Year', value: 3 },
+                          { label: '4th Year', value: 4 }
+                        ]}
+                        placeholder="Select Year"
+                        value={form.year}
+                        onChange={(v) =>
+                          setForm((p) => ({
+                            ...p,
+                            year: v as number
+                          }))
+                        }
+                      />
+                    </div>
+                  </div>
                   <div className="sa-grid">
                     <div className="sa-field">
                       <label>Experience</label>
