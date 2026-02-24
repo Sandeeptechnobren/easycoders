@@ -24,7 +24,7 @@ export default function RegisterPage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await api.post('/register', { name, email, password, role, college_id: collegeId });
+            await api.post('/register', { name, email, password, role:3, college_id: collegeId });
             router.push('/login');
         } catch (err: any) {
             setError(err.response?.data?.message || 'Registration failed');
@@ -58,8 +58,6 @@ export default function RegisterPage() {
                 >
                     Create Account
                 </h2>
-
-                {/* ERROR ALERT */}
                 {error && (
                     <div className="alert alert-danger text-center py-2">
                         {error}
@@ -67,8 +65,6 @@ export default function RegisterPage() {
                 )}
 
                 <form onSubmit={handleSubmit}>
-
-                    {/* NAME */}
                     <div className="mb-3">
                         <label className="form-label">Full Name</label>
                         <input
@@ -80,8 +76,6 @@ export default function RegisterPage() {
                             style={{ borderRadius: "8px" }}
                         />
                     </div>
-
-                    {/* EMAIL */}
                     <div className="mb-3">
                         <label className="form-label">Email</label>
                         <input
@@ -93,8 +87,6 @@ export default function RegisterPage() {
                             style={{ borderRadius: "8px" }}
                         />
                     </div>
-
-                    {/* PASSWORD */}
                     <div className="mb-3">
                         <label className="form-label">Password</label>
                         <input
