@@ -1,14 +1,11 @@
 'use client';
-
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
 import RoleGuard from '@/components/RoleGuard';
 import styles from './student-details.module.css';
 import { fetchWithAuth } from '@/lib/api';
-
 type InterestOption = { id: number; interest: string };
-
 type AssessmentAttempt = {
   id: number;
   assessment_id: number;
@@ -121,13 +118,7 @@ export default function TrainerStudentDetailsPage() {
 
     try {
       setSavingInterest(true);
-
-      // your interest object can be null (student.interest === null)
-      // In that case, backend must create interest row.
-      // If backend already auto-creates: fine.
-      // If not, tell me and I’ll adjust endpoint logic.
-      const assessmentUserId = student.id; // your API uses assessment_user_id == student.id in response
-
+      const assessmentUserId = student.id;
       await fetchWithAuth(
         'https://api.easycoders.in/projects/backend/public/api/hr/assessmentUser/updateInterestStatus',
         {
@@ -136,7 +127,7 @@ export default function TrainerStudentDetailsPage() {
           body: JSON.stringify({
             assessment_user_id: assessmentUserId,
             interest_status: Number(selectedInterestId || 0),
-            call_response: callResponse || null, // if your backend supports this field
+            call_response: callResponse || null,
           }),
         }
       );
@@ -220,8 +211,6 @@ export default function TrainerStudentDetailsPage() {
             <Link href="/trainer/students" className={`${styles.btn} ${styles.primary}`}>
               ← Back
             </Link>
-
-            {/* TOP interest control beside back */}
             <div className={styles.interestBox}>
               <div className={styles.interestLabel}>
                 Current: <b>{currentInterestLabel}</b>
@@ -308,8 +297,6 @@ export default function TrainerStudentDetailsPage() {
                 </div>
               </div>
             </section>
-
-            {/* Trainer tools */}
             <section className={styles.toolsGrid}>
               <section className={styles.card}>
                 <div className={styles.cardTitle}>Attendance</div>
@@ -324,7 +311,6 @@ export default function TrainerStudentDetailsPage() {
                   </button>
                 </div>
               </section>
-
               <section className={styles.card}>
                 <div className={styles.cardTitle}>Add Marks</div>
                 <div className={styles.toolRow}>
@@ -336,8 +322,6 @@ export default function TrainerStudentDetailsPage() {
                 </div>
               </section>
             </section>
-
-            {/* Assessment table (unchanged) */}
             <section className={styles.card}>
               <div className={styles.cardTitle}>Assessment Details</div>
               <div className={styles.divider} />
