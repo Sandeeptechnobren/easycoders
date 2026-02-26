@@ -1,357 +1,95 @@
-// 'use client';
-// import RoleGuard from '@/components/RoleGuard';
-// import Link from 'next/link';
-// import { useEffect, useMemo, useState } from 'react';
-// import styles from './enrollmentRequests.module.css';
-// import { fetchWithAuth } from '@/lib/api';
-// type ReqRow = {
-//   id: number;
-//   course_id?: number;
-//   college?: string;
-//   name: string;
-//   email: string;
-//   phone_number: string;
-//   payment_method?: string;
-//   transaction_number?: string;
-//   created_at?: string;
-// };
-// export default function EnrollmentRequestsPage() {
-//   const [rows, setRows] = useState<ReqRow[]>([]);
-//   const [loading, setLoading] = useState(true);
-//   const [error, setError] = useState('');
-//   const [selected, setSelected] = useState<ReqRow | null>(null);
-//   const [busy, setBusy] = useState(false);
-//   const [convertResult, setConvertResult] = useState<any>(null);
-//   const [form, setForm] = useState({
-//     total_fee: '',
-//     first_payment_amount: '',
-//     first_payment_date: '',
-//     next_due_date: '',
-//   });
-//   const [openDirect, setOpenDirect] = useState(false);
-//   const [directBusy, setDirectBusy] = useState(false);
-//   const [directResult, setDirectResult] = useState<any>(null);
-//   const [directForm, setDirectForm] = useState({
-//     name: '',
-//     email: '',
-//     phone_number: '',
-//     course_id: '',
-//     college: '',
-//     total_fee: '',
-//     first_payment_amount: '',
-//     first_payment_date: '',
-//     next_due_date: '',
-//   });
-//   const load = async () => {
-//     try {
-//       setLoading(true);
-//       setError('');
-//       const json = await fetchWithAuth(
-//         'https://api.easycoders.in/projects/backend/public/api/admin/enrollmentRequests'
-//       );
-//       setRows(json.data || []);
-//     } catch (e: any) {
-//       setError(e?.message === 'Unauthorized' ? 'Session expired. Please login again.' : 'Failed to load requests');
-//       setRows([]);
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-//   useEffect(() => {
-//     load();
-//   }, []);
-//   const filtered = useMemo(() => rows, [rows]);
-//   const convert = async () => {
-//     if (!selected) return;
-//     try {
-//       setBusy(true);
-//       setConvertResult(null);
-//       const payload = {
-//         total_fee: Number(form.total_fee),
-//         first_payment_amount: Number(form.first_payment_amount),
-//         first_payment_date: form.first_payment_date,
-//         next_due_date: form.next_due_date || null,
-//       };
-//       const json = await fetchWithAuth(
-//         `https://api.easycoders.in/projects/backend/public/api/admin/enrollmentRequests/${selected.id}/convert`,
-//         {
-//           method: 'POST',
-//           headers: { 'Content-Type': 'application/json' },
-//           body: JSON.stringify(payload),
-//         }
-//       );
-//       setConvertResult(json.data);
-//       await load();
-//     } catch (e: any) {
-//       alert(e?.message || 'Conversion failed');
-//     } finally {
-//       setBusy(false);
-//     }
-//   };
-//   const submitDirect = async () => {
-//     try {
-//       setDirectBusy(true);
-//       setDirectResult(null);
-//       const payload = {
-//         name: directForm.name.trim(),
-//         email: directForm.email.trim(),
-//         phone_number: directForm.phone_number.trim(),
-//         course_id: directForm.course_id ? Number(directForm.course_id) : null,
-//         college: directForm.college.trim() || null,
-//         total_fee: Number(directForm.total_fee),
-//         first_payment_amount: Number(directForm.first_payment_amount),
-//         first_payment_date: directForm.first_payment_date,
-//         next_due_date: directForm.next_due_date || null,
-//       };
-//       const json = await fetchWithAuth(
-//         `https://api.easycoders.in/projects/backend/public/api/admin/directAdmissions/convert`,
-//         {
-//           method: 'POST',
-//           headers: { 'Content-Type': 'application/json' },
-//           body: JSON.stringify(payload),
-//         }
-//       );
-//       setDirectResult(json.data);
-//       await load();
-//     } catch (e: any) {
-//       alert(e?.message || 'Direct admission failed');
-//     } finally {
-//       setDirectBusy(false);
-//     }
-//   };
-//   const resetConvertModal = (r: ReqRow) => {
-//     setSelected(r);
-//     setConvertResult(null);
-//     setForm({ total_fee: '', first_payment_amount: '', first_payment_date: '', next_due_date: '' });
-//   };
-//   const resetDirectModal = () => {
-//     setOpenDirect(true);
-//     setDirectResult(null);
-//     setDirectForm({
-//       name: '',
-//       email: '',
-//       phone_number: '',
-//       course_id: '',
-//       college: '',
-//       total_fee: '',
-//       first_payment_amount: '',
-//       first_payment_date: '',
-//       next_due_date: '',
-//     });
-//   };
-//   const directValid =
-//     directForm.name.trim() &&
-//     directForm.email.trim() &&
-//     directForm.phone_number.trim() &&
-//     directForm.total_fee &&
-//     directForm.first_payment_amount &&
-//     directForm.first_payment_date;
-//   return (
-//   <RoleGuard allowedRoles={[1, 2, 4]}>
-//   <div className={styles.wrap}>
-//     <header className={styles.topbar}>
-//       <div className={styles.left}>
-//         <div className={styles.crumbs}>
-//           <Link href="/admin" className={styles.crumbLink}>
-//             Admin
-//           </Link>
-//           <span className={styles.crumbSep}>/</span>
-//           <span className={styles.crumbNow}>Direct Admission</span>
-//         </div>
-//         <h1 className={styles.title}>Direct Student Admission</h1>
-//         <p className={styles.subtitle}>
-//           Create student accounts manually with fee structure
-//         </p>
-//       </div>
-
-//       <div className={styles.right}>
-//         <button
-//           className={`${styles.btn} ${styles.primary}`}
-//           onClick={submitDirect}
-//           disabled={directBusy || !directValid}
-//         >
-//           {directBusy ? 'Creating…' : 'Create Admission'}
-//         </button>
-//       </div>
-//     </header>
-
-//     {/* FORM CARD */}
-//     <section className={styles.card}>
-      
-//       <div className={styles.sectionTitle}>Student Details</div>
-
-//       <div className={styles.formGrid}>
-//         <input
-//           className={styles.input}
-//           placeholder="Full Name"
-//           value={directForm.name}
-//           onChange={(e) => setDirectForm((p) => ({ ...p, name: e.target.value }))}
-//         />
-
-//         <input
-//           className={styles.input}
-//           placeholder="Email"
-//           value={directForm.email}
-//           onChange={(e) => setDirectForm((p) => ({ ...p, email: e.target.value }))}
-//         />
-
-//         <input
-//           className={styles.input}
-//           placeholder="Phone Number"
-//           value={directForm.phone_number}
-//           onChange={(e) => setDirectForm((p) => ({ ...p, phone_number: e.target.value }))}
-//         />
-
-//         <input
-//           className={styles.input}
-//           placeholder="College"
-//           value={directForm.college}
-//           onChange={(e) => setDirectForm((p) => ({ ...p, college: e.target.value }))}
-//         />
-
-//         <input
-//           className={styles.input}
-//           placeholder="Course ID"
-//           type="number"
-//           value={directForm.course_id}
-//           onChange={(e) => setDirectForm((p) => ({ ...p, course_id: e.target.value }))}
-//         />
-//       </div>
-
-//       <div className={styles.sectionTitle} style={{ marginTop: 18 }}>
-//         Fee Details
-//       </div>
-
-//       <div className={styles.formGrid}>
-//         <input
-//           className={styles.input}
-//           placeholder="Total Fee"
-//           type="number"
-//           value={directForm.total_fee}
-//           onChange={(e) => setDirectForm((p) => ({ ...p, total_fee: e.target.value }))}
-//         />
-
-//         <input
-//           className={styles.input}
-//           placeholder="First Payment"
-//           type="number"
-//           value={directForm.first_payment_amount}
-//           onChange={(e) => setDirectForm((p) => ({ ...p, first_payment_amount: e.target.value }))}
-//         />
-
-//         <input
-//           className={styles.input}
-//           type="date"
-//           value={directForm.first_payment_date}
-//           onChange={(e) => setDirectForm((p) => ({ ...p, first_payment_date: e.target.value }))}
-//         />
-
-//         <input
-//           className={styles.input}
-//           type="date"
-//           value={directForm.next_due_date}
-//           onChange={(e) => setDirectForm((p) => ({ ...p, next_due_date: e.target.value }))}
-//         />
-//       </div>
-
-//       {directResult && (
-//         <div className={styles.resultBox}>
-//           <div className={styles.strong}>Student Created ✅</div>
-
-//           <div className={styles.dim}>
-//             Enrollment ID: <b>{directResult.enrollment_id}</b>
-//           </div>
-
-//           <div className={styles.dim}>
-//             Email: <b>{directResult.email}</b>
-//           </div>
-
-//           <div className={styles.dim}>
-//             Password: <b>{directResult.password}</b>
-//           </div>
-
-//           <div className={styles.dim}>
-//             Student must change password on first login.
-//           </div>
-//         </div>
-//       )}
-
-//     </section>
-//   </div>
-// </RoleGuard>
-//   );
-// }
 'use client';
-
 import RoleGuard from '@/components/RoleGuard';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import styles from './enrollmentRequests.module.css';
 import { fetchWithAuth } from '@/lib/api';
-
 type Course = {
   id: number;
   title: string;
   discounted_price: string;
   duration: string;
-  category: {
-    name: string;
-  };
+  category: { name: string };
+};
+
+type College = {
+  id: number;
+  college_name: string;
+};
+
+type AdmissionResponse = {
+  user_id: number;
+  enrollment_id: string;
+  email: string;
+  password: string;
+  receipt_url: string;
 };
 
 export default function DirectAdmissionPage() {
 
   const [courses, setCourses] = useState<Course[]>([]);
+  const [colleges, setColleges] = useState<College[]>([]);
   const [courseLoading, setCourseLoading] = useState(false);
-
+  const [collegeLoading, setCollegeLoading] = useState(false);
   const [directBusy, setDirectBusy] = useState(false);
-  const [directResult, setDirectResult] = useState<any>(null);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [directResult, setDirectResult] =
+    useState<AdmissionResponse | null>(null);
 
   const [directForm, setDirectForm] = useState({
     name: '',
     email: '',
     phone_number: '',
     course_id: '',
-    college: '',
+    college_id: '',
     total_fee: '',
-    first_payment_amount: '',
-    first_payment_date: '',
-    next_due_date: '',
+    payment_amount: '',
+    payment_mode: 'CASH',
+    reference_id: '',
   });
 
-  // ================= LOAD COURSES =================
   const loadCourses = async () => {
     try {
       setCourseLoading(true);
-
       const res = await fetchWithAuth(
-        "https://api.easycoders.in/projects/backend/public/api/courses"
+        'https://api.easycoders.in/projects/backend/public/api/courses'
       );
-
       setCourses(res || []);
     } catch {
-      alert("Failed to load courses");
+      alert('Failed to load courses');
     } finally {
       setCourseLoading(false);
     }
   };
 
+  const loadColleges = async () => {
+    try {
+      setCollegeLoading(true);
+      const res = await fetchWithAuth(
+        'https://api.easycoders.in/projects/backend/public/api/collegeList'
+      );
+      setColleges(res.data || []);
+    } catch {
+      alert('Failed to load colleges');
+    } finally {
+      setCollegeLoading(false);
+    }
+  };
+
   useEffect(() => {
     loadCourses();
+    loadColleges();
   }, []);
 
-  // ================= COURSE CHANGE =================
   const handleCourseChange = (id: string) => {
     const course = courses.find((c) => c.id === Number(id));
-
     setDirectForm((p) => ({
       ...p,
       course_id: id,
-      total_fee: course ? course.discounted_price : "",
+      total_fee: course ? course.discounted_price : '',
     }));
   };
 
-  // ================= SUBMIT =================
   const submitDirect = async () => {
     try {
       setDirectBusy(true);
@@ -362,15 +100,20 @@ export default function DirectAdmissionPage() {
         email: directForm.email.trim(),
         phone_number: directForm.phone_number.trim(),
         course_id: Number(directForm.course_id),
-        college: directForm.college.trim() || null,
+        college_id: directForm.college_id
+          ? Number(directForm.college_id)
+          : null,
         total_fee: Number(directForm.total_fee),
-        first_payment_amount: Number(directForm.first_payment_amount),
-        first_payment_date: directForm.first_payment_date,
-        next_due_date: directForm.next_due_date || null,
+        payment_amount: Number(directForm.payment_amount),
+        payment_mode: directForm.payment_mode,
+        reference_id:
+          directForm.payment_mode === 'CASH'
+            ? null
+            : directForm.reference_id,
       };
 
       const json = await fetchWithAuth(
-        `https://api.easycoders.in/projects/backend/public/api/admin/directAdmissions/convert`,
+        'https://api.easycoders.in/projects/backend/public/api/directAdmission',
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -379,7 +122,7 @@ export default function DirectAdmissionPage() {
       );
 
       setDirectResult(json.data);
-
+      setShowSuccess(true);
     } catch (e: any) {
       alert(e?.message || 'Admission failed');
     } finally {
@@ -388,18 +131,18 @@ export default function DirectAdmissionPage() {
   };
 
   const directValid =
-    directForm.name.trim() &&
-    directForm.email.trim() &&
-    directForm.phone_number.trim() &&
+    directForm.name &&
+    directForm.email &&
+    directForm.phone_number &&
     directForm.course_id &&
     directForm.total_fee &&
-    directForm.first_payment_amount &&
-    directForm.first_payment_date;
+    directForm.payment_amount &&
+    (directForm.payment_mode === 'CASH' ||
+      directForm.reference_id);
 
   return (
     <RoleGuard allowedRoles={[1, 2, 4]}>
       <div className={styles.wrap}>
-
         <header className={styles.topbar}>
           <div className={styles.left}>
             <div className={styles.crumbs}>
@@ -409,14 +152,111 @@ export default function DirectAdmissionPage() {
               <span className={styles.crumbSep}>/</span>
               <span className={styles.crumbNow}>Direct Admission</span>
             </div>
-
             <h1 className={styles.title}>Direct Student Admission</h1>
-            <p className={styles.subtitle}>
-              Create student account with course and fee details
-            </p>
           </div>
 
-          <div className={styles.right}>
+          {/* <div className={styles.right}>
+            <button
+              className={`${styles.btn} ${styles.primary}`}
+              onClick={submitDirect}
+              disabled={directBusy || !directValid}
+            >
+              {directBusy ? 'Creating…' : 'Create Admission'}
+            </button>
+          </div> */}
+        </header>
+
+        <section className={styles.card}>
+          <div className={styles.sectionTitle}>Student Details</div>
+
+          <div className={styles.formGrid}>
+            <input className={styles.input} placeholder="Full Name"
+              value={directForm.name}
+              onChange={(e)=>setDirectForm(p=>({...p,name:e.target.value}))}
+            />
+
+            <input className={styles.input} placeholder="Email"
+              value={directForm.email}
+              onChange={(e)=>setDirectForm(p=>({...p,email:e.target.value}))}
+            />
+
+            <input className={styles.input} placeholder="Phone Number"
+              value={directForm.phone_number}
+              onChange={(e)=>setDirectForm(p=>({...p,phone_number:e.target.value}))}
+            />
+
+            {/* COLLEGE DROPDOWN */}
+            <select
+              className={styles.input}
+              value={directForm.college_id}
+              onChange={(e)=>
+                setDirectForm(p=>({...p,college_id:e.target.value}))
+              }
+            >
+              <option value="">
+                {collegeLoading ? "Loading Colleges..." : "Select College"}
+              </option>
+              {colleges.map(c=>(
+                <option key={c.id} value={c.id}>
+                  {c.college_name}
+                </option>
+              ))}
+            </select>
+
+            {/* COURSE */}
+            <select
+              className={styles.input}
+              value={directForm.course_id}
+              onChange={(e)=>handleCourseChange(e.target.value)}
+            >
+              <option value="">
+                {courseLoading ? "Loading Courses..." : "Select Course"}
+              </option>
+              {courses.map(c=>(
+                <option key={c.id} value={c.id}>
+                  {c.category.name} - {c.title}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className={styles.sectionTitle}>Payment Details</div>
+
+          <div className={styles.formGrid}>
+            <input className={styles.input} type="number"
+              placeholder="Total Fee"
+              value={directForm.total_fee}
+              onChange={(e)=>setDirectForm(p=>({...p,total_fee:e.target.value}))}
+            />
+
+            <input className={styles.input} type="number"
+              placeholder="Payment Amount"
+              value={directForm.payment_amount}
+              onChange={(e)=>setDirectForm(p=>({...p,payment_amount:e.target.value}))}
+            />
+
+            <select className={styles.input}
+              value={directForm.payment_mode}
+              onChange={(e)=>setDirectForm(p=>({
+                ...p,
+                payment_mode:e.target.value,
+                reference_id:''
+              }))}
+            >
+              <option value="CASH">CASH</option>
+              <option value="UPI">UPI</option>
+              <option value="NET BANKING">NET BANKING</option>
+            </select>
+
+            {directForm.payment_mode!=='CASH' && (
+              <input className={styles.input}
+                placeholder="Transaction ID"
+                value={directForm.reference_id}
+                onChange={(e)=>setDirectForm(p=>({...p,reference_id:e.target.value}))}
+              />
+            )}
+          </div>
+          <div >
             <button
               className={`${styles.btn} ${styles.primary}`}
               onClick={submitDirect}
@@ -425,135 +265,58 @@ export default function DirectAdmissionPage() {
               {directBusy ? 'Creating…' : 'Create Admission'}
             </button>
           </div>
-        </header>
-
-        <section className={styles.card}>
-
-          <div className={styles.sectionTitle}>Student Details</div>
-
-          <div className={styles.formGrid}>
-            <input
-              className={styles.input}
-              placeholder="Full Name"
-              value={directForm.name}
-              onChange={(e) => setDirectForm((p) => ({ ...p, name: e.target.value }))}
-            />
-
-            <input
-              className={styles.input}
-              placeholder="Email"
-              value={directForm.email}
-              onChange={(e) => setDirectForm((p) => ({ ...p, email: e.target.value }))}
-            />
-
-            <input
-              className={styles.input}
-              placeholder="Phone Number"
-              value={directForm.phone_number}
-              onChange={(e) => setDirectForm((p) => ({ ...p, phone_number: e.target.value }))}
-            />
-
-            <input
-              className={styles.input}
-              placeholder="College"
-              value={directForm.college}
-              onChange={(e) => setDirectForm((p) => ({ ...p, college: e.target.value }))}
-            />
-
-            {/* COURSE DROPDOWN */}
-            <select
-              className={styles.input}
-              value={directForm.course_id}
-              onChange={(e) => handleCourseChange(e.target.value)}
-            >
-              <option value="">
-                {courseLoading ? "Loading Courses..." : "Select Course"}
-              </option>
-
-              {courses.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.category.name} - {c.title} ({c.duration})
-                </option>
-              ))}
-            </select>
-
-          </div>
-
-          <div className={styles.sectionTitle} style={{ marginTop: 18 }}>
-            Fee Details
-          </div>
-
-          <div className={styles.formGrid}>
-            <input
-              className={styles.input}
-              placeholder="Total Fee"
-              type="number"
-              readOnly
-              value={directForm.total_fee}
-            />
-
-            <input
-              className={styles.input}
-              placeholder="First Payment"
-              type="number"
-              value={directForm.first_payment_amount}
-              onChange={(e) =>
-                setDirectForm((p) => ({
-                  ...p,
-                  first_payment_amount: e.target.value,
-                }))
-              }
-            />
-
-            <input
-              className={styles.input}
-              type="date"
-              value={directForm.first_payment_date}
-              onChange={(e) =>
-                setDirectForm((p) => ({
-                  ...p,
-                  first_payment_date: e.target.value,
-                }))
-              }
-            />
-
-            <input
-              className={styles.input}
-              type="date"
-              value={directForm.next_due_date}
-              onChange={(e) =>
-                setDirectForm((p) => ({
-                  ...p,
-                  next_due_date: e.target.value,
-                }))
-              }
-            />
-          </div>
-
-          {directResult && (
-            <div className={styles.resultBox}>
-              <div className={styles.strong}>Student Created ✅</div>
-
-              <div className={styles.dim}>
-                Enrollment ID: <b>{directResult.enrollment_id}</b>
+        </section>
+        {showSuccess && directResult && (
+          <div className={styles.modalOverlay}>
+            <div className={styles.modal}>
+              <div className={styles.modalHead}>
+                <div className={styles.modalTitle}>
+                  Admission Successful
+                </div>
+                <button
+                  className={styles.x}
+                  onClick={() => setShowSuccess(false)}
+                >
+                  ✕
+                </button>
               </div>
 
-              <div className={styles.dim}>
-                Email: <b>{directResult.email}</b>
-              </div>
+              <div className={styles.modalBody}>
+                <div className={styles.successIcon}>✓</div>
 
-              <div className={styles.dim}>
-                Password: <b>{directResult.password}</b>
-              </div>
+                <div className={styles.strong}>
+                  Student Account Created Successfully
+                </div>
 
-              <div className={styles.dim}>
-                Student must change password on first login.
+                <div className={styles.modalInfo}>
+                  <div>
+                    <b>Enrollment ID:</b> {directResult.enrollment_id}
+                  </div>
+                  <div>
+                    <b>Email:</b> {directResult.email}
+                  </div>
+                  <div>
+                    <b>Password:</b> {directResult.password}
+                  </div>
+                </div>
+
+                {directResult.receipt_url && (
+                  <button
+                    className={`${styles.btn} ${styles.primary} ${styles.downloadBtn}`}
+                    onClick={() =>
+                      window.open(directResult.receipt_url, '_blank')
+                    }
+                  >
+                    Download Receipt
+                  </button>
+                )}
               </div>
             </div>
-          )}
-
-        </section>
+          </div>
+        )}
       </div>
     </RoleGuard>
   );
 }
+
+
