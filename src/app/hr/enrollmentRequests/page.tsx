@@ -154,16 +154,6 @@ export default function DirectAdmissionPage() {
             </div>
             <h1 className={styles.title}>Direct Student Admission</h1>
           </div>
-
-          {/* <div className={styles.right}>
-            <button
-              className={`${styles.btn} ${styles.primary}`}
-              onClick={submitDirect}
-              disabled={directBusy || !directValid}
-            >
-              {directBusy ? 'Creating…' : 'Create Admission'}
-            </button>
-          </div> */}
         </header>
 
         <section className={styles.card}>
@@ -184,8 +174,6 @@ export default function DirectAdmissionPage() {
               value={directForm.phone_number}
               onChange={(e)=>setDirectForm(p=>({...p,phone_number:e.target.value}))}
             />
-
-            {/* COLLEGE DROPDOWN */}
             <select
               className={styles.input}
               value={directForm.college_id}
@@ -202,8 +190,6 @@ export default function DirectAdmissionPage() {
                 </option>
               ))}
             </select>
-
-            {/* COURSE */}
             <select
               className={styles.input}
               value={directForm.course_id}
