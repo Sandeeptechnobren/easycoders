@@ -361,7 +361,7 @@ export default function HrStudentsPage() {
                   <tr>
                     <th>Student</th>
                     <th>Email</th>
-                    <th>Phone Number</th>
+                    {/* <th>Phone Number</th> */}
                     <th>Interest</th>
                     <th style={{ textAlign: 'right' }}>Action</th>
                   </tr>
@@ -396,11 +396,11 @@ export default function HrStudentsPage() {
                           </div>
                         </td>
 
-                        <td>
+                        {/* <td>
                           <span className={`${styles.pill} ${styles.neutral}`} title={s.phone}>
                             {s.phone}
                           </span>
-                        </td>
+                        </td> */}
 
                         <td>
                           <span className={`${styles.pill} ${interestCls}`}>{interestLabel}</span>
