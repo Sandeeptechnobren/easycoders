@@ -1,6 +1,9 @@
 'use client';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+ 
+import TestimonialCarousel from '@/components/TestimonialCarousel';
+import FAQAccordion from '@/components/FAQAccordion';
 
 export default function HomePage() {
   const [courses, setCourses] = useState<any[]>([]);
@@ -23,74 +26,45 @@ export default function HomePage() {
   });
 
   return (
-    <div className="min-h-screen">
-      <style jsx>{`
-        .introSection { padding: 40px 20px; text-align: center; }
-        .transparentDiv { display: flex; flex-direction: column; align-items: center; max-width: 1200px; margin: 0 auto; gap: 20px; }
-        .heroTitle { font-size: 28px !important; line-height: 1.2; }
-        .introImage img { max-height: 200px; width: auto; margin-top: 20px; }
-        
-        /* Grid adjustments: Mobile-first (1 column) */
-        .cardGrid { display: grid; grid-template-columns: 1fr; gap: 20px; padding: 20px; }
-        
-        .mainInternalNav { display: flex; overflow-x: auto; gap: 10px; padding: 10px 0; white-space: nowrap; -ms-overflow-style: none; scrollbar-width: none; }
-        .mainInternalNav::-webkit-scrollbar { display: none; }
-
-        /* Desktop Breakpoints */
-        @media (min-width: 768px) {
-          .introSection { text-align: left; padding: 60px 40px; }
-          .transparentDiv { flex-direction: row; justify-content: space-between; text-align: left; }
-          .heroTitle { font-size: 40px !important; }
-          .cardGrid { grid-template-columns: repeat(2, 1fr); }
-          .introImage img { max-height: 280px; margin-top: 0; }
-        }
-
-        @media (min-width: 1024px) {
-          .cardGrid { grid-template-columns: repeat(3, 1fr); }
-          .introSection { padding: 80px 100px; }
-        }
-      `}</style>
-
-      <section className="introSection global-header-bg">
-        <div className="transparentDiv">
-          <div className="internalIntro">
-            <h1 className="heroTitle" style={{ fontWeight: 800, color: 'white' }}>
-              Level Up Your <br /> Coding Career
+    <div  > 
+      <section className="home-header-bg">
+        <div className="container">
+          <div className="banner-section">
+            <div className="banner-content">
+              <h1 className="heroTitle">
+            Level up your Coding Career with <br/>
+            <span>{"{EASYCODERS}"}</span>
             </h1>
-            <div className="searchBox">
-              <span className="searchIcon">🔍</span>
-              <input
-                type="search"
-                placeholder="Search courses..."
-                className="searchInput"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
+            <h3 className="subheroTitle">Become a Data Scientist or Business Analyst. 
+           <strong> No Coding knowledge required.</strong></h3>
+             <div className="button-container">
+             <a href="/courses" className="btn btn-info">Join Our Courses <i></i></a>
+             <a href="/about" className="btn btn-default">Checkout All</a>
+             </div>
+             
           </div>
-          <div className="introImage d-none d-md-block">
-            <img src="/images/illustrations.png" alt="Hero Illustration" />
-          </div>
+          <img src="/images/easycoder-hero.png" alt="Hero Illustration" />
+      </div>
         </div>
       </section>
 
-      <section className="description px-4 md:px-10">
-        <div className="mainInternalNav">
+      <section className='section-block'>
+        <div className='container'>
+<div className='title-section text-center mb-5'>
+  <h2 className='heading2'>Explore Top courses</h2>
+  <p>Become a Data Scientist or Business Analyst. No coding knowledge required.</p>
+</div>
+<div className="mainInternalNav">
           {['All', 'Beginner', 'Intermediate', 'Advanced'].map((lvl) => (
             <div 
               key={lvl} 
               className={`internalNav ${filter === lvl ? 'activeNav' : ''}`}
-              style={filter === lvl ? { background: '#8B5CF6', color: 'white', borderColor: '#8B5CF6' } : {}}
               onClick={() => setFilter(lvl)}
             >
               {lvl}
             </div>
           ))}
         </div>
-
-        <h2 className="sectionTitle">
-          {searchQuery ? `Search results for "${searchQuery}"` : "Filters Spotlight"}
-        </h2>
 
         <div className="cardGrid">
           {filteredCourses.length > 0 ? (
@@ -116,21 +90,41 @@ export default function HomePage() {
             </div>
           )}
         </div>
+          </div>
+      </section>
 
-        <h2 className="sectionTitle">Success Stories</h2>
-        <div className="cardGrid">
-          {[
-            { id: 1, name: "Aarav Sharma", role: "Frontend Developer", feedback: "Easy Coders helped me move from basics to building real-world projects confidently." },
-            { id: 2, name: "Priya Verma", role: "Computer Science Student", feedback: "The learning approach is practical and industry-focused. Highly recommended!" },
-            { id: 3, name: "Rahul Singh", role: "Backend Developer", feedback: "Clear explanations, hands-on coding, and great mentorship." },
-          ].map(testimonial => (
-            <div className="courseCard testimonialCard" key={testimonial.id}>
-              <h3 className="cardTitle">{testimonial.name}</h3>
-              <p className="testimonialRole">{testimonial.role}</p>
-              <p className="testimonialText">“{testimonial.feedback}”</p>
-              <div className="rating">★★★★★ 5.0</div>
+      <section className='section-block' style={{ backgroundColor: '#EFF5D0' }}>
+        <div className='container'>
+          <div className='row'>
+            <div className='col-md-3'>
+            <div className='title-section'>
+                <h2>Success that <br/>speaks for itself</h2>
+                <p>Join the 2M+ learners who have skilled up and stood out.</p>
+                <a href='#' className='btn btn-primary'>Read all Quotes</a>
+              </div>
             </div>
-          ))}
+            <div className='col-md-2'>
+              </div>
+            <div className='col-md-7'>
+              <TestimonialCarousel />
+            </div>
+          </div>
+     
+        
+        </div>
+      </section>
+
+      <section className='section-block' style={{ backgroundColor: '#EBF2F5' }}>
+        <div className='container'>
+          <div className='title-section text-center'>
+            <h2>Frequently asked questions</h2>
+            <p>Join the 2M+ learners who have skilled up and stood out.</p>
+          </div>
+          <div className="row justify-content-center">
+            <div className="col-md-8">
+              <FAQAccordion />
+            </div>
+          </div>
         </div>
       </section>
     </div>
