@@ -18,6 +18,7 @@ function CoursesList() {
   const [loading, setLoading] = useState(true);
   const searchParams = useSearchParams();
   const categoryId = searchParams.get('category');
+  const searchQuery = searchParams.get('search') ?? '';
   useEffect(() => {
     setLoading(true);
     const endpoint = categoryId
@@ -29,7 +30,16 @@ function CoursesList() {
       .finally(() => setLoading(false));
   }, [categoryId]);
   if (loading) return <Loader />;
-  const groupedCourses = courses.reduce((acc: any, course: any) => {
+  const q = searchQuery.trim().toLowerCase();
+  const filteredCourses = q
+    ? courses.filter((course: any) => {
+        const title = String(course?.title ?? '').toLowerCase();
+        const description = String(course?.description ?? '').toLowerCase();
+        return title.includes(q) || description.includes(q);
+      })
+    : courses;
+
+  const groupedCourses = filteredCourses.reduce((acc: any, course: any) => {
     const categoryName = course.category?.name || 'Other';
     if (!acc[categoryName]) acc[categoryName] = [];
     acc[categoryName].push(course);
