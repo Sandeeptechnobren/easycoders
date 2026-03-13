@@ -71,7 +71,7 @@
 }
 
 .navItem:hover {
-  background-color: 06494f;
+  background-color: rgba(19, 113, 117, 0.1);
   color: var(--accent);
 }
 
@@ -80,9 +80,9 @@
   color: var(--accent);
 } */
 .navItem.active {
-  background: 06494f; /* Light purple background */
-  color: var(--accent);                /* Solid purple text/icon */
-  border-left: 4px solid var(--accent); /* Optional: Vertical line indicator */
+  background: rgba(19, 113, 117, 0.15);
+  color: var(--accent);
+  border-left: 4px solid var(--accent);
   font-weight: 700;
 }
 
@@ -201,6 +201,8 @@
   font-size: 13px;
   color: var(--muted);
   display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
   justify-content: space-between;
   margin-bottom: 16px;
 }

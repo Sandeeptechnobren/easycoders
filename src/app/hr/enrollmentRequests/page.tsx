@@ -11,12 +11,10 @@ type Course = {
   duration: string;
   category: { name: string };
 };
-
 type College = {
   id: number;
   college_name: string;
 };
-
 type AdmissionResponse = {
   user_id: number;
   enrollment_id: string;
@@ -24,9 +22,7 @@ type AdmissionResponse = {
   password: string;
   receipt_url: string;
 };
-
 export default function DirectAdmissionPage() {
-
   const [courses, setCourses] = useState<Course[]>([]);
   const [colleges, setColleges] = useState<College[]>([]);
   const [courseLoading, setCourseLoading] = useState(false);
@@ -34,8 +30,7 @@ export default function DirectAdmissionPage() {
   const [directBusy, setDirectBusy] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [directResult, setDirectResult] =
-    useState<AdmissionResponse | null>(null);
-
+  useState<AdmissionResponse | null>(null);
   const [directForm, setDirectForm] = useState({
     name: '',
     email: '',
@@ -47,7 +42,6 @@ export default function DirectAdmissionPage() {
     payment_mode: 'CASH',
     reference_id: '',
   });
-
   const loadCourses = async () => {
     try {
       setCourseLoading(true);
@@ -61,7 +55,6 @@ export default function DirectAdmissionPage() {
       setCourseLoading(false);
     }
   };
-
   const loadColleges = async () => {
     try {
       setCollegeLoading(true);
@@ -75,12 +68,10 @@ export default function DirectAdmissionPage() {
       setCollegeLoading(false);
     }
   };
-
   useEffect(() => {
     loadCourses();
     loadColleges();
   }, []);
-
   const handleCourseChange = (id: string) => {
     const course = courses.find((c) => c.id === Number(id));
     setDirectForm((p) => ({
@@ -89,12 +80,10 @@ export default function DirectAdmissionPage() {
       total_fee: course ? course.discounted_price : '',
     }));
   };
-
   const submitDirect = async () => {
     try {
       setDirectBusy(true);
       setDirectResult(null);
-
       const payload = {
         name: directForm.name.trim(),
         email: directForm.email.trim(),
@@ -111,7 +100,6 @@ export default function DirectAdmissionPage() {
             ? null
             : directForm.reference_id,
       };
-
       const json = await fetchWithAuth(
         'https://api.easycoders.in/projects/backend/public/api/directAdmission',
         {
@@ -120,7 +108,6 @@ export default function DirectAdmissionPage() {
           body: JSON.stringify(payload),
         }
       );
-
       setDirectResult(json.data);
       setShowSuccess(true);
     } catch (e: any) {
@@ -129,7 +116,6 @@ export default function DirectAdmissionPage() {
       setDirectBusy(false);
     }
   };
-
   const directValid =
     directForm.name &&
     directForm.email &&
@@ -139,7 +125,6 @@ export default function DirectAdmissionPage() {
     directForm.payment_amount &&
     (directForm.payment_mode === 'CASH' ||
       directForm.reference_id);
-
   return (
     <RoleGuard allowedRoles={[1, 2, 4]}>
       <div className={styles.wrap}>
@@ -155,21 +140,17 @@ export default function DirectAdmissionPage() {
             <h1 className={styles.title}>Direct Student Admission</h1>
           </div>
         </header>
-
         <section className={styles.card}>
           <div className={styles.sectionTitle}>Student Details</div>
-
           <div className={styles.formGrid}>
             <input className={styles.input} placeholder="Full Name"
               value={directForm.name}
               onChange={(e)=>setDirectForm(p=>({...p,name:e.target.value}))}
             />
-
             <input className={styles.input} placeholder="Email"
               value={directForm.email}
               onChange={(e)=>setDirectForm(p=>({...p,email:e.target.value}))}
             />
-
             <input className={styles.input} placeholder="Phone Number"
               value={directForm.phone_number}
               onChange={(e)=>setDirectForm(p=>({...p,phone_number:e.target.value}))}
@@ -205,22 +186,18 @@ export default function DirectAdmissionPage() {
               ))}
             </select>
           </div>
-
           <div className={styles.sectionTitle}>Payment Details</div>
-
           <div className={styles.formGrid}>
             <input className={styles.input} type="number"
               placeholder="Total Fee"
               value={directForm.total_fee}
               onChange={(e)=>setDirectForm(p=>({...p,total_fee:e.target.value}))}
             />
-
             <input className={styles.input} type="number"
               placeholder="Payment Amount"
               value={directForm.payment_amount}
               onChange={(e)=>setDirectForm(p=>({...p,payment_amount:e.target.value}))}
             />
-
             <select className={styles.input}
               value={directForm.payment_mode}
               onChange={(e)=>setDirectForm(p=>({
@@ -233,7 +210,6 @@ export default function DirectAdmissionPage() {
               <option value="UPI">UPI</option>
               <option value="NET BANKING">NET BANKING</option>
             </select>
-
             {directForm.payment_mode!=='CASH' && (
               <input className={styles.input}
                 placeholder="Transaction ID"

@@ -12,10 +12,12 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const router = useRouter();
+  const [submitting, setSubmitting]= useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      setSubmitting(true);
       const response = await api.post('/login', { email, password });
       const token = response.data.data.access_token;
       const user = response.data.data.user;
@@ -30,9 +32,11 @@ export default function LoginPage() {
       else if (role === 3) router.push('/student');
       else if (role === 4) router.push('/trainer');
       else router.push('/');
-
     } catch (err: any) {
       setError(err.response?.data?.message || 'Login failed');
+    }
+    finally{
+      setSubmitting(false);
     }
   };
 
@@ -106,8 +110,12 @@ export default function LoginPage() {
         />
       </div>
 
-      <button type="submit" className="formButton">
-        Login →
+      <button type="submit" className="formButton" disabled={submitting}
+      style={{
+          opacity: submitting ? 0.7 : 1,
+          cursor: submitting ? 'not-allowed' : 'pointer'
+        }}>
+              {submitting?'Logging In...':'Login'}
       </button>
     </form>
 

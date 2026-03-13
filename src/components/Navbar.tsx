@@ -13,7 +13,6 @@ type NavLink = {
   onClick?: () => void;
 };
 export default function Navbar() {
-
   const { role, logout } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
@@ -21,9 +20,7 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const handleLogout = () => {
     logout();
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    localStorage.removeItem('role');
+    localStorage.clear();
     setIsOpen(false);
     router.replace('/');
   };
@@ -236,21 +233,18 @@ export default function Navbar() {
     }
   `}</style>
 </div>
-      <div className={styles.container}>
-        <div className={styles.logo} style={{ display: 'flex', alignItems: 'center'}}>
-  <div style={{ display: 'flex', flexDirection: 'column' }}>
+    <div className={styles.container}>
+      <div className={styles.logo} style={{ display: 'flex', alignItems: 'center'}}>
+<div style={{ display: 'flex', flexDirection: 'column' }}>
   <img
     src="/images/fullnobackground.png"
     alt="Easy Coders Logo"
     style={{ height: 45, margin:'0px' }}
   />
-
     <span style={{ fontSize: 11, color: '#666', marginTop: '-10px' }}>
       An Initiative by <b style={{color:'#8e0000'}}> <a href="https://technobren.com/" style={{color:'#8e0000', textDecoration:'none'}} target='_blank'> Technobren InfoTech Pvt. Ltd.</a></b>
     </span>
-
   </div>
-
 </div>
       <div className={styles.desktopMenu}>
       {navLinks.map((link) => (
@@ -289,7 +283,6 @@ export default function Navbar() {
       </Link>
       ))}
       </div>
-      
     </nav>
   );
 }
