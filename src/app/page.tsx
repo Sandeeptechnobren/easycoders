@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
  
 import TestimonialCarousel from '@/components/TestimonialCarousel';
 import FAQAccordion from '@/components/FAQAccordion';
-
+import CourseGrid from "@/components/CourseGrid";
 export default function HomePage() {
   const [courses, setCourses] = useState<any[]>([]);
   const [filter, setFilter] = useState('All');
@@ -28,6 +28,8 @@ export default function HomePage() {
   return (
     <div  > 
       <section className="home-header-bg">
+        <div className='circle1'></div>
+        <div className='circle2'></div>
         <div className="container">
           <div className="banner-section">
             <div className="banner-content">
@@ -38,8 +40,8 @@ export default function HomePage() {
             <h3 className="subheroTitle">Become a Data Scientist or Business Analyst. 
            <strong> No Coding knowledge required.</strong></h3>
              <div className="button-container">
-             <a href="/courses" className="btn btn-info">Join Our Courses <i></i></a>
-             <a href="/about" className="btn btn-default">Checkout All</a>
+             <Link href="/courses" className="btn btn-info">Join Our Courses <i></i></Link>
+             <Link href="/about" className="btn btn-default">Checkout All</Link>
              </div>
              
           </div>
@@ -66,30 +68,9 @@ export default function HomePage() {
           ))}
         </div>
 
-        <div className="cardGrid">
-          {filteredCourses.length > 0 ? (
-            filteredCourses.map(course => (
-              <div className="courseCard" key={course.id}>
-                <span className="badge">{course.level}</span>
-                <div className="cardImage">
-                  <img src={course.image} alt={course.title} />
-                </div>
-                <h3 className="cardTitle">{course.title}</h3>
-                <div className="rating">★★★★★ {course.rating}</div>
-                <div className="cardFooter">
-                  <span className="views">{course.views}</span>
-                  <Link href={`/courses`} className="enrollBtn">
-                    Explore
-                  </Link>
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="text-center w-full py-10 opacity-50">
-              <h3>No courses found matches your criteria.</h3>
-            </div>
-          )}
-        </div>
+        <div>
+      <CourseGrid filteredCourses={filteredCourses} />
+    </div>
           </div>
       </section>
 

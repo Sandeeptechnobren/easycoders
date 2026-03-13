@@ -1,5 +1,6 @@
 'use client';
 import styles from './Footer.module.css';
+import Image from "next/image";
 
 export default function Footer() {
     return (
@@ -7,10 +8,8 @@ export default function Footer() {
             <div className='container'>
                 <div className='row'>
                     <div className='col-md-3'>
-                    <img
-    src="/images/logo.svg" className='ft-logo'
-    alt="Easy Coders Logo"
-    style={{ height: 63, margin:'0px' }}
+                    <Image    src="/images/logo.svg" className={styles.ftLogo}
+    alt="Easy Coders Logo" width={180} height={63}
   /> 
   <small> © {new Date().getFullYear()}{" "}
                 <a 

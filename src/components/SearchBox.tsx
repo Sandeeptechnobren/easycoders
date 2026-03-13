@@ -19,7 +19,7 @@ export default function SearchBox({
   onChange,
   onSubmit,
   placeholder = 'Search…',
-  icon = '🔍',
+  icon = '',
   className,
   inputClassName,
   ariaLabel = 'Search',
@@ -31,7 +31,7 @@ export default function SearchBox({
 
   return (
     <form className={`${styles.searchBox} ${className ?? ''}`} onSubmit={handleSubmit}>
-      
+      <span className={styles.searchIcon}>{icon}</span>
       <input
         type="search"
         placeholder={placeholder}
