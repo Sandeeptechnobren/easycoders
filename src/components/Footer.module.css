@@ -2,38 +2,41 @@
     width: 100%;
     background: #000;
     color: #fff;
-    display: flex;
-    justify-content: center;
-    align-items: center;
     padding: 26px 10px;
     font-size: 14px;
     border-top: 1px solid #eaeaea;
+}
 
-    .ft-logo{
-        filter: brightness(0) saturate(100%) invert(100%) sepia(97%) saturate(0%) hue-rotate(55deg) brightness(103%) contrast(104%);
-        margin-bottom: 15px;
-    }
+/* headings */
+.footer h4 {
+    font-size: 16px;
+}
 
-    h4 {
-        font-size: 16px;
-    }
+/* copyright */
+.footer small {
+    display: block;
+    padding-top: 10px;
+}
 
-    small {
-        display: block;
-        padding-top: 20px;
-        a {
-            color: #fff;
+/* link inside small */
+.footer small a {
+    color: #fff;
+}
 
-        }
-    }
+ 
+.ftLogo {
+    filter: brightness(0) saturate(100%) invert(100%) sepia(97%) saturate(0%) hue-rotate(55deg) brightness(103%) contrast(104%);
  
 }
+
+/* footer links */
 .footerContent a {
     color: #00c2ff;
     text-decoration: none;
     font-weight: 600;
     transition: color 0.2s ease;
 }
+
 .footerContent a:hover {
     color: #008fbb;
     text-decoration: underline;

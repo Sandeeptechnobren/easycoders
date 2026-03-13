@@ -4,19 +4,25 @@
   top: 0;
   left: 0;
   z-index: 999;
-  transition: all 0.3s ease;
+  padding: 15px 0;
+  transition: all 0.3s ease-in-out;
 }
 
  
 .navbarScrolled {
   background: #ffffff;
   box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+  padding: 5px 0;
+}
+
+.navbarScrolled .logo img{
+  width: 160px;
+ 
 }
 
 .container {
     max-width: 1300px;
     margin: auto;
-    padding: 15px 0;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -28,9 +34,8 @@
 }
 
 .logo img {
-    width: 210px;
-    height: 63px;
-    border-radius: 8px;
+  width: 180px;
+  transition: all 0.3s ease-in-out;
 }
 
 .desktopMenu {
