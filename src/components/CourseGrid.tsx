@@ -30,12 +30,17 @@ export default function CourseGrid({ filteredCourses }: CourseGridProps) {
               
 
               <h3 className="cardTitle">{course.title}</h3>
+              <p className="cardDescp">Learn to build secure, scalable, and high-performance web.</p>
 
               <div className="rating">
                <i className="icon-star"></i> {course.rating}
               </div>
 
-              <span className="views"><i className="icon icon-eye"></i> {course.views}</span>
+              <div className="courFlex">
+              <span className="duration"><i className="icon icon-clock"></i> 4hrs</span>
+
+<span className="views"><i className="icon icon-eye"></i> {course.views}</span>
+                </div>
 
               <Link href="/courses" className="btn btn-default enrollBtn btn-sm">
                 View Course

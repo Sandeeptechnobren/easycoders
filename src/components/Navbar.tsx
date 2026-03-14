@@ -116,11 +116,13 @@ export default function Navbar() {
       <div className={styles.container}>
         <div className={styles.logo} style={{ display: 'flex', alignItems: 'center'}}>
   <div style={{ display: 'flex', flexDirection: 'column' }}>
+  <Link href="/">
   <img
     src="/images/logo.svg"
     alt="Easy Coders Logo"
-    style={{ height: 63, margin:'0px' }}
+    style={{ height: 63, margin: "0px" }}
   />
+</Link>
 
  
   </div>

@@ -28,8 +28,6 @@ export default function HomePage() {
   return (
     <div  > 
       <section className="home-header-bg">
-        <div className='circle1'></div>
-        <div className='circle2'></div>
         <div className="container">
           <div className="banner-section">
             <div className="banner-content">

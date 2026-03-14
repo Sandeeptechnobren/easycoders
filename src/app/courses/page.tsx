@@ -1,122 +1,79 @@
 'use client';
-import { Suspense, useEffect, useState } from 'react';
-import api from '@/lib/axios';
-import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
-import Loader from '../loader/page';
-const COURSE_IMAGES = [
-  'https://images.unsplash.com/photo-1517694712202-14dd9538aa97', // coding
-  'https://images.unsplash.com/photo-1555066931-4365d14bab8c', // laptop
-  'https://images.unsplash.com/photo-1587620962725-abab7fe55159', // dev
-  'https://images.unsplash.com/photo-1522202176988-66273c2fd55f', // teamwork
-  'https://images.unsplash.com/photo-1498050108023-c5249f4df085', // programming
-  'https://images.unsplash.com/photo-1531482615713-2afd69097998', // ai
-  'https://images.unsplash.com/photo-1519389950473-47ba0277781c', // tech
-];
-function CoursesList() {
-  const [courses, setCourses] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const searchParams = useSearchParams();
-  const categoryId = searchParams.get('category');
-  const searchQuery = searchParams.get('search') ?? '';
-  useEffect(() => {
-    setLoading(true);
-    const endpoint = categoryId
-      ? `/courses?category_id=${categoryId}`
-      : '/courses';
-    api.get(endpoint)
-      .then(res => setCourses(res.data?.data ?? res.data))
-      .catch(() => setCourses([]))
-      .finally(() => setLoading(false));
-  }, [categoryId]);
-  if (loading) return <Loader />;
-  const q = searchQuery.trim().toLowerCase();
-  const filteredCourses = q
-    ? courses.filter((course: any) => {
-        const title = String(course?.title ?? '').toLowerCase();
-        const description = String(course?.description ?? '').toLowerCase();
-        return title.includes(q) || description.includes(q);
-      })
-    : courses;
 
-  const groupedCourses = filteredCourses.reduce((acc: any, course: any) => {
-    const categoryName = course.category?.name || 'Other';
-    if (!acc[categoryName]) acc[categoryName] = [];
-    acc[categoryName].push(course);
-    return acc;
-  }, {});
-  return (
-    <div className="d-flex flex-column gap-5">
-      {Object.entries(groupedCourses).map(
-        ([categoryName, categoryCourses]: any) => (
-          <div key={categoryName}>
-            <h2 className="sectionTitle">
-              {categoryName} ({categoryCourses.length})
-            </h2>
-            <div className="cardGrid">
-              {categoryCourses.map((course: any, index: number) => (
-                <div className="courseCard" key={course.id}> 
-                  {course.offer && (
-                    <span className="badge">{course.offer}</span>
-                  )}
-                  <div className="cardImage">
-                    <img
-                      src={
-                        course.image ||
-                        COURSE_IMAGES[index % COURSE_IMAGES.length] + '?w=400&h=300&fit=crop'
-                      }
-                      alt={course.title}
-                    />
-                  </div>
-                  <h3 className="cardTitle">{course.title}</h3>
-                  <p className="testimonialText">
-                    {course.description?.length > 90
-                      ? course.description.slice(0, 90) + '...'
-                      : course.description}
-                  </p>
-                  <div className="cardFooter">
-                    <span className="views">
-                      {course.duration || 'Self paced'}
-                    </span>
-                    <Link href={`/courses/${course.id}`}>
-                      <button className="enrollBtn">
-                        Explore →
-                      </button>
-                    </Link>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )
-      )}
-    </div>
-  );
-}
+import { useState } from 'react';
+import CourseGrid from '@/components/CourseGrid';
+import Breadcrumb from '@/components/Breadcrumb';
+
+type Course = {
+  id: number | string;
+  level: string;
+  image: string;
+  title: string;
+  rating: string | number;
+  views: string | number;
+};
+
 export default function CoursesPage() {
+
+  const [filter, setFilter] = useState('All');
+
+  const courses: Course[] = [
+    { id: 1, level: 'Beginner', title: 'Summer Training', rating: 4.8, views: '120k Views', image:'https://5.imimg.com/data5/SELLER/Default/2023/9/342394080/WQ/GC/AM/7726776/45-days-basic-module-summer-and-internship-training-program.png' },
+    { id: 2, level: 'Beginner', title: 'Internship', rating: 4.7, views: '131k Views', image:'https://images.shiksha.com/mediadata/images/articles/1575005482php2pK7B8.jpeg' },
+    { id: 3, level: 'Intermediate', title: 'Job Oriented Training', rating: 4.9, views: '150k Views', image:'https://5.imimg.com/data5/SELLER/Default/2022/2/HT/KM/QN/93804707/job-oriented-training1.png' },
+    { id: 4, level: 'Beginner', title: 'Language Training', rating: 4.6, views: '189k Views', image:'https://online.stanford.edu/sites/default/files/styles/embedded_large/public/2018-03/cs_programminglanguage_cs242.jpg?itok=OMscvbtw' }
+  ];
+
+  const filteredCourses =
+    filter === 'All'
+      ? courses
+      : courses.filter((course) => course.level === filter);
+
   return (
-    <div className="min-h-screen">
-      <section className="introSection global-header-bg">
-        <div className="transparentDiv">
-          <div style={{ display: 'flex', width: '100%', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div className="internalIntro" style={{ alignItems: 'flex-start', textAlign: 'left' }}>
-              <h1 style={{ fontSize: '42px', fontWeight: 900 }}>
-                Explore Our Courses
-              </h1>
-              <p style={{ marginTop: 10, maxWidth: 450 }}>
-                Learn industry-ready skills with practical,
-                project-based training.
-              </p>
+    
+    <section className="inner-block">
+      <div className='home-header-bg innerBanner'>
+        <div className='container'>
+          <div className="title-section  mb-5">
+                <Breadcrumb
+                items={[
+                  { label: 'Home', href: '/' },
+                  { label: 'Courses' }
+                ]}
+              />
+              <h1 className="heading1">Explore Top courses</h1>
+              <p>Learn industry-ready skills with practical, project-based training.</p>
             </div>
-            <div className="internalIntro introImage" />
+          </div> 
+        </div>
+
+        <div className='section-block'>
+          <div className="container">
+            <div className='flexCourseBlock'>
+              
+              <div className="tabCourse">
+                  <h4 className='widget-title'>Quick Links</h4>
+                  <div className='tabCard'>
+                      {['All', 'Beginner', 'Intermediate', 'Advanced'].map((lvl) => (
+                      <div
+                        key={lvl}
+                        className={`internalNav ${filter === lvl ? 'activeNav' : ''}`}
+                        onClick={() => setFilter(lvl)}
+                      >
+                        {lvl}
+                      </div>
+                    ))} 
+                  </div>
+              </div>
+
+              <div className='flexContentBlock'>
+                <h3>Popular Courses</h3>
+              <CourseGrid filteredCourses={filteredCourses} />
+            </div>
+            </div>
           </div>
         </div>
-      </section>
-      <section className="description">
-        <Suspense fallback={<Loader />}>
-          <CoursesList />
-        </Suspense>
-      </section>
-    </div>
+     
+    </section>
   );
 }
