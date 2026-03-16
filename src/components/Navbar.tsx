@@ -1,12 +1,10 @@
 'use client';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import styles from './Navbar.module.css';
 import { useAuth } from '@/context/AuthContext';
-import Registration from './Registration';
-import {} from 'react-icons/fa';
-import { useEffect } from 'react';
+import LoginModal from '@/components/LoginModal';
 import SearchBox from '@/components/SearchBox';
 
 type NavLink = {
@@ -14,16 +12,18 @@ type NavLink = {
   href?: string;
   onClick?: () => void;
 };
-export default function Navbar() {
 
-  
+export default function Navbar() {
   const { role, logout } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
+
+  const [showLogin, setShowLogin] = useState(false); // 👈 login modal state
   const [showRegistration, setShowRegistration] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [navSearch, setNavSearch] = useState('');
   const [isScrolled, setIsScrolled] = useState(false);
+
   const handleLogout = () => {
     logout();
     localStorage.removeItem('token');
@@ -32,6 +32,7 @@ export default function Navbar() {
     setIsOpen(false);
     router.replace('/');
   };
+
   useEffect(() => {
     // body scroll lock for mobile menu
     if (isOpen) {
@@ -41,39 +42,38 @@ export default function Navbar() {
         document.body.style.overflow = prev;
       };
     }
-  
+
     // navbar scroll effect
     const handleScroll = () => {
-      if (window.scrollY > 50) {
-        setIsScrolled(true);
-      } else {
-        setIsScrolled(false);
-      }
+      setIsScrolled(window.scrollY > 50);
     };
-  
+
     window.addEventListener('scroll', handleScroll);
-  
+
     return () => {
       window.removeEventListener('scroll', handleScroll);
     };
   }, [isOpen]);
+
   const commonLinks: NavLink[] = [
     { name: 'Home', href: '/' },
     { name: 'Courses', href: '/courses' },
     { name: 'About Us', href: '/about' },
     { name: 'Contact Us', href: '/contactus' },
   ];
+
   const studentLinks: NavLink[] = [
     { name: 'Home', href: '/student' },
     { name: 'My Tasks', href: '/student/tasks' },
     { name: 'Tickets', href: '/student/tickets' },
     { name: 'Logout', onClick: handleLogout },
   ];
+
   const trainerLinks: NavLink[] = [
     { name: 'Home', href: '/trainer' },
-    // { name: 'Enrollment', href: '/admin/enrollmentRequests' },
     { name: 'Logout', onClick: handleLogout },
   ];
+
   const hrLinks: NavLink[] = [
     { name: 'Home', href: '/hr' },
     { name: 'Students', href: '/hr/students' },
@@ -89,9 +89,10 @@ export default function Navbar() {
     { name: 'Student Management', href: '/admin/studentManagement' },
     { name: 'Logout', onClick: handleLogout },
   ];
+
   const guestLinks: NavLink[] = [
     ...commonLinks,
-    { name: 'Login', href: '/login' },
+    { name: 'Login', onClick: () => setShowLogin(true) }, // 👈 open popup
   ];
 
   const navLinks: NavLink[] =
@@ -106,77 +107,102 @@ export default function Navbar() {
       : guestLinks;
 
   return (
-    <nav className={`${styles.navbar} ${isScrolled ? styles.navbarScrolled : ''}`}>
-      <div
-  className="upperNav"
-  
-> 
- 
-</div>
-      <div className={styles.container}>
-        <div className={styles.logo} style={{ display: 'flex', alignItems: 'center'}}>
-  <div style={{ display: 'flex', flexDirection: 'column' }}>
-  <Link href="/">
-  <img
-    src="/images/logo.svg"
-    alt="Easy Coders Logo"
-    style={{ height: 63, margin: "0px" }}
-  />
-</Link>
+    <>
+      <nav className={`${styles.navbar} ${isScrolled ? styles.navbarScrolled : ''}`}>
+        <div className={styles.container}>
 
- 
-  </div>
+          {/* Logo */}
+          <div className={styles.logo}>
+            <Link href="/">
+              <img
+                src="/images/logo.svg"
+                alt="Easy Coders Logo"
+                style={{ height: 63 }}
+              />
+            </Link>
+          </div>
 
-</div>
-      <div className={styles.desktopMenu}>
-      {navLinks.map((link) => (
-        <Link
-          key={link.name}
-          href={link.href || '#'}
-          onClick={link.onClick}
-          className={`${styles.navLink} ${
-            link.name === 'Logout' ? styles.logoutBtn : ''
-          } ${pathname === link.href ? styles.active : ''}`}
-        >
-          {link.name}
-          {link.href && <span className={styles.underline}></span>}
-        </Link>
-      ))}
-      <SearchBox
-        value={navSearch}
-        onChange={setNavSearch}
-        placeholder="Search courses..."
-        className={styles.navSearch}
-        inputClassName={styles.navSearchInput}
-        onSubmit={(value) => {
-          const q = value.trim();
-          router.push(q ? `/courses?search=${encodeURIComponent(q)}` : '/courses');
-        }}
+          {/* Desktop Menu */}
+          <div className={styles.desktopMenu}>
+            {navLinks.map((link) => (
+              <Link
+                key={link.name}
+                href={link.href || '#'}
+                onClick={(e) => {
+                  if (link.onClick) {
+                    e.preventDefault();
+                    link.onClick();
+                  }
+                }}
+                className={`${styles.navLink} ${
+                  link.name === 'Logout' ? styles.logoutBtn : ''
+                } ${pathname === link.href ? styles.active : ''}`}
+              >
+                {link.name}
+                {link.href && <span className={styles.underline}></span>}
+              </Link>
+            ))}
+
+            <SearchBox
+              value={navSearch}
+              onChange={setNavSearch}
+              placeholder="Search courses..."
+              className={styles.navSearch}
+              inputClassName={styles.navSearchInput}
+              onSubmit={(value) => {
+                const q = value.trim();
+                router.push(
+                  q ? `/courses?search=${encodeURIComponent(q)}` : '/courses'
+                );
+              }}
+            />
+          </div>
+
+          {/* Mobile Button */}
+          <button
+            className={styles.menuButton}
+            onClick={() => setIsOpen(!isOpen)}
+          >
+            {isOpen ? '✖' : '☰'}
+          </button>
+        </div>
+
+        {/* Overlay */}
+        <div
+          className={`${styles.overlay} ${isOpen ? styles.overlayOpen : ''}`}
+          onClick={() => setIsOpen(false)}
+        />
+
+        {/* Mobile Menu */}
+        <div className={`${styles.mobileMenu} ${isOpen ? styles.open : ''}`}>
+          {navLinks.map((link) => (
+            <Link
+              key={link.name}
+              href={link.href || '#'}
+              onClick={(e) => {
+                if (link.onClick) {
+                  e.preventDefault();
+                  link.onClick();
+                }
+                setIsOpen(false);
+              }}
+              className={`${styles.mobileLink} ${
+                link.name === 'Logout'
+                  ? styles.logoutBtnMobile
+                  : ''
+              } ${pathname === link.href ? styles.mobileActive : ''}`}
+            >
+              {link.name}
+            </Link>
+          ))}
+        </div>
+      </nav>
+
+      {/* 👇 LOGIN MODAL */}
+      <LoginModal
+        isOpen={showLogin}
+        onClose={() => setShowLogin(false)}
       />
-      </div>
-      <button className={styles.menuButton} onClick={() => setIsOpen(!isOpen)}>
-      {isOpen ? '✖' : '☰'}
-      </button>
-      </div>
-      <div className={`${styles.overlay} ${isOpen ? styles.overlayOpen : ''}`} onClick={() => setIsOpen(false)}/>
-      <div className={`${styles.mobileMenu} ${isOpen ? styles.open : ''}`}>
-      {navLinks.map((link) => (
-      <Link
-        key={link.name}
-        href={link.href || '#'}
-        onClick={() => {
-          link.onClick?.();
-          setIsOpen(false);
-        }}
-        className={`${styles.mobileLink} ${
-          link.name === 'Logout' ? styles.logoutBtnMobile : ''
-        } ${pathname === link.href ? styles.mobileActive : ''}`}
-      >
-        {link.name}
-      </Link>
-      ))}
-      </div>
-      
-    </nav>
+    </>
   );
 }

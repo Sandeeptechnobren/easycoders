@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import CourseGrid from '@/components/CourseGrid';
-import Breadcrumb from '@/components/Breadcrumb';
+import PageHeader from '@/components/PageHeader';
 
 type Course = {
   id: number | string;
@@ -32,20 +32,14 @@ export default function CoursesPage() {
   return (
     
     <section className="inner-block">
-      <div className='home-header-bg innerBanner'>
-        <div className='container'>
-          <div className="title-section  mb-5">
-                <Breadcrumb
-                items={[
-                  { label: 'Home', href: '/' },
-                  { label: 'Courses' }
-                ]}
-              />
-              <h1 className="heading1">Explore Top courses</h1>
-              <p>Learn industry-ready skills with practical, project-based training.</p>
-            </div>
-          </div> 
-        </div>
+      <PageHeader
+        title="Explore Top Courses"
+        description="Learn industry-ready skills with practical, project-based training."
+        breadcrumbs={[
+          { label: "Home", href: "/" },
+          { label: "Courses" }
+        ]}
+      />
 
         <div className='section-block'>
           <div className="container">
