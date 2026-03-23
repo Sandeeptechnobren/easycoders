@@ -1,99 +1,134 @@
 'use client';
 
+import { useEffect, useRef, useState } from 'react';
+import PageHeader from '@/components/PageHeader';
+
+type CounterItem = {
+  value: number;
+  label: string;
+};
+
+const data: CounterItem[] = [
+  { value: 120, label: 'Live Projects' },
+  { value: 15, label: 'Expert Trainers' },
+  { value: 100, label: 'Hiring Companies' },
+];
+
 export default function AboutPage() {
+  const [counts, setCounts] = useState(data.map(() => 0));
+  const ref = useRef<HTMLDivElement | null>(null);
+  const started = useRef(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      entries => {
+        if (entries[0].isIntersecting && !started.current) {
+          started.current = true;
+
+          data.forEach((item, index) => {
+            let start = 0;
+            const end = item.value;
+            const duration = 1200;
+            const stepTime = Math.max(Math.floor(duration / end), 20);
+
+            const counter = setInterval(() => {
+              start += 1;
+
+              setCounts(prev => {
+                const newCounts = [...prev];
+                newCounts[index] = start;
+                return newCounts;
+              });
+
+              if (start >= end) clearInterval(counter);
+            }, stepTime);
+          });
+        }
+      },
+      { threshold: 0.5 }
+    );
+
+    if (ref.current) observer.observe(ref.current);
+
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <div className="min-h-screen">
 
-      {/* HERO */}
-      <section className="introSection global-header-bg">
-        <div className="transparentDiv">
-          <div style={{ display: 'flex', width: '100%', justifyContent: 'space-between', alignItems: 'center' }}>
+    <section>
+      <PageHeader
+        title="We Build Developers"
+        description="Tech learning platform focused on real-world development skills and career growth.
+"
+        breadcrumbs={[
+          { label: "Home", href: "/" },
+          { label: "About Us" }
+        ]}
+      />
 
-            <div className="internalIntro" style={{ alignItems: 'flex-start', textAlign: 'left' }}>
-              <h1 style={{ fontSize: '42px', fontWeight: 900 }}>
-                We Build Developers,<br />Not Just Courses
-              </h1>
-              <p style={{ marginTop: 15, fontSize: 16, maxWidth: 500 }}>
-                EasyCoders is a modern tech learning platform focused on real-world
-                development skills and career growth.
-              </p>
+        <section className="counterSection" ref={ref}>
+          <div className="container">
+            <div className="row text-center">
+              {data.map((item, index) => (
+                <div className="col-md-4" key={index}>
+                  <div className="counter-box">
+                    <figure className='figureCount fontAdlam'>+{counts[index]}</figure>
+                    <h4 className='figureTItle '>{item.label}</h4>
+                  </div>
+                </div>
+              ))}
             </div>
-
-            <div className="internalIntro introImage" />
           </div>
-        </div>
       </section>
 
-      {/* CONTENT */}
-      <section className="description">
-
-        {/* STATS STRIP */}
-        <div className="cardGrid" style={{ marginBottom: 40 }}>
-          {[
-            // { label: "Students Trained", value: "5,00+" },
-            { label: "Live Projects", value: "120+" },
-            { label: "Expert Trainers", value: "15+" },
-            { label: "Placement Support", value: "100%" },
-          ].map((stat, i) => (
-            <div key={i} className="courseCard" style={{ textAlign: 'center' }}>
-              <h2 style={{ fontSize: 28, fontWeight: 800, color: '#8B5CF6' }}>
-                {stat.value}
-              </h2>
-              <p className="testimonialRole">{stat.label}</p>
+     <section className='section-block'>
+      <div className='container'>
+          <div className='row'>
+            <div className='col-md-4'>
+                <div className='storyBlock'>
+                <h2 className='mb-4'>Our Story</h2>
+              <p>EasyCoders was born from a simple problem: students learn syntax, but struggle to build real applications. We decided to flip the learning model — focusing on projects, workflows, and problem-solving.</p>
+              <p> Today, we help learners go from zero to job-ready through structured learning paths, mentorship, and industry-style training.</p>
+            <hr className='divider'/>
+            <h4 className='tagline fontAdlam'>Modern Technology <br/>Develop with US</h4> </div>
             </div>
-          ))}
-        </div>
 
-        {/* STORY */}
-        <div className="courseCard" style={{ marginBottom: 40 }}>
-          <h2 className="sectionTitle">Our Story</h2>
-          <p className="testimonialText">
-            EasyCoders was born from a simple problem: students learn syntax,
-            but struggle to build real applications. We decided to flip the
-            learning model — focusing on projects, workflows, and problem-solving.
-          </p>
-          <p className="testimonialText">
-            Today, we help learners go from zero to job-ready through
-            structured learning paths, mentorship, and industry-style training.
-          </p>
-        </div>
+            <div className='col-md-1'></div>
 
-        {/* MISSION / VISION */}
-        <div className="cardGrid" style={{ marginBottom: 40 }}>
-          <div className="courseCard">
-            <h3 className="cardTitle">Our Mission</h3>
-            <p className="testimonialText">
-              To create confident developers by providing practical,
-              project-driven and career-focused technical education.
-            </p>
+            <div className='col-md-7'>
+              <div className='profileImg'>
+                <img src="/images/profile-img.jpg" alt="About Us" />
+              </div>
+            </div>
           </div>
+      </div>
+     </section>
 
-          <div className="courseCard">
-            <h3 className="cardTitle">Our Vision</h3>
-            <p className="testimonialText">
-              To become the most trusted platform for learning real-world
-              software development skills globally.
-            </p>
+     <section className='section-block'>
+        <div className='container'>
+          <div className='row'>
+              <div className='col-md-6'>
+                <div className='iconTextBlock'>
+                    <img src="/images/icon-mission.svg" alt="Our Mission" />  
+                    <h3>Our Mission</h3>
+                    <p>To create confident developers by providing practical, project-driven and career-focused technical education.</p>
+                </div>
+               
+              </div>
+
+              <div className='col-md-6'>
+                <div className='iconTextBlock'>
+                    <img src="/images/icon-vision.svg" alt="Our Vision" />  
+                    <h3>Our Vision</h3>
+                <p>To become the most trusted platform for learning real-world software development skills globally.</p>
+                </div>
+                
+              </div>
           </div>
         </div>
+     </section> 
 
-        {/* TEAM */}
-        {/* <h2 className="sectionTitle">Meet The Team</h2>
-        <div className="cardGrid">
-          {[
-            { name: "Rahul Sharma", role: "Senior Web Trainer" },
-            { name: "Anjali Verma", role: "React Trainer" },
-            { name: "Amit Patel", role: "Backend Trainer" }
-          ].map((t, i) => (
-            <div key={i} className="courseCard testimonialCard">
-              <div className="testimonialImage" />
-              <h3 className="cardTitle">{t.name}</h3>
-              <p className="testimonialRole">{t.role}</p>
-            </div>
-          ))}
-        </div> */}
-
-      </section>
-    </div>
+    </section>
+    
   );
 }
