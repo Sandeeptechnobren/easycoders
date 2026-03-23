@@ -14,7 +14,7 @@ type NavLink = {
 };
 
 export default function Navbar() {
-  const { role, logout } = useAuth();
+  const { role, logout, isLoading } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
 
@@ -74,6 +74,8 @@ export default function Navbar() {
     { name: 'Logout', onClick: handleLogout },
   ];
 
+  
+
   const hrLinks: NavLink[] = [
     { name: 'Home', href: '/hr' },
     { name: 'Students', href: '/hr/students' },
@@ -92,17 +94,31 @@ export default function Navbar() {
 
   const guestLinks: NavLink[] = [
     ...commonLinks,
-    { name: 'Login', onClick: () => setShowLogin(true) }, // 👈 open popup
+    { name: 'Login', onClick: () => setShowLogin(true) },  
   ];
 
+  // Convert role to number for comparison, or use null if not available
+  const roleNum = role ? parseInt(role, 10) : null;
+
+  const logoRedirect =
+  roleNum === 1
+    ? '/admin'
+    : roleNum === 2
+    ? '/hr'
+    : roleNum === 3
+    ? '/student'
+    : roleNum === 4
+    ? '/trainer'
+    : '/';
+
   const navLinks: NavLink[] =
-    role === 1
+    roleNum === 1
       ? adminLinks
-      : role === 2
+      : roleNum === 2
       ? hrLinks
-      : role === 4
+      : roleNum === 4
       ? trainerLinks
-      : role === 3
+      : roleNum === 3
       ? studentLinks
       : guestLinks;
 
@@ -111,16 +127,16 @@ export default function Navbar() {
       <nav className={`${styles.navbar} ${isScrolled ? styles.navbarScrolled : ''}`}>
         <div className={styles.container}>
 
-          {/* Logo */}
+         
           <div className={styles.logo}>
-            <Link href="/">
-              <img
-                src="/images/logo.svg"
-                alt="Easy Coders Logo"
-                style={{ height: 63 }}
-              />
-            </Link>
-          </div>
+          <Link href={logoRedirect}>
+            <img
+              src="/images/logo.svg"
+              alt="Easy Coders Logo"
+              style={{ height: 63 }}
+            />
+          </Link>
+        </div>
 
           {/* Desktop Menu */}
           <div className={styles.desktopMenu}>
@@ -143,19 +159,21 @@ export default function Navbar() {
               </Link>
             ))}
 
-            <SearchBox
-              value={navSearch}
-              onChange={setNavSearch}
-              placeholder="Search courses..."
-              className={styles.navSearch}
-              inputClassName={styles.navSearchInput}
-              onSubmit={(value) => {
-                const q = value.trim();
-                router.push(
-                  q ? `/courses?search=${encodeURIComponent(q)}` : '/courses'
-                );
-              }}
-            />
+            {!role && !isLoading && (
+              <SearchBox
+                value={navSearch}
+                onChange={setNavSearch}
+                placeholder="Search courses..."
+                className={styles.navSearch}
+                inputClassName={styles.navSearchInput}
+                onSubmit={(value) => {
+                  const q = value.trim();
+                  router.push(
+                    q ? `/courses?search=${encodeURIComponent(q)}` : '/courses'
+                  );
+                }}
+              />
+            )}
           </div>
 
           {/* Mobile Button */}
@@ -188,7 +206,7 @@ export default function Navbar() {
               }}
               className={`${styles.mobileLink} ${
                 link.name === 'Logout'
-                  ? styles.logoutBtnMobile
+                  ? `${styles.btn} ${styles.btnPrimary}`
                   : ''
               } ${pathname === link.href ? styles.mobileActive : ''}`}
             >
@@ -198,7 +216,7 @@ export default function Navbar() {
         </div>
       </nav>
 
-      {/* 👇 LOGIN MODAL */}
+ 
       <LoginModal
         isOpen={showLogin}
         onClose={() => setShowLogin(false)}

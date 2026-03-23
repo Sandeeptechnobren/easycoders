@@ -42,7 +42,8 @@ export default function RootLayout({
           {!isSelfAssessment && <Footer />}
         </AuthProvider>
         {!isSelfAssessment && <SelfAssessmentBubble />}
-        <Registration/>
+        {/* Registration temporarily disabled */}
+        {/* <Registration /> */}
         <Script
           src="https://code.jquery.com/jquery-3.6.0.min.js"
           strategy="beforeInteractive"

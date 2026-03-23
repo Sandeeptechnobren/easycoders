@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import api from '@/lib/axios';
 import { useAuth } from '@/context/AuthContext';
 
@@ -34,7 +35,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
       localStorage.setItem('user', JSON.stringify(user));
       localStorage.setItem('role', role);
 
-      login(role);
+      login(role, user, token);
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 
       onClose(); // Close popup after login
@@ -86,6 +87,8 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
           <button type="submit" className="formButton">
             Login →
           </button>
+
+           <div className='text-center'><small>Don’t have an account? <Link href="/contactus">Contact Us</Link></small></div>
 
         </form>
       </div>
