@@ -850,3 +850,10 @@ body {
   margin-top: 10px;
   text-align: center;
 }
+
+.admin-wrap{min-height:100vh;background:#f7f8fb;color:#0f172a;padding:18px; padding-top: 130px;
+}
+
+.text-blue{
+      color: #4462bc !important;
+}
