@@ -337,46 +337,46 @@ export default function AdminHomePage() {
           <>
             {/* KPI with light colors */}
             <section className={styles.kpis}>
-              <div className={styles.kpi} style={{ borderLeft: '5px solid #0ea5e9' }}>
-                <div className={styles.kpiLabel}>Total Students</div>
+              <div className={styles.kpi} style={{ borderLeft: '3px solid #0ea5e9' }}>
                 <div className={styles.kpiValue}>{interestStats.total}</div>
+                <div className={styles.kpiLabel}>Total Students</div>
                 <div className={styles.kpiHint}>All students</div>
               </div>
 
-              <div className={styles.kpi} style={{ borderLeft: '5px solid #22c55e' }}>
-                <div className={styles.kpiLabel}>Interested</div>
+              <div className={styles.kpi} style={{ borderLeft: '3px solid #22c55e' }}>
                 <div className={styles.kpiValue}>{interestStats.Interested}</div>
+                <div className={styles.kpiLabel}>Interested</div>
                 <div className={styles.kpiHint}>Ready to join</div>
               </div>
 
-              <div className={styles.kpi} style={{ borderLeft: '5px solid #ef4444' }}>
-                <div className={styles.kpiLabel}>Not Interested</div>
+              <div className={styles.kpi} style={{ borderLeft: '3px solid #ef4444' }}>
                 <div className={styles.kpiValue}>{interestStats['Not Interested']}</div>
+                <div className={styles.kpiLabel}>Not Interested</div>                
                 <div className={styles.kpiHint}>No follow-up</div>
               </div>
 
-              <div className={styles.kpi} style={{ borderLeft: '5px solid #f59e0b' }}>
-                <div className={styles.kpiLabel}>Call Back Later</div>
+              <div className={styles.kpi} style={{ borderLeft: '3px solid #f59e0b' }}>
                 <div className={styles.kpiValue}>{interestStats['Call Back Later']}</div>
+                <div className={styles.kpiLabel}>Call Back Later</div>
                 <div className={styles.kpiHint}>Follow-up pending</div>
               </div>
 
-              <div className={styles.kpi} style={{ borderLeft: '5px solid #64748b' }}>
-                <div className={styles.kpiLabel}>Not Reachable</div>
+              <div className={styles.kpi} style={{ borderLeft: '3px solid #64748b' }}>
                 <div className={styles.kpiValue}>{interestStats['Not Reachable']}</div>
+                <div className={styles.kpiLabel}>Not Reachable</div>
                 <div className={styles.kpiHint}>Try again later</div>
               </div>
 
-              <div className={styles.kpi} style={{ borderLeft: '5px solid #8b5cf6' }}>
-                <div className={styles.kpiLabel}>Not Set</div>
+              <div className={styles.kpi} style={{ borderLeft: '3px solid #8b5cf6' }}>
                 <div className={styles.kpiValue}>{interestStats['Not Set']}</div>
+                <div className={styles.kpiLabel}>Not Set</div>
                 <div className={styles.kpiHint}>Needs first call</div>
               </div>
 
               {interestStats.Other > 0 && (
-                <div className={styles.kpi} style={{ borderLeft: '5px solid #0f172a' }}>
-                  <div className={styles.kpiLabel}>Other</div>
+                <div className={styles.kpi} style={{ borderLeft: '3px solid #0f172a' }}>
                   <div className={styles.kpiValue}>{interestStats.Other}</div>
+                  <div className={styles.kpiLabel}>Other</div>
                   <div className={styles.kpiHint}>New categories</div>
                 </div>
               )}

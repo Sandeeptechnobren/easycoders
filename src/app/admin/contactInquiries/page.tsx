@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import api from "@/lib/axios";
 import Loader from "@/app/loader/page";
-
+import '../../globals.css';
 
 // Define the type for an Inquiry
 interface Inquiry {
@@ -64,9 +64,9 @@ export default function ContactInquiries() {
     const todayCount = inquiries.filter(i => i.date === new Date().toLocaleDateString()).length;
 
     return (
-        <div className="min-vh-100 d-flex flex-column" style={{ background: "#050505", color: "#e0e6ed", fontFamily: "'Inter', sans-serif" }}>
+        <div className="admin-wrap">
 
-            <div className="container-fluid p-4 p-md-5 mb-auto">
+            <div className="container">
                 {/* Header Section */}
                 <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-5 gap-3">
                     <div>
@@ -86,13 +86,13 @@ export default function ContactInquiries() {
                     <div className="d-flex gap-3">
                         <div className="px-4 py-3 rounded-4"
                             style={{ background: "rgba(0,194,255,0.1)", border: "1px solid rgba(0,194,255,0.2)" }}>
-                            <span className="d-block text-info small text-uppercase fw-bold">Total</span>
-                            <span className="h3 fw-bold mb-0 text-white">{totalInquiries}</span>
+                            <span className="d-block   small text-uppercase fw-bold">Total</span>
+                            <span className="h3 fw-bold mb-0 ">{totalInquiries}</span>
                         </div>
                         <div className="px-4 py-3 rounded-4"
                             style={{ background: "rgba(0,255,157,0.1)", border: "1px solid rgba(0,255,157,0.2)" }}>
                             <span className="d-block text-success small text-uppercase fw-bold">Today</span>
-                            <span className="h3 fw-bold mb-0 text-white">{todayCount}</span>
+                            <span className="h3 fw-bold mb-0">{todayCount}</span>
                         </div>
                     </div>
                 </div>
@@ -102,32 +102,32 @@ export default function ContactInquiries() {
                 ) : inquiries.length > 0 ? (
                     <div className="table-responsive rounded-4 p-3"
                         style={{
-                            background: "rgba(20, 20, 20, 0.6)",
+                            background: "rgba(255, 255, 255, 0.6)",
                             backdropFilter: "blur(12px)",
                             border: "1px solid rgba(255, 255, 255, 0.08)",
-                            boxShadow: "0 4px 20px rgba(0, 0, 0, 0.1)"
+                            boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)"
                         }}>
-                        <table className="table table-dark table-hover align-middle mb-0" style={{ background: "transparent" }}>
+                        <table className="table  table-hover align-middle mb-0" style={{ background: "transparent" }}>
                             <thead style={{ borderBottom: "1px solid rgba(0,194,255,0.3)" }}>
                                 <tr>
-                                    <th className="py-3 ps-3 text-info">Date</th>
-                                    <th className="py-3 text-info">Name</th>
-                                    <th className="py-3 text-info">Email</th>
-                                    <th className="py-3 text-info">Message</th>
-                                    <th className="py-3 text-end pe-3 text-info">Actions</th>
+                                    <th className="py-3 ps-3">Date</th>
+                                    <th className="py-3">Name</th>
+                                    <th className="py-3">Email</th>
+                                    <th className="py-3">Message</th>
+                                    <th className="py-3 text-end pe-3">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {inquiries.map((inquiry) => (
                                     <tr key={inquiry.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-                                        <td className="ps-3 text-secondary">{inquiry.date}</td>
-                                        <td className="fw-bold text-white">{inquiry.name}</td>
+                                        <td className="ps-3">{inquiry.date}</td>
+                                        <td className="fw-bold">{inquiry.name}</td>
                                         <td>
-                                            <a href={`mailto:${inquiry.email}`} className="text-decoration-none text-info small">
+                                            <a href={`mailto:${inquiry.email}`} className="text-decoration-none text-blue small">
                                                 {inquiry.email}
                                             </a>
                                         </td>
-                                        <td className="text-secondary text-truncate" style={{ maxWidth: "300px" }} title={inquiry.message}>
+                                        <td className=" text-truncate" style={{ maxWidth: "300px" }} title={inquiry.message}>
                                             {inquiry.message}
                                         </td>
                                         <td className="text-end pe-3">
@@ -144,8 +144,8 @@ export default function ContactInquiries() {
                                                             cursor: "pointer",
                                                             width: "40px",
                                                             height: "20px",
-                                                            backgroundColor: inquiry.resolved ? "#00ff9d" : "#343a40",
-                                                            borderColor: inquiry.resolved ? "#00ff9d" : "#495057",
+                                                            backgroundColor: inquiry.resolved ? "#4462bc " : "#eee",
+                                                            borderColor: inquiry.resolved ? "#4462bc " : "#eee",
                                                             transition: "0.3s ease"
                                                         }}
                                                     />

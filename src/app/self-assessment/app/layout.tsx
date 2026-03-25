@@ -33,6 +33,7 @@ export default function AssessmentAppLayout({
   const handleLogout = () => {
     localStorage.removeItem('assessment_user');
     localStorage.removeItem('assessment_token');
+    localStorage.removeItem('logged_in_user');
     router.replace('/');
   };
   const isActive = (path: string) => pathname === path;

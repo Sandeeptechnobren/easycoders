@@ -1,19 +1,28 @@
 .navbar {
-    width: 100%;
-    position: fixed;
-    top: 0;
-    z-index: 999;
-    transition: all 0.3s ease;
-    background: rgba(255, 255, 255, 0.934);
-    backdrop-filter: blur(10px);
-    border-bottom: 1px solid rgba(0, 194, 255, 0.1);
-    border-radius: 0px 0px 20px 20px;
+  position: fixed;
+  width: 100%;
+  top: 0;
+  left: 0;
+  z-index: 999;
+  padding: 15px 0;
+  transition: all 0.3s ease-in-out;
+}
+
+ 
+.navbarScrolled {
+  background: #ffffff;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+  padding: 5px 0;
+}
+
+.navbarScrolled .logo img{
+  width: 160px;
+ 
 }
 
 .container {
     max-width: 1300px;
     margin: auto;
-    padding: 0 20px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -25,29 +34,39 @@
 }
 
 .logo img {
-    width: 140px;
-    height: 48px;
-    border-radius: 8px;
+  width: 180px;
+  transition: all 0.3s ease-in-out;
 }
 
 .desktopMenu {
     display: flex;
     align-items: center;
 }
+
+.navSearch {
+    margin-left: 12px;
+    width: 240px;
+}
+
+.navSearchInput {
+    font-size: 12px;
+}
 .navLink {
     display: inline-flex;
     align-items: center;
     justify-content: center;
 
-    padding: 8px 16px;
+    margin: 0 15px;
     font-size: 0.9rem;
     font-weight: 500;
-    color: #032c73;
+    color: #323231;
+    font-family: inherit;
     text-decoration: none;
-
+text-transform: uppercase;
     background: none;
     border: none;
     cursor: pointer;
+    letter-spacing: 1px;
 
     position: relative;
     transition: all 0.25s ease;
@@ -58,16 +77,16 @@
 }
 
 .active {
-    color: #a207c8 !important;
+    color: #4462BC !important;
 }
 .underline {
     content: '';
     position: absolute;
     left: 0;
     bottom: -4px;
+    height:3px;
     width: 0%;
-    background: #00c2ff;
-    box-shadow: 0 0 6px #00c2ff;
+    background: #4462BC;
     transition: width 0.3s ease;
 }
 
@@ -79,6 +98,7 @@
     color: #ff4a4a !important;
     border: 1px solid rgba(255, 74, 74, 0.4);
     border-radius: 999px;
+        padding: 8px 15px;
     background: rgba(255, 74, 74, 0.08);
 }
 

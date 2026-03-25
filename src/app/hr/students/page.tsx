@@ -33,7 +33,7 @@ type Student = {
   name: string;
   email: string;
   phone: string;
-  status: number | string; // 1/0 or "Active"/"Inactive"
+  status: number | string;
   assessments_attempts?: AssessmentAttempt[];
   interest: Interest | null;
 };
@@ -57,14 +57,12 @@ function normalizeStudentStatus(s: Student['status']): 'Active' | 'Inactive' {
 function normalizeInterestLabel(interest: Student['interest']): string {
   const label = interest?.interest_status?.interest?.trim();
   if (!label) return 'Not Set';
-
   const l = label.toLowerCase();
   if (l === 'interested') return 'Interested';
   if (l === 'not interest' || l === 'not interested') return 'Not Interested';
   if (l === 'call back later') return 'Call Back Later';
   if (l === 'not reachable') return 'Not Reachable';
-
-  return label; // fallback for any new statuses
+  return label;
 }
 
 function interestClassName(label: string) {
@@ -87,15 +85,12 @@ export default function HrStudentsPage() {
   const [loadingStudents, setLoadingStudents] = useState(true);
   const [loadingColleges, setLoadingColleges] = useState(true);
   const loading = loadingStudents || loadingColleges;
-
   const [query, setQuery] = useState('');
   const [status, setStatus] = useState<'All' | 'Active' | 'Inactive'>('All');
   const [course, setCourse] = useState<'All' | string>('All');
-
   const [error, setError] = useState('');
   const [selectedCollegeID, setSelectedCollegeID] = useState<string>('');
   const [colleges, setColleges] = useState<College[]>([]);
-
   useEffect(() => {
     const fetchStudents = async () => {
       try {
@@ -139,7 +134,6 @@ export default function HrStudentsPage() {
 
   useEffect(() => {
     fetchColleges();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchColleges = async () => {
@@ -210,7 +204,6 @@ export default function HrStudentsPage() {
   return (
     <RoleGuard allowedRoles={[2]}>
       <div className={styles.wrap}>
-        {/* Header */}
         <header className={styles.topbar}>
           <div className={styles.left}>
             <div className={styles.crumbs}>
@@ -226,8 +219,6 @@ export default function HrStudentsPage() {
               Search, filter, and open a student profile to view complete details.
             </p>
           </div>
-
-          {/* ✅ Updated stats */}
           <div className={styles.right}>
             <div className={styles.miniStats}>
               <div className={styles.mini}>
@@ -273,8 +264,6 @@ export default function HrStudentsPage() {
             </Link>
           </div>
         </header>
-
-        {/* Filters */}
         <section className={styles.filters}>
           <select
             name="college"
@@ -293,38 +282,7 @@ export default function HrStudentsPage() {
               </option>
             ))}
           </select>
-
-          {/* <input
-            className={styles.input}
-            placeholder="Search name/email/phone/interest..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
-
-          <select
-            value={status}
-            onChange={(e) => setStatus(e.target.value as any)}
-            className={styles.select}
-          >
-            <option value="All">All Status</option>
-            <option value="Active">Active</option>
-            <option value="Inactive">Inactive</option>
-          </select> */}
-
-          {/* <select
-            value={course}
-            onChange={(e) => setCourse(e.target.value)}
-            className={styles.select}
-          >
-            {courseOptions.map((c) => (
-              <option key={c} value={c}>
-                {c === 'All' ? 'All Courses' : c}
-              </option>
-            ))}
-          </select> */}
         </section>
-
-        {/* Content */}
         <section className={styles.card}>
           {loading && (
             <div className={styles.skeletonWrap}>
@@ -395,13 +353,6 @@ export default function HrStudentsPage() {
                             {s.email}
                           </div>
                         </td>
-
-                        {/* <td>
-                          <span className={`${styles.pill} ${styles.neutral}`} title={s.phone}>
-                            {s.phone}
-                          </span>
-                        </td> */}
-
                         <td>
                           <span className={`${styles.pill} ${interestCls}`}>{interestLabel}</span>
                         </td>
@@ -416,7 +367,6 @@ export default function HrStudentsPage() {
                   })}
                 </tbody>
               </table>
-
               <div className={styles.mobileList}>
                 {filtered.map((s: any) => {
                   const interestLabel = normalizeInterestLabel(s.interest);

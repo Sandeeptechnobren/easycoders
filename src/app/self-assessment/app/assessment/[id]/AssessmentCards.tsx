@@ -21,15 +21,15 @@ export default function AssessmentCards() {
   const [downloadingId, setDownloadingId] = useState<number | null>(null);
 
   useEffect(() => {
-    const token = localStorage.getItem('assessment_token');
-    if (!token) {
+    const assessment_token = localStorage.getItem('assessment_token');
+    if (!assessment_token) {
       router.replace('/self-assessment/login');
       return;
     }
 
     api
       .get('/assessment/list', {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${assessment_token}` },
       })
       .then(res => setAssessments(res.data?.data || []))
       .catch(err => {
@@ -45,9 +45,9 @@ export default function AssessmentCards() {
   const handleDownload = async (assessmentId: number) => {
     setDownloadingId(assessmentId);
     try {
-      const token = localStorage.getItem('assessment_token');
+      const assessment_token = localStorage.getItem('assessment_token');
       const res = await api.get(`/assessment/certificate/${assessmentId}`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${assessment_token}` },
       });
 
       if (res.data.status === 'success' && res.data.download_url) {
@@ -64,8 +64,16 @@ export default function AssessmentCards() {
     }
   };
 
-  if (loading) return <p>Loading assessments…</p>;
-  if (!assessments.length) return <p>No active assessments available.</p>;
+  if (loading) return (
+    <div style={{ textAlign: 'center', padding: '60px 0', color: '#6b7280', fontSize: '15px' }}>
+      Loading assessments…
+    </div>
+  );
+  if (!assessments.length) return (
+    <div style={{ textAlign: 'center', padding: '60px 0', color: '#6b7280', fontSize: '15px' }}>
+      No active assessments available.
+    </div>
+  );
 
   return (
     <>
@@ -114,7 +122,7 @@ export default function AssessmentCards() {
                       cursor: downloadingId === item.id ? 'wait' : 'pointer',
                     }}
                   >
-                    {downloadingId === item.id ? 'Generating...' : ' Certificate'}
+                    {downloadingId === item.id ? 'Generating...' : 'Download Certificate'}
                   </button>
                 )}
               </div>

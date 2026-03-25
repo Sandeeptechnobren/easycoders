@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import api from "@/lib/axios"; // adjust path if needed
-
 export default function Tasks() {
     const [addTaskPopup, setAddTaskPopup] = useState(false);
     const [taskName, setTaskName] = useState("");
@@ -42,6 +41,7 @@ export default function Tasks() {
     };
 
     return (
+        <div className="admin-wrap"> 
         <div className="container mt-4">
             <div className="d-flex justify-content-between align-items-center mb-4">
                 <h3 className="fw-bold">Task List</h3>
@@ -175,6 +175,7 @@ export default function Tasks() {
                     </div>
                 </div>
             </div>
+        </div>
         </div>
     );
 }
