@@ -300,14 +300,14 @@ export default function AdminStudentDetailsPage() {
                     onClick={() => updateInterest(opt.id)}
                     style={{
                       borderLeft: opt.interest === 'Interested'
-                        ? '4px solid #22c55e'
+                        ? '3px solid #22c55e'
                         : opt.interest === 'Not Interested'
-                        ? '4px solid #ef4444'
+                        ? '3px solid #ef4444'
                         : opt.interest === 'Call Back Later'
-                        ? '4px solid #f59e0b'
+                        ? '3px solid #f59e0b'
                         : opt.interest === 'Not Reachable'
-                        ? '4px solid #64748b'
-                        : '4px solid #8b5cf6',
+                        ? '3px solid #64748b'
+                        : '3px solid #8b5cf6',
                     }}
                   >
                     {opt.interest}
