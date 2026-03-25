@@ -87,7 +87,7 @@ export default function HrHomePage() {
 
   const [userData, setUserData] = useState<{ name?: string } | null>(null);
 
-  // ✅ Fix SSR/prerender crash + prevent infinite render loop
+ 
   useEffect(() => {
     try {
       const raw = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
@@ -245,7 +245,7 @@ export default function HrHomePage() {
           </div>
         </header>
 
-        {/* Filters */}
+       
         <section className={styles.filters}>
           <label className={styles.filterLabel} htmlFor="college-select">
             College
@@ -283,7 +283,7 @@ export default function HrHomePage() {
           )}
         </section>
 
-        {/* States */}
+        
         {loading && (
           <section className={styles.card}>
             <div className={styles.skeletonWrap}>
@@ -313,82 +313,85 @@ export default function HrHomePage() {
           </section>
         )}
 
+        
         {!loading && !error && (
           <>
             <section className={styles.kpis}>
   <div
     className={styles.kpi}
-    style={{ borderLeft: '4px solid #6366f1' }}
+    style={{ borderLeft: '3px solid #6366f1' }}  
   >
-    <div className={styles.kpiLabel}>Total Students</div>
     <div className={styles.kpiValue}>{interestStats.total}</div>
+    <div className={styles.kpiLabel}>Total Students</div>
     <div className={styles.kpiHint}>All enrolled students</div>
   </div>
 
   <div
     className={styles.kpi}
-    style={{ borderLeft: '4px solid #10b981' }}
+    style={{ borderLeft: '3px solid #10b981' }} // Green
   >
-    <div className={styles.kpiLabel}>Interested</div>
-    <div className={styles.kpiValue} style={{ color: '#059669' }}>
+    <div className={styles.kpiValue}>
       {interestStats.Interested}
     </div>
+    <div className={styles.kpiLabel}>Interested</div>
     <div className={styles.kpiHint}>Ready to join</div>
   </div>
 
   <div
     className={styles.kpi}
-    style={{ borderLeft: '4px solid #ef4444' }}
+    style={{ borderLeft: '3px solid #ef4444' }} // Red
   >
-    <div className={styles.kpiLabel}>Not Interested</div>
-    <div className={styles.kpiValue} style={{ color: '#dc2626' }}>
+    <div className={styles.kpiValue}>
       {interestStats['Not Interested']}
     </div>
+    <div className={styles.kpiLabel}>Not Interested</div>
     <div className={styles.kpiHint}>No follow-up needed</div>
   </div>
 
   <div
     className={styles.kpi}
-    style={{ borderLeft: '4px solid #f59e0b' }} // Amber
+    style={{ borderLeft: '3px solid #f59e0b' }} // Amber
   >
-    <div className={styles.kpiLabel}>Call Back Later</div>
-    <div className={styles.kpiValue} style={{ color: '#d97706' }}>
+    <div className={styles.kpiValue}>
       {interestStats['Call Back Later']}
     </div>
+    <div className={styles.kpiLabel}>Call Back Later</div>
     <div className={styles.kpiHint}>Follow-up pending</div>
   </div>
 
   <div
     className={styles.kpi}
-    style={{ borderLeft: '4px solid #3b82f6' }} // Blue
+    style={{ borderLeft: '3px solid #3b82f6' }} // Blue
   >
-    <div className={styles.kpiLabel}>Not Reachable</div>
-    <div className={styles.kpiValue} style={{ color: '#2563eb' }}>
+    <div className={styles.kpiValue}>
       {interestStats['Not Reachable']}
     </div>
+    <div className={styles.kpiLabel}>Not Reachable</div>
     <div className={styles.kpiHint}>Try again later</div>
   </div>
 
   <div
     className={styles.kpi}
-    style={{ borderLeft: '4px solid #6b7280' }} // Gray
+    style={{ borderLeft: '3px solid #6b7280' }} // Gray
   >
-    <div className={styles.kpiLabel}>Not Set</div>
-    <div className={styles.kpiValue} style={{ color: '#374151' }}>
+    <div className={styles.kpiValue}>
       {interestStats['Not Set']}
     </div>
+    <div className={styles.kpiLabel}>Not Set</div>
+    
     <div className={styles.kpiHint}>Needs first call</div>
   </div>
 
   {interestStats.Other > 0 && (
     <div
       className={styles.kpi}
-      style={{ borderLeft: '4px solid #8b5cf6' }} // Violet
+      style={{ borderLeft: '3px solid #8b5cf6' }} // Violet
     >
-      <div className={styles.kpiLabel}>Other</div>
-      <div className={styles.kpiValue} style={{ color: '#7c3aed' }}>
+      <div className={styles.kpiValue}>
         {interestStats.Other}
       </div>
+      <div className={styles.kpiLabel}>Other</div>
+      
       <div className={styles.kpiHint}>New categories</div>
     </div>
   )}
