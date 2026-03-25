@@ -42,7 +42,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
 
       if (role === 1) router.push('/admin');
       else if (role === 2) router.push('/hr');
-      else if (role === 3) router.push('/student');
+      else if (role === 3) router.push('/student-dashboard');
       else if (role === 4) router.push('/trainer');
       else router.push('/');
 

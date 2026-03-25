@@ -24,14 +24,17 @@ export default function Navbar() {
   const [navSearch, setNavSearch] = useState('');
   const [isScrolled, setIsScrolled] = useState(false);
 
-  const handleLogout = () => {
-    logout();
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    localStorage.removeItem('role');
-    setIsOpen(false);
-    router.replace('/');
-  };
+const handleLogout = async () => {
+  await logout();  
+
+  localStorage.removeItem('token');
+  localStorage.removeItem('user');
+  localStorage.removeItem('role');
+
+  setIsOpen(false);
+
+  router.push('/');  
+};
 
   useEffect(() => {
     // body scroll lock for mobile menu
@@ -63,9 +66,9 @@ export default function Navbar() {
   ];
 
   const studentLinks: NavLink[] = [
-    { name: 'Home', href: '/student' },
-    { name: 'My Tasks', href: '/student/tasks' },
-    { name: 'Tickets', href: '/student/tickets' },
+    { name: 'Home', href: '/student-dashboard' },
+    { name: 'My Tasks', href: '/students/tasks' },
+    { name: 'Tickets', href: '/students/tickets' },
     { name: 'Logout', onClick: handleLogout },
   ];
 
@@ -106,7 +109,7 @@ export default function Navbar() {
     : roleNum === 2
     ? '/hr'
     : roleNum === 3
-    ? '/student'
+    ? '/student-dashboard'
     : roleNum === 4
     ? '/trainer'
     : '/';

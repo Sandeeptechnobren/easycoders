@@ -3,6 +3,9 @@
 import { useEffect, useState } from 'react';
 import api from '@/lib/axios';
 import Loader from '../../loader/page';
+ 
+
+ 
 
 export default function TasksPage() {
     const [tasks, setTasks] = useState<any[]>([]);
@@ -35,7 +38,8 @@ export default function TasksPage() {
     if (loadingTasks || loadingCategories) return <Loader />;
 
     return (
-        <div className="container mt-4">
+        <div className='admin-wrap'>
+        <div className="container  ">
             <div className="d-flex justify-content-between align-items-center">
                 <h4 className="mb-4 mt-2">My Tasks</h4>
                 <select
@@ -51,9 +55,7 @@ export default function TasksPage() {
                     ))}
                 </select>
             </div>
-            <div className="card shadow-sm">
-
-                <div className="card-body table-responsive">
+             <div className="table-responsive">
                     {tasks.length === 0 ? (
                         <p className="text-center text-muted">No tasks assigned yet.</p>
                     ) : (
@@ -118,7 +120,7 @@ export default function TasksPage() {
                         </table>
                     )}
                 </div>
-            </div>
+        </div>
         </div>
     );
 }
