@@ -52,6 +52,7 @@ export default function Tickets() {
     if (loading || loadingCategories) return <Loader />;
 
     return (
+        <div className='admin-wrap'>
         <div className="container py-4">
             {/* Page Header */}
             <div className="d-flex justify-content-between align-items-center mb-4">
@@ -234,6 +235,7 @@ export default function Tickets() {
                     </div>
                 </div>
             </div>
+        </div>
         </div>
     );
 }

@@ -1,5 +1,5 @@
-.wrap{min-height:100vh;background:#f7f8fb;color:#0f172a;padding:18px}
-.topbar{max-width:1200px;margin:0 auto;display:flex;justify-content:space-between;gap:14px;padding:16px;border:1px solid #e6e8ef;background:#fff;border-radius:16px}
+.wrap{min-height:100vh;background:#f7f8fb;color:#0f172a;    padding: 130px 18px 18px;}
+.topbar{max-width:1300px;margin:0 auto;display:flex;justify-content:space-between;gap:14px;padding:16px;border:1px solid #e6e8ef;background:#fff;border-radius:16px}
 .left{min-width:0}
 .right{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .crumbs{display:flex;gap:8px;align-items:center;font-size:12px;color:#64748b}
@@ -9,19 +9,19 @@
 .title{font-size:20px;font-weight:1000;margin-top:6px}
 .subtitle{font-size:13px;color:#64748b;margin-top:4px}
 
-.kpis{max-width:1200px;margin:14px auto 0;display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.kpis{max-width:1300px;margin:14px auto 0;display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
 .kpi{padding:14px;border-radius:16px;border:1px solid #e6e8ef;background:#fff}
 .kpiLabel{font-size:12px;color:#64748b;font-weight:900}
 .kpiValue{font-size:24px;font-weight:1000;margin-top:6px}
 .kpiHint{font-size:12px;color:#64748b;margin-top:6px}
 
-.filters{max-width:1200px;margin:12px auto 0;display:flex;gap:10px;flex-wrap:wrap}
+.filters{max-width:1300px;margin:12px auto 0;display:flex;gap:10px;flex-wrap:wrap}
 .search{flex:1;min-width:220px;border:1px solid #e6e8ef;border-radius:12px;padding:10px 12px;background:#fff}
 .select{min-width:220px;border:1px solid #e6e8ef;border-radius:12px;padding:10px 12px;background:#fff}
 .clearBtn{border:1px solid #e6e8ef;border-radius:12px;padding:10px 12px;background:#fff;font-weight:900;cursor:pointer}
 .clearBtn:hover{background:#f8fafc}
 
-.card{max-width:1200px;margin:14px auto 0;border:1px solid #e6e8ef;background:#fff;border-radius:16px;padding:16px}
+.card{max-width:1300px;margin:14px auto 0;border:1px solid #e6e8ef;background:#fff;border-radius:16px;padding:16px}
 .tableWrap{width:100%;overflow:auto}
 .table{width:100%;border-collapse:separate;border-spacing:0 10px}
 .table th{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:#64748b;text-align:left;padding:0 10px}

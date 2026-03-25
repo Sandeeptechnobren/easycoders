@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import RoleGuard from '@/components/RoleGuard';
-import styles from './students.module.css';
+import styles from '../../students/students.module.css';
 import { useEffect, useMemo, useState } from 'react';
 import { fetchWithAuth } from '@/lib/api';
 import { computeInterestStats, normalizeInterestLabel, interestClass } from '@/lib/interest';
