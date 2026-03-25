@@ -311,7 +311,7 @@ body {
 }
 .internalNav{
     border-bottom: 3px solid #eee;
-   padding: 9px 28px;
+   padding: 9px 15px;
     cursor: pointer;
     margin-bottom: 15px;
     font-weight: 600;
@@ -521,9 +521,19 @@ body {
       border-radius: 10px;
       padding: 24px 20px;
 
+      li {
+        list-style: none;
+      }
+
       .internalNav{
         border-bottom: none;
         border-radius: 20px;
+        border: none;
+        background-color: transparent;
+        font-size: 14px;
+        width: 100%;
+        text-align: left;
+        
         &.activeNav{
           background-color: #4462BC;
           color: #fff;
@@ -542,7 +552,7 @@ body {
       padding-top: 20px;
 
       .courseCardBlock{
-        max-width: 300px;
+        max-width: 310px;
       }
     }
   }
