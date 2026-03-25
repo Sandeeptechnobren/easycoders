@@ -83,6 +83,7 @@ const handleLogout = async () => {
     { name: 'Home', href: '/hr' },
     { name: 'Students', href: '/hr/students' },
     { name: 'Admission', href: '/hr/enrollmentRequests' },
+    { name: 'Payments', href: '/hr/fee' },
     { name: 'Logout', onClick: handleLogout },
   ];
 
