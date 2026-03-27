@@ -3,6 +3,8 @@ import React, { useEffect, useState } from 'react';
 import api from '@/lib/axios';
 import { useParams } from 'next/navigation';
 import Loader from '@/app/loader/page';
+ 
+import PageHeader from '@/components/PageHeader';
 export default function CourseDetailsPage() {
   const params = useParams();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
@@ -11,6 +13,15 @@ export default function CourseDetailsPage() {
   const [showEnrollForm, setShowEnrollForm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [showQrEnroll, setShowQrEnroll] = useState(false);
+  const COURSE_IMAGES = [
+  'https://images.unsplash.com/photo-1517694712202-14dd9538aa97',
+  'https://images.unsplash.com/photo-1555066931-4365d14bab8c',
+  'https://images.unsplash.com/photo-1587620962725-abab7fe55159',
+  'https://images.unsplash.com/photo-1522202176988-66273c2fd55f',
+  'https://images.unsplash.com/photo-1498050108023-c5249f4df085',
+  'https://images.unsplash.com/photo-1531482615713-2afd69097998',
+  'https://images.unsplash.com/photo-1519389950473-47ba0277781c'
+];
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -48,74 +59,96 @@ export default function CourseDetailsPage() {
   if (loading) return <Loader />;
   if (!course) return <div>Course not found</div>;
   return (
-    <div className="min-h-screen">
-      <section className="introSection global-header-bg">
-        <div className="transparentDiv">
-          <div style={{ display: 'flex', width: '100%', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div className="internalIntro" style={{ alignItems: 'flex-start', textAlign: 'left' }}>
-              <h1 style={{ fontSize: '42px', fontWeight: 900 }}>
-                 {course.title}
-              </h1>
-              <p style={{ marginTop: 10, maxWidth: 450 }}>
-                {course.category?.name} • {course.level}
-              </p>
+    <div className="inner-block">
+      <PageHeader
+        title="Web Applications for Everybody"
+        description="Learn industry-ready skills with practical, project-based training."
+        breadcrumbs={[
+        { label: "Home", href: "/" },
+        { label: "Courses", href: "/courses" },
+        { label: course?.title || "Course" }
+      ]}
+      />
+    
+      <div className="container">
+        <div className='section-block'>
+            <div className='row'>
+                <div className="col-md-8">
+                  {course.offer && (
+                    <div className="offerBadge">
+                      {course.offer}
+                    </div>
+                  )}
+                  <h2 className="courseTitle">{course.title}</h2>
+                    <p>
+                        {course.description}
+                    </p>
+
+                    <div className='courseDt mb-4'>
+                        <span><strong>Level :</strong> {course.level}</span>
+                          <div><strong>Duration :</strong>  {course.duration}</div>
+                    </div>
+
+                  {course.category?.features?.length > 0 && (
+                    <div className="featuresBlock">
+                      <h3 className="featuresTitle mb-3">What You Will Get</h3>
+                      <ul className="featuresList">
+                        {course.category.features.map((f: any) => (
+                          <li key={f.id} className="featureItem">
+                            <span className="tick"></span>
+                            <span>{f.feature}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+              </div>
+
+               <div className='col-md-4'>
+                <div className='courseDetail'>
+                   <div className="courseImage mb-1">
+                   <img
+                      src={
+                        course.image ||
+                        COURSE_IMAGES[course.id % COURSE_IMAGES.length]
+                      }
+                      alt={course.title}
+                      className="img-fluid rounded"
+                      style={{ width: '100%', height: '250px', objectFit: 'cover' }}
+                    />
+                  </div>
+                  <h5 className="courseTitle">{course.title}</h5>
+                   
+                    <div className='courseDt mb-4 '>
+                        <span><strong>Level :</strong> {course.level}</span>
+                          <div><strong>Duration :</strong>  {course.duration}</div>
+                    </div>
+                    {!showEnrollForm && (
+                      <button
+                      onClick={() => setShowEnrollForm(true)}
+                      className="btn btn-primary enrollNow">
+                      <span style={{ fontSize: '13px',  textAlign:  'left',  marginTop: '2px' }}>
+                      Enrol Now <br/>
+                      for Quick Discount
+                      </span>
+                      <div><span style={{ fontSize: '16px', fontWeight: '700' }}>
+                      ₹{course.discounted_price}
+                      </span><span style={{ fontSize: '12px', textDecoration: 'line-through', opacity: 0.7 }}>
+                      ₹{course.original_price}
+                      </span>
+                      </div>
+                      </button>
+                    )}
+                </div>
+                
+             </div>
             </div>
-            <div className="internalIntro introImage" />
-          </div>
+
+           
         </div>
-      </section>
-      <section className="description">
-  <div className="courseCard mainCard">
-    {course.offer && (
-      <span className="badge">{course.offer}</span>
-    )}
-<div style={{display: 'flex',alignItems: 'center',flexWrap: 'wrap'}}>
-  <h2 className="sectionTitle">Course Overview</h2>
-  {!showEnrollForm && (
-    <button
-      onClick={() => setShowEnrollForm(true)}
-      className="enrollBtn"
-      style={{ marginLeft: 'auto' }}
-    >
-      Enroll Now →
-    </button>
-  )}
+        
+ 
 </div>
-    <p className="testimonialText">
-      {course.description}
-    </p>
-    <div className="cardGrid">
-      <div className="courseCard infoCard">
-        <div className="infoRow">
-          <h3>Duration</h3>
-          <p>{course.duration}</p>
-        </div>
-        <div className="infoRow">
-          <h3>Level</h3>
-          <p>{course.level}</p>
-        </div>
-        <div className="infoRow">
-          <h3>Fees</h3>
-          <p>
-            <del>₹{course.original_price}</del>
-            <br />
-            <strong>₹{course.discounted_price}</strong>
-          </p>
-        </div>
-      </div>
-      {course.category?.features?.length > 0 && (
-        <div className="courseCard featureCard">
-          <h3 className="sectionTitle">What You Will Get</h3>
-          <ul className="featureList">
-            {course.category.features.map((f: any) => (
-              <li key={f.id}>{f.feature}</li>
-            ))}
-          </ul>
-        </div>
-      )}
-    </div>
-  </div>
-</section>
 
   {/* {showEnrollForm && (
     
@@ -290,44 +323,7 @@ export default function CourseDetailsPage() {
   >
     {/* MODAL */}
     <div className="enrollModal" onClick={(e) => e.stopPropagation()}>
-      {/* LEFT: Course details */}
-      <div className="enrollLeft">
-        <div className="enrollHeader">
-          <h2 className="courseTitle">{course.title}</h2>
-          <p className="courseCategory">{course.category?.name}</p>
-        </div>
-
-        {course.offer && (
-          <div className="offerBadge">
-            🎉 {course.offer}
-          </div>
-        )}
-
-        <div className="metaCard">
-          <div className="metaRow">
-            <span className="metaKey">Level:</span>
-            <b className="metaVal">{course.level}</b>
-          </div>
-          <div className="metaRow">
-            <span className="metaKey">Duration:</span>
-            <b className="metaVal">{course.duration}</b>
-          </div>
-        </div>
-
-        {course.category?.features?.length > 0 && (
-          <div className="featuresBlock">
-            <h3 className="featuresTitle">What You Will Get</h3>
-            <ul className="featuresList">
-              {course.category.features.map((f: any) => (
-                <li key={f.id} className="featureItem">
-                  <span className="tick">✔</span>
-                  <span>{f.feature}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </div>
+    
 
       {/* RIGHT: Enrollment form */}
       <div className="enrollRight">
@@ -514,7 +510,7 @@ export default function CourseDetailsPage() {
 
       .enrollModal {
         width: 100%;
-        max-width: 1020px;
+        max-width: 450px;
         height: min(90vh, 720px);
         background: #fff;
         border-radius: 14px;
@@ -524,11 +520,7 @@ export default function CourseDetailsPage() {
         box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
       }
 
-      @media (min-width: 900px) {
-        .enrollModal {
-          grid-template-columns: 1.05fr 0.95fr;
-        }
-      }
+  
 
       .enrollLeft {
         padding: 26px;

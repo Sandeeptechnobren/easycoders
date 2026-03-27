@@ -395,13 +395,7 @@ body {
         display: inline-flex;
       
         
-        .icon-clock{
-          background-image: url(../../public/images/icon-clock.svg);
-          background-repeat: no-repeat;
-          width: 16px;
-          height: 16px;
-          display: inline-block;
-        }
+     
       
       }
     }
@@ -446,7 +440,13 @@ body {
     border-radius: 5px;
   }
 }
-
+.icon-clock{
+  background-image: url(../../public/images/icon-clock.svg);
+  background-repeat: no-repeat;
+  width: 16px;
+  height: 16px;
+  display: inline-block;
+}
 
 /* inner banner */
 .innerBanner{
@@ -867,3 +867,70 @@ body {
 .text-blue{
       color: #4462bc !important;
 } 
+
+.offerBadge{
+      color: #fff;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    background: #F7982B;
+    border-radius: 5px;
+    padding: 7px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    display: inline-block;
+     line-height: 1;
+}
+
+.courseTitle{
+  padding-top: 20px;
+}
+
+.featuresBlock{
+  background-color: #EBF4F9;
+  padding: 20px;
+  border-radius: 10px;
+      max-width: 600px;
+
+  .featuresList{
+    padding-left: 0;
+    li{
+      list-style: none;
+      position: relative;
+      padding-left:35px;
+      margin-bottom: 6px;
+
+      .tick{
+        position: absolute;
+        left: 0;
+        top: 3px;
+        background-image: url('/images/icon-tick.svg');
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: contain;
+        width: 18px;
+        height: 18px;
+        display: inline-block;
+      }
+    }
+  }
+}
+
+.courseDetail{
+  border-radius: 10px;
+  padding: 15px;
+  border: 1px solid #dad9d9;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  font-size: 13px;
+}
+
+.enrollNow{
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  >span, >div{
+    display: inline-flex;
+    flex-direction: column;
+  }
+}
+
+/* popup css */
