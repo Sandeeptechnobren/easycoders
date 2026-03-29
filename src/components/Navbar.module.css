@@ -4,7 +4,7 @@
   top: 0;
   left: 0;
   z-index: 999;
-  padding: 15px 0;
+  padding: 4px 0;
   transition: all 0.3s ease-in-out;
 }
 
@@ -13,7 +13,10 @@
   background: #ffffff;
   box-shadow: 0 8px 25px rgba(0,0,0,0.08);
   padding: 5px 0;
+
 }
+
+
 
 .navbarScrolled .logo img{
   width: 160px;
@@ -26,6 +29,15 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+}
+
+.contactus{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ff4a4a;
+  font-weight: bolder;
+  /* border-bottom:1px solid blue; */
 }
 
 .logo {
@@ -62,7 +74,7 @@
     color: #323231;
     font-family: inherit;
     text-decoration: none;
-text-transform: uppercase;
+    text-transform: uppercase;
     background: none;
     border: none;
     cursor: pointer;
