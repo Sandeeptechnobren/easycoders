@@ -26,16 +26,17 @@ export default function HomePage() {
   });
 
   return (
-    <div  > 
+    <div>
       <section className="home-header-bg">
         <div className="container">
+          
           <div className="banner-section">
             <div className="banner-content">
               <h1 className="heroTitle">
             Level up your Coding Career with <br/>
             <span>{"{EASYCODERS}"}</span>
             </h1>
-            <h3 className="subheroTitle">Become a Data Scientist or Business Analyst. 
+            <h3 className="subheroTitle">Start your coding career ! <br /> 
            <strong> No Coding knowledge required.</strong></h3>
              <div className="button-container">
              <Link href="/courses" className="btn btn-info">Join Our Courses <i></i></Link>
