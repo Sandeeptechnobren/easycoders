@@ -3,124 +3,365 @@
 import { useEffect, useState } from 'react';
 import api from '@/lib/axios';
 import Loader from '../../loader/page';
- 
-
- 
 
 export default function TasksPage() {
-    const [tasks, setTasks] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [taskCategories, setTaskCategories] = useState<any[]>([]);
-    const [selectedCategory, setSelectedCategory] = useState<string>('');
-    const [loadingTasks, setLoadingTasks] = useState(true);
-    const [loadingCategories, setLoadingCategories] = useState(true);
+  const [tasks, setTasks] = useState<any[]>([]);
+  const [taskCategories, setTaskCategories] = useState<any[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [loadingTasks, setLoadingTasks] = useState(true);
+  const [loadingCategories, setLoadingCategories] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [previewImg, setPreviewImg] = useState<string | null>(null);
 
+  useEffect(() => {
+    api.get('/student/tasks', { params: { category_id: selectedCategory } })
+      .then(res => setTasks(res.data?.data ?? res.data))
+      .finally(() => setLoadingTasks(false));
+  }, [selectedCategory]);
 
-    useEffect(() => {
-        api.get('/student/tasks', {
-            params: {
-                category_id: selectedCategory,
-            },
-        })
-            .then(res => {
-                setTasks(res.data?.data ?? res.data);
-            })
-            .finally(() => setLoadingTasks(false));
-    }, [selectedCategory]);
-    useEffect(() => {
-        api.get('/getTaskCategories')
-            .then(res => {
-                setTaskCategories(res.data?.data ?? res.data);
-            })
-            .finally(() => setLoadingCategories(false));
-    }, []);
+  useEffect(() => {
+    api.get('/getTaskCategories')
+      .then(res => setTaskCategories(res.data?.data ?? res.data))
+      .finally(() => setLoadingCategories(false));
+  }, []);
 
-    if (loadingTasks || loadingCategories) return <Loader />;
+  if (loadingTasks || loadingCategories) return <Loader />;
 
-    return (
-        <div className='admin-wrap'>
-        <div className="container  ">
-            <div className="d-flex justify-content-between align-items-center">
-                <h4 className="mb-4 mt-2">My Tasks</h4>
-                <select
-                    className="form-select w-25"
-                    value={selectedCategory}
-                    onChange={(e) => setSelectedCategory(e.target.value)}
-                >
-                    <option value="">All</option>
-                    {taskCategories.map((category) => (
-                        <option key={category.id} value={category.id}>
-                            {category.name}
-                        </option>
-                    ))}
-                </select>
+  const filteredTasks = tasks.filter(task =>
+    task.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    task.description?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const statusConfig: Record<string, { bg: string; color: string; label: string }> = {
+    completed: { bg: '#f0fdf4', color: '#15803d', label: '✓ Completed' },
+    pending:   { bg: '#fffbeb', color: '#b45309', label: '⏳ Pending' },
+    default:   { bg: '#f1f5f9', color: '#475569', label: '— N/A' },
+  };
+
+  const getStatus = (status: string) =>
+    statusConfig[status] ?? statusConfig.default;
+
+  const completedCount = tasks.filter(t => t.status === 'completed').length;
+  const pendingCount   = tasks.filter(t => t.status === 'pending').length;
+
+  return (
+    <>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+        .tp-wrap * { box-sizing: border-box; margin: 0; padding: 0; }
+        .tp-wrap {
+          font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+          background: #f1f5f9;
+          min-height: 100vh;
+          padding: 32px 24px 48px;
+        }
+
+        /* Header */
+        .tp-header { margin-bottom: 28px; }
+        .tp-title-row { display: flex; align-items: center; gap: 14px; margin-bottom: 6px; }
+        .tp-title-icon {
+          width: 42px; height: 42px; border-radius: 12px;
+          background: linear-gradient(135deg, #2563eb, #7c3aed);
+          display: flex; align-items: center; justify-content: center;
+          font-size: 18px; flex-shrink: 0;
+        }
+        .tp-title { font-size: 22px; font-weight: 800; color: #0f172a; }
+        .tp-subtitle { font-size: 13px; color: #64748b; margin-left: 56px; }
+
+        /* Stats row */
+        .tp-stats { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
+        .tp-stat {
+          background: #fff; border: 1px solid #e2e8f0; border-radius: 12px;
+          padding: 14px 20px; display: flex; align-items: center; gap: 12px;
+          min-width: 140px;
+        }
+        .tp-stat-icon { font-size: 20px; }
+        .tp-stat-val { font-size: 20px; font-weight: 800; color: #0f172a; line-height: 1; }
+        .tp-stat-lbl { font-size: 11px; color: #94a3b8; margin-top: 2px; }
+
+        /* Controls */
+        .tp-controls {
+          display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; align-items: center;
+        }
+        .tp-search {
+          flex: 1; min-width: 200px; position: relative;
+        }
+        .tp-search-icon {
+          position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+          font-size: 14px; color: #94a3b8; pointer-events: none;
+        }
+        .tp-search input {
+          width: 100%; height: 40px; padding: 0 14px 0 36px;
+          border: 1px solid #e2e8f0; border-radius: 10px;
+          background: #fff; font-size: 13px; color: #1e293b;
+          font-family: inherit; outline: none;
+          transition: border-color 0.15s, box-shadow 0.15s;
+        }
+        .tp-search input:focus {
+          border-color: #93c5fd;
+          box-shadow: 0 0 0 3px rgba(37,99,235,0.08);
+        }
+        .tp-search input::placeholder { color: #cbd5e1; }
+        .tp-select-wrap { position: relative; }
+        .tp-select-wrap select {
+          height: 40px; padding: 0 36px 0 14px;
+          border: 1px solid #e2e8f0; border-radius: 10px;
+          background: #fff; font-size: 13px; color: #1e293b;
+          font-family: inherit; outline: none; appearance: none;
+          cursor: pointer; min-width: 160px;
+          transition: border-color 0.15s;
+        }
+        .tp-select-wrap select:focus { border-color: #93c5fd; }
+        .tp-select-arrow {
+          position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+          font-size: 10px; color: #94a3b8; pointer-events: none;
+        }
+        .tp-count {
+          font-size: 12px; color: #94a3b8; font-weight: 500;
+          white-space: nowrap; align-self: center;
+        }
+
+        /* Table card */
+        .tp-card {
+          background: #fff; border-radius: 18px;
+          border: 1px solid #e2e8f0; overflow: hidden;
+        }
+        .tp-table { width: 100%; border-collapse: collapse; }
+        .tp-table thead tr {
+          background: #f8fafc; border-bottom: 1px solid #e2e8f0;
+        }
+        .tp-table th {
+          padding: 12px 16px; font-size: 11px; font-weight: 700;
+          color: #64748b; text-transform: uppercase; letter-spacing: 0.06em;
+          white-space: nowrap;
+        }
+        .tp-table tbody tr {
+          border-bottom: 1px solid #f1f5f9;
+          transition: background 0.12s;
+        }
+        .tp-table tbody tr:last-child { border-bottom: none; }
+        .tp-table tbody tr:hover { background: #f8fafc; }
+        .tp-table td { padding: 14px 16px; vertical-align: middle; }
+
+        .tp-num {
+          width: 32px; height: 32px; border-radius: 8px;
+          background: #f1f5f9; display: flex; align-items: center;
+          justify-content: center; font-size: 12px; font-weight: 700; color: #64748b;
+        }
+        .tp-task-title { font-size: 13px; font-weight: 700; color: #0f172a; margin-bottom: 2px; }
+        .tp-task-desc { font-size: 12px; color: #94a3b8; line-height: 1.5; max-width: 260px; }
+        .tp-cat-badge {
+          display: inline-block; font-size: 11px; font-weight: 600;
+          padding: 3px 10px; border-radius: 20px;
+          background: #eff6ff; color: #1d4ed8;
+          border: 1px solid #bfdbfe;
+        }
+        .tp-img-thumb {
+          width: 48px; height: 48px; border-radius: 10px;
+          object-fit: cover; border: 1px solid #e2e8f0; cursor: pointer;
+          transition: transform 0.15s, box-shadow 0.15s;
+        }
+        .tp-img-thumb:hover { transform: scale(1.08); box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
+        .tp-no-img { font-size: 18px; color: #e2e8f0; }
+        .tp-status-pill {
+          display: inline-flex; align-items: center; gap: 4px;
+          font-size: 11px; font-weight: 700; padding: 4px 10px;
+          border-radius: 20px; white-space: nowrap;
+        }
+
+        /* Empty state */
+        .tp-empty {
+          display: flex; flex-direction: column; align-items: center;
+          padding: 60px 24px; text-align: center;
+        }
+        .tp-empty-icon {
+          width: 72px; height: 72px; border-radius: 20px;
+          background: #f8fafc; border: 1px solid #e2e8f0;
+          display: flex; align-items: center; justify-content: center;
+          font-size: 32px; margin-bottom: 16px;
+        }
+        .tp-empty-title { font-size: 16px; font-weight: 700; color: #1e293b; margin-bottom: 6px; }
+        .tp-empty-desc { font-size: 13px; color: #94a3b8; }
+
+        /* Image preview modal (no fixed) */
+        .tp-overlay {
+          position: absolute; inset: 0; background: rgba(15,23,42,0.7);
+          display: flex; align-items: center; justify-content: center;
+          z-index: 50; border-radius: 18px;
+        }
+        .tp-preview-box {
+          background: #fff; border-radius: 16px; padding: 16px;
+          max-width: 320px; width: 90%; text-align: center;
+        }
+        .tp-preview-box img { width: 100%; border-radius: 10px; margin-bottom: 12px; }
+        .tp-close-btn {
+          background: #f1f5f9; border: none; border-radius: 8px;
+          padding: 7px 16px; font-size: 13px; font-weight: 600;
+          color: #475569; cursor: pointer; font-family: inherit;
+        }
+      `}</style>
+
+      <div className="tp-wrap">
+        <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+
+          {/* Header */}
+          <div className="tp-header">
+            <div className="tp-title-row">
+              <div className="tp-title-icon">📝</div>
+              <div className="tp-title">My Tasks</div>
             </div>
-             <div className="table-responsive">
-                    {tasks.length === 0 ? (
-                        <p className="text-center text-muted">No tasks assigned yet.</p>
-                    ) : (
-                        <table className="table table-bordered table-hover align-middle">
-                            <thead className="table-light">
-                                <tr>
-                                    <th>#</th>
-                                    <th>Title</th>
-                                    <th>Description</th>
-                                    <th>Category</th>
-                                    <th>Output Image</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {tasks.map((task, index) => (
-                                    <tr key={task.id}>
-                                        <td>{index + 1}</td>
+            <div className="tp-subtitle">All tasks assigned to you by your trainer</div>
+          </div>
 
-                                        <td className="fw-semibold">
-                                            {task.title}
-                                        </td>
+          {/* Stats */}
+          <div className="tp-stats">
+            <div className="tp-stat">
+              <span className="tp-stat-icon">📋</span>
+              <div>
+                <div className="tp-stat-val">{tasks.length}</div>
+                <div className="tp-stat-lbl">Total tasks</div>
+              </div>
+            </div>
+            <div className="tp-stat">
+              <span className="tp-stat-icon">✅</span>
+              <div>
+                <div className="tp-stat-val" style={{ color: '#16a34a' }}>{completedCount}</div>
+                <div className="tp-stat-lbl">Completed</div>
+              </div>
+            </div>
+            <div className="tp-stat">
+              <span className="tp-stat-icon">⏳</span>
+              <div>
+                <div className="tp-stat-val" style={{ color: '#d97706' }}>{pendingCount}</div>
+                <div className="tp-stat-lbl">Pending</div>
+              </div>
+            </div>
+          </div>
 
-                                        <td style={{ maxWidth: 300 }}>
-                                            {task.description}
-                                        </td>
+          {/* Controls */}
+          <div className="tp-controls">
+            <div className="tp-search">
+              <span className="tp-search-icon">🔍</span>
+              <input
+                type="text"
+                placeholder="Search tasks..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+              />
+            </div>
 
-                                        <td>
-                                            <span className="badge bg-info text-dark">
-                                                {task.category?.name ?? 'N/A'}
-                                            </span>
-                                        </td>
+            <div className="tp-select-wrap">
+              <select
+                value={selectedCategory}
+                onChange={e => setSelectedCategory(e.target.value)}
+              >
+                <option value="">All Categories</option>
+                {taskCategories.map(cat => (
+                  <option key={cat.id} value={cat.id}>{cat.name}</option>
+                ))}
+              </select>
+              <span className="tp-select-arrow">▼</span>
+            </div>
 
-                                        <td className="text-center">
-                                            {task.image ? (
-                                                <img
-                                                    src={task.image}
-                                                    alt="Task Output"
-                                                    style={{ width: 60, height: 60, objectFit: 'cover' }}
-                                                    className="rounded border"
-                                                />
-                                            ) : (
-                                                <span className="text-muted">—</span>
-                                            )}
-                                        </td>
+            <span className="tp-count">
+              {filteredTasks.length} of {tasks.length} tasks
+            </span>
+          </div>
 
-                                        <td>
-                                            <span
-                                                className={`badge ${task.status === 'completed'
-                                                    ? 'bg-success'
-                                                    : task.status === 'pending'
-                                                        ? 'bg-warning text-dark'
-                                                        : 'bg-secondary'
-                                                    }`}
-                                            >
-                                                {task.status}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    )}
+          {/* Table card */}
+          <div className="tp-card" style={{ position: 'relative' }}>
+
+            {/* Image preview overlay */}
+            {previewImg && (
+              <div className="tp-overlay" onClick={() => setPreviewImg(null)}>
+                <div className="tp-preview-box" onClick={e => e.stopPropagation()}>
+                  <img src={previewImg} alt="Task output preview" />
+                  <button className="tp-close-btn" onClick={() => setPreviewImg(null)}>
+                    Close
+                  </button>
                 </div>
+              </div>
+            )}
+
+            {filteredTasks.length === 0 ? (
+              <div className="tp-empty">
+                <div className="tp-empty-icon">📭</div>
+                <div className="tp-empty-title">
+                  {searchQuery ? 'No tasks match your search' : 'No tasks assigned yet'}
+                </div>
+                <div className="tp-empty-desc">
+                  {searchQuery
+                    ? 'Try a different keyword or clear the search.'
+                    : 'Your trainer will assign tasks to you soon. Check back later.'}
+                </div>
+              </div>
+            ) : (
+              <div style={{ overflowX: 'auto' }}>
+                <table className="tp-table">
+                  <thead>
+                    <tr>
+                      <th style={{ width: 52 }}>#</th>
+                      <th>Task</th>
+                      <th>Category</th>
+                      <th style={{ textAlign: 'center' }}>Output</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredTasks.map((task, index) => {
+                      const s = getStatus(task.status);
+                      return (
+                        <tr key={task.id}>
+                          <td>
+                            <div className="tp-num">{index + 1}</div>
+                          </td>
+
+                          <td>
+                            <div className="tp-task-title">{task.title}</div>
+                            {task.description && (
+                              <div className="tp-task-desc">{task.description}</div>
+                            )}
+                          </td>
+
+                          <td>
+                            <span className="tp-cat-badge">
+                              {task.category?.name ?? 'General'}
+                            </span>
+                          </td>
+
+                          <td style={{ textAlign: 'center' }}>
+                            {task.image ? (
+                              <img
+                                src={task.image}
+                                alt="Task output"
+                                className="tp-img-thumb"
+                                onClick={() => setPreviewImg(task.image)}
+                              />
+                            ) : (
+                              <span className="tp-no-img">—</span>
+                            )}
+                          </td>
+
+                          <td>
+                            <span
+                              className="tp-status-pill"
+                              style={{ background: s.bg, color: s.color }}
+                            >
+                              {s.label}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+
         </div>
-        </div>
-    );
+      </div>
+    </>
+  );
 }
