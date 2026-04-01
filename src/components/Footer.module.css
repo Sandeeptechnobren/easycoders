@@ -23,10 +23,8 @@
     color: #fff;
 }
 
- 
 .ftLogo {
     filter: brightness(0) saturate(100%) invert(100%) sepia(97%) saturate(0%) hue-rotate(55deg) brightness(103%) contrast(104%);
- 
 }
 
 /* footer links */
@@ -38,6 +36,41 @@
 }
 
 .footerContent a:hover {
+    color: #008fbb;
+    text-decoration: underline;
+}
+
+/* divider above address */
+.footer hr {
+    border: none;
+    border-top: 1px solid #333;
+    margin: 16px 0;
+}
+
+/* address block */
+.ftAddress {
+    font-style: normal;
+    font-size: 13px;
+    line-height: 1.9;
+    color: #ccc;
+}
+
+.ftAddress strong {
+    display: block;
+    color: #fff;
+    font-size: 14px;
+    margin-bottom: 2px;
+}
+
+/* phone and email links */
+.ftAddress a {
+    color: #00c2ff;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s ease;
+}
+
+.ftAddress a:hover {
     color: #008fbb;
     text-decoration: underline;
 }

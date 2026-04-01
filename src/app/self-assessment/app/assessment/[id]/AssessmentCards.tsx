@@ -1,8 +1,8 @@
 
 'use client';
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import api from '@/lib/axios';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 type Assessment = {
   id: number;
@@ -82,51 +82,58 @@ export default function AssessmentCards() {
           const isCompleted = item.status === 'completed';
 
           return (
-            <div key={item.id} className={`assessmentCard ${isCompleted ? 'completed' : ''}`}>
-              <h3>{item.title}</h3>
-              <p className="assessmentDesc">{item.description || 'No description available.'}</p>
+           <div key={item.id} className={`assessmentCard ${isCompleted ? 'completed' : ''}`}>
+  
+  {/* STATUS BADGE */}
+  <div className={`statusBadge ${isCompleted ? 'done' : 'active'}`}>
+    {isCompleted ? 'Completed' : 'Active'}
+  </div>
 
-              <div className="assessmentMeta">
-                {item.level && <span>Level: {item.level}</span>}
-                {item.duration && <span>Duration: {item.duration} mins</span>}
-                <span style={{ color: isCompleted ? '#22c55e' : '#666', fontWeight: 'bold' }}>
-                  {isCompleted ? '✓ Completed' : 'Status: Available'}
-                </span>
-              </div>
-              <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-                <button
-                  className="startBtn"
-                  disabled={isCompleted}
-                  onClick={() => router.push(`/self-assessment/app/assessment/${item.id}`)}
-                  style={{
-                    flex: 1,
-                    backgroundColor: isCompleted ? '#9ca3af' : '#16316b',
-                    cursor: isCompleted ? 'not-allowed' : 'pointer',
-                    opacity: isCompleted ? 0.7 : 1,
-                  }}
-                >
-                  {isCompleted ? 'Attempted' : 'Start Assessment'}
-                </button>
-                {isCompleted && (
-                  <button
-                    onClick={() => handleDownload(item.id)}
-                    disabled={downloadingId === item.id}
-                    style={{
-                      flex: 1,
-                      backgroundColor: '#22c55e',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '12px',
-                      padding: '10px',
-                      fontWeight: '700',
-                      cursor: downloadingId === item.id ? 'wait' : 'pointer',
-                    }}
-                  >
-                    {downloadingId === item.id ? 'Generating...' : 'Download Certificate'}
-                  </button>
-                )}
-              </div>
-            </div>
+  <h3>{item.title}</h3>
+
+  <p className="assessmentDesc">
+    {item.description || 'No description available.'}
+  </p>
+
+  <div className="assessmentMeta">
+    {item.level && <span>🎯 {item.level}</span>}
+    {item.duration && <span>⏱ {item.duration} mins</span>}
+  </div>
+
+  <div style={{ display: 'flex', gap: '10px', marginTop: '16px', width: '100%' }}>
+    <button
+      className="startBtn"
+      disabled={isCompleted}
+      onClick={() => router.push(`/self-assessment/app/assessment/${item.id}`)}
+      style={{
+        flex: 1,
+        height: '38px',
+        background: isCompleted
+          ? '#9ca3af'
+          : 'linear-gradient(135deg,#4f46e5,#7c3aed)',
+        color: '#fff',
+        cursor: isCompleted ? 'not-allowed' : 'pointer',
+      }}
+    >
+      {isCompleted ? 'Attempted' : 'Start'}
+    </button>
+
+    {isCompleted && (
+      <button
+        onClick={() => handleDownload(item.id)}
+        disabled={downloadingId === item.id}
+        className="startBtn"
+        style={{
+          flex: 1,
+          background: '#22c55e',
+          color: '#fff',
+        }}
+      >
+        {downloadingId === item.id ? '...' : 'Certificate'}
+      </button>
+    )}
+  </div>
+</div>
           );
         })}
       </div>
