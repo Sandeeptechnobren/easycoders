@@ -50,11 +50,9 @@ export default function AdminStudentDetailsPage() {
   const [busyInterest, setBusyInterest] = useState(false);
   const [error, setError] = useState('');
 
-  // interest master list
   const [interestOptions, setInterestOptions] = useState<InterestOption[]>([]);
   const [callResponse, setCallResponse] = useState('');
 
-  // Finance / payments (from admin backend APIs)
   const [totalFee, setTotalFee] = useState<number>(0);
   const [nextDueDate, setNextDueDate] = useState<string>('');
   const [payments, setPayments] = useState<Payment[]>([]);
@@ -67,12 +65,10 @@ export default function AdminStudentDetailsPage() {
   });
   const [payBusy, setPayBusy] = useState(false);
 
-  // Attendance
   const [attDate, setAttDate] = useState('');
   const [attStatus, setAttStatus] = useState<'PRESENT' | 'ABSENT'>('PRESENT');
   const [attBusy, setAttBusy] = useState(false);
 
-  // Marks
   const [markBusy, setMarkBusy] = useState(false);
   const [markForm, setMarkForm] = useState({ title: '', score: '', max_score: '100', remark: '' });
 
@@ -80,11 +76,9 @@ export default function AdminStudentDetailsPage() {
     try {
       setLoading(true);
       setError('');
-
       const json = await fetchWithAuth(
         `https://api.easycoders.in/projects/backend/public/api/hr/students/${encodeURIComponent(id)}`
       );
-
       setStudent(json.data || null);
       setCallResponse(json.data?.interest?.call_response || '');
     } catch (e: any) {
@@ -106,19 +100,16 @@ export default function AdminStudentDetailsPage() {
     }
   };
 
-  // Optional: load finance/payments from admin backend (if you built it)
   const loadFinance = async () => {
     try {
       const json = await fetchWithAuth(
         `https://api.easycoders.in/projects/backend/public/api/admin/students/${encodeURIComponent(id)}`
       );
-
       const prof = json?.data?.profile;
       setTotalFee(Number(prof?.total_fee ?? 0));
       setNextDueDate(prof?.next_due_date ? String(prof.next_due_date).slice(0, 10) : '');
       setPayments(json?.data?.payments || []);
     } catch {
-      // If you haven't added admin/students/{id} backend yet, you can keep finance hidden.
       setPayments([]);
     }
   };
@@ -128,14 +119,12 @@ export default function AdminStudentDetailsPage() {
     loadStudent();
     loadInterestOptions();
     loadFinance();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
-  const interestLabel = useMemo(() => {
-    return normalizeInterestLabel(student?.interest?.interest_status?.interest);
-  }, [student]);
-
-  const studentStatusLabel = student?.status === 1 ? 'Active' : 'Inactive';
+  const interestLabel = useMemo(
+    () => normalizeInterestLabel(student?.interest?.interest_status?.interest),
+    [student]
+  );
 
   const paidAmount = useMemo(() => payments.reduce((sum, p) => sum + Number(p.amount || 0), 0), [payments]);
   const dueAmount = useMemo(() => Math.max(0, Number(totalFee || 0) - paidAmount), [totalFee, paidAmount]);
@@ -144,25 +133,21 @@ export default function AdminStudentDetailsPage() {
     if (!student) return;
     try {
       setBusyInterest(true);
-
-      const body = {
-        assessment_user_id: student.id, // your backend uses assessment_user_id = student id in your response
-        interest_status: interest_status_id,
-        call_response: callResponse || null,
-      };
-
       await fetchWithAuth(
         `https://api.easycoders.in/projects/backend/public/api/hr/assessmentUser/updateInterestStatus`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
+          body: JSON.stringify({
+            assessment_user_id: student.id,
+            interest_status: interest_status_id,
+            call_response: callResponse || null,
+          }),
         }
       );
-
-      await loadStudent(); // refresh current status
+      await loadStudent();
     } catch (e: any) {
-      setError(e?.message === 'Unauthorized' ? 'Session expired. Please login again.' : 'Failed to update interest');
+      setError(e?.message === 'Unauthorized' ? 'Session expired.' : 'Failed to update interest');
     } finally {
       setBusyInterest(false);
     }
@@ -253,388 +238,371 @@ export default function AdminStudentDetailsPage() {
     }
   };
 
+  const interestAccent: Record<string, string> = {
+    'Interested': '#639922',
+    'Not Interested': '#E24B4A',
+    'Call Back Later': '#EF9F27',
+    'Not Reachable': '#888780',
+    'Not Set': '#7F77DD',
+  };
+
   return (
     <RoleGuard allowedRoles={[1]}>
       <div className={styles.wrap}>
+
+        {/* ── Topbar ── */}
         <header className={styles.topbar}>
-          <div className={styles.left}>
-            <div className={styles.crumbs}>
+          <div className={styles.topLeft}>
+            <nav className={styles.crumbs}>
               <Link href="/admin" className={styles.crumbLink}>Admin</Link>
               <span className={styles.crumbSep}>/</span>
               <Link href="/admin/students" className={styles.crumbLink}>Students</Link>
               <span className={styles.crumbSep}>/</span>
               <span className={styles.crumbNow}>Details</span>
-            </div>
-
-            <h1 className={styles.title}>Student Details</h1>
-            <p className={styles.subtitle}>Profile, interest, assessments and finance.</p>
+            </nav>
+            <h1 className={styles.pageTitle}>Student Details</h1>
+            <p className={styles.pageSub}>Profile, interest, assessments and finance</p>
           </div>
-
-          {/* TOP RIGHT: Back + Interest buttons (as you requested) */}
-          <div className={styles.right}>
-            <Link href="/admin/students" className={`${styles.btn} ${styles.primary}`}>
-              ← Back
-            </Link>
-
-            <div className={styles.interestTop}>
-              <div className={styles.interestBadge}>
-                <span className={`${styles.pill} ${styles[interestClass(interestLabel)]}`}>
-                  {interestLabel}
-                </span>
-              </div>
-
-              <input
-                className={styles.callInput}
-                value={callResponse}
-                onChange={(e) => setCallResponse(e.target.value)}
-                placeholder="Call response (optional)"
-              />
-
-              <div className={styles.interestBtns}>
-                {interestOptions.map((opt) => (
-                  <button
-                    key={opt.id}
-                    type="button"
-                    className={`${styles.btn} ${styles.small}`}
-                    disabled={busyInterest}
-                    onClick={() => updateInterest(opt.id)}
-                    style={{
-                      borderLeft: opt.interest === 'Interested'
-                        ? '3px solid #22c55e'
-                        : opt.interest === 'Not Interested'
-                        ? '3px solid #ef4444'
-                        : opt.interest === 'Call Back Later'
-                        ? '3px solid #f59e0b'
-                        : opt.interest === 'Not Reachable'
-                        ? '3px solid #64748b'
-                        : '3px solid #8b5cf6',
-                    }}
-                  >
-                    {opt.interest}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
+          <Link href="/admin/students" className={styles.backBtn}>← Back</Link>
         </header>
 
+        {/* ── Loading ── */}
         {loading && (
-          <section className={styles.card}>
-            <div className={styles.skeletonWrap}>
-              <div className={styles.skRow} /><div className={styles.skRow} /><div className={styles.skRow} />
-              <div className={styles.skRow} /><div className={styles.skRow} />
+          <div className={styles.pageBody}>
+            <div className={styles.skCard}>
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className={styles.skRow} style={{ animationDelay: `${i * 0.07}s` }} />
+              ))}
             </div>
-          </section>
+          </div>
         )}
 
+        {/* ── Error ── */}
         {!loading && error && (
-          <section className={styles.card}>
-            <div className={`${styles.state} ${styles.error}`}>
-              <div className={styles.stateTitle}>Could not load student</div>
-              <div className={styles.stateText}>{error}</div>
-              <div className={styles.stateActions}>
-                <Link href="/login" className={`${styles.btn} ${styles.small}`}>Go to Login →</Link>
-              </div>
+          <div className={styles.pageBody}>
+            <div className={styles.emptyState}>
+              <div className={styles.emptyIcon}>⚠</div>
+              <div className={styles.emptyTitle}>Could not load student</div>
+              <div className={styles.emptyText}>{error}</div>
+              <Link href="/login" className={styles.emptyAction}>Go to Login →</Link>
             </div>
-          </section>
+          </div>
         )}
 
+        {/* ── Main content ── */}
         {!loading && !error && student && (
-          <>
-            {/* Student info */}
-            <section className={styles.card}>
-              <div className={styles.detailsCard}>
-                <div className={styles.topRow}>
-                  <div className={styles.identity}>
-                    <div className={styles.avatar} aria-hidden="true">
-                      {(student.name?.[0] || 'S').toUpperCase()}
-                    </div>
-                    <div className={styles.identityText}>
-                      <div className={styles.name}>{student.name}</div>
-                      <div className={styles.idLine}>
-                        Student ID: <b>{student.id}</b>
-                      </div>
-                    </div>
-                  </div>
+          <div className={styles.pageBody}>
 
-                  <span className={`${styles.pill} ${student.status === 1 ? styles.ok : styles.bad}`}>
-                    {studentStatusLabel}
+            {/* Row 1: Profile + Interest */}
+            <div className={styles.row2}>
+
+              {/* Profile card */}
+              <div className={styles.card}>
+                <div className={styles.cardHead}>
+                  <span className={styles.cardTitle}>Student Profile</span>
+                  <span className={`${styles.statusPill} ${student.status === 1 ? styles.pillGreen : styles.pillRed}`}>
+                    {student.status === 1 ? 'Active' : 'Inactive'}
                   </span>
                 </div>
-
+                <div className={styles.profileHero}>
+                  <div className={styles.avatarLg}>
+                    {(student.name?.[0] || 'S').toUpperCase()}
+                  </div>
+                  <div>
+                    <div className={styles.heroName}>{student.name}</div>
+                    <div className={styles.heroId}>ID #{student.id}</div>
+                  </div>
+                </div>
                 <div className={styles.divider} />
-
-                <div className={styles.grid}>
+                <div className={styles.fieldGrid}>
                   <div className={styles.field}>
-                    <span className={styles.k}>Email</span>
-                    <span className={styles.v}>{student.email}</span>
+                    <span className={styles.fieldKey}>Email</span>
+                    <span className={styles.fieldVal}>{student.email}</span>
                   </div>
                   <div className={styles.field}>
-                    <span className={styles.k}>Phone</span>
-                    <span className={styles.v}>{student.phone}</span>
+                    <span className={styles.fieldKey}>Phone</span>
+                    <span className={styles.fieldVal}>{student.phone}</span>
                   </div>
+                  <div className={styles.field}>
+                    <span className={styles.fieldKey}>Interest Status</span>
+                    <span className={`${styles.pill} ${styles[interestClass(interestLabel)]}`}>{interestLabel}</span>
+                  </div>
+                  {student.interest?.call_response && (
+                    <div className={styles.field}>
+                      <span className={styles.fieldKey}>Last Call Note</span>
+                      <span className={styles.fieldVal}>{student.interest.call_response}</span>
+                    </div>
+                  )}
                 </div>
               </div>
-            </section>
 
-            {/* Assessments */}
-            <section className={styles.card}>
-              <div className={styles.detailsCard}>
-                <div className={styles.sectionHead}>
-                  <div>
-                    <div className={styles.sectionTitle}>Assessment Details</div>
-                    <div className={styles.sectionSub}>Attempts and certificates</div>
-                  </div>
+              {/* Interest update card */}
+              <div className={styles.card}>
+                <div className={styles.cardHead}>
+                  <span className={styles.cardTitle}>Update Interest</span>
+                  {busyInterest && <span className={styles.busyBadge}>Saving…</span>}
                 </div>
-
+                <div className={styles.fieldKey} style={{ marginBottom: 6 }}>Call Response Note</div>
+                <textarea
+                  className={styles.textarea}
+                  rows={3}
+                  placeholder="Enter call response or notes…"
+                  value={callResponse}
+                  onChange={(e) => setCallResponse(e.target.value)}
+                />
                 <div className={styles.divider} />
+                <div className={styles.fieldKey} style={{ marginBottom: 10 }}>Set Status</div>
+                <div className={styles.interestBtns}>
+                  {interestOptions.map((opt) => (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      className={styles.interestBtn}
+                      disabled={busyInterest}
+                      onClick={() => updateInterest(opt.id)}
+                      style={{ borderLeftColor: interestAccent[opt.interest] || '#d1d5db' }}
+                    >
+                      <span
+                        className={styles.interestDot}
+                        style={{ background: interestAccent[opt.interest] || '#d1d5db' }}
+                      />
+                      {opt.interest}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
 
-                <div className={styles.tableWrap}>
-                  <table className={styles.table}>
-                    <thead>
-                      <tr>
-                        <th>Title</th>
-                        <th>Status</th>
-                        <th>Score</th>
-                        <th>Certificate</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {student.assessments_attempts?.length ? (
-                        student.assessments_attempts.map((a) => (
-                          <tr key={a.id}>
-                            <td>
-                              <div className={styles.strong}>
-                                {a.assessment?.title ?? `Assessment #${a.assessment_id}`}
-                              </div>
-                              <div className={styles.dim}>Attempt ID: {a.id}</div>
-                            </td>
-                            <td>
-                              <span className={`${styles.pill} ${a.status === 'completed' ? styles.ok : styles.neutral}`}>
-                                {a.status}
-                              </span>
-                            </td>
-                            <td>{a.score}</td>
-                            <td>
-                              {a.certificate_code ? (
-                                <span className={`${styles.pill} ${styles.neutral}`}>{a.certificate_code}</span>
-                              ) : (
-                                <span className={styles.dim}>—</span>
-                              )}
-                            </td>
-                          </tr>
-                        ))
-                      ) : (
-                        <tr>
-                          <td colSpan={4} className={styles.emptyRow}>No attempts found.</td>
+            {/* Row 2: Finance summary */}
+            <div className={styles.feeRow}>
+              <div className={styles.feeStat}>
+                <div className={styles.feeLabel}>Total Fee</div>
+                <div className={styles.feeVal}>₹{totalFee.toLocaleString()}</div>
+              </div>
+              <div className={styles.feeDivider} />
+              <div className={styles.feeStat}>
+                <div className={styles.feeLabel}>Paid</div>
+                <div className={`${styles.feeVal} ${styles.feeGreen}`}>₹{paidAmount.toLocaleString()}</div>
+              </div>
+              <div className={styles.feeDivider} />
+              <div className={styles.feeStat}>
+                <div className={styles.feeLabel}>Due</div>
+                <div className={`${styles.feeVal} ${dueAmount > 0 ? styles.feeRed : styles.feeGreen}`}>
+                  ₹{dueAmount.toLocaleString()}
+                </div>
+              </div>
+              {nextDueDate && (
+                <>
+                  <div className={styles.feeDivider} />
+                  <div className={styles.feeStat}>
+                    <div className={styles.feeLabel}>Next Due Date</div>
+                    <div className={styles.feeVal}>{nextDueDate}</div>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Row 3: Assessments */}
+            <div className={styles.card}>
+              <div className={styles.cardHead}>
+                <span className={styles.cardTitle}>Assessment Attempts</span>
+                <span className={styles.cardSub}>Certificates & scores</span>
+              </div>
+              <div className={styles.tableWrap}>
+                <table className={styles.table}>
+                  <thead>
+                    <tr>
+                      <th>Title</th>
+                      <th>Status</th>
+                      <th>Score</th>
+                      <th>Certificate</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {student.assessments_attempts?.length ? (
+                      student.assessments_attempts.map((a) => (
+                        <tr key={a.id}>
+                          <td>
+                            <div className={styles.tdBold}>{a.assessment?.title ?? `Assessment #${a.assessment_id}`}</div>
+                            <div className={styles.tdSub}>Attempt #{a.id}</div>
+                          </td>
+                          <td>
+                            <span className={`${styles.pill} ${a.status === 'completed' ? styles.pillGreen : styles.pillAmber}`}>
+                              {a.status}
+                            </span>
+                          </td>
+                          <td className={styles.tdBold}>{a.score}</td>
+                          <td>
+                            {a.certificate_code
+                              ? <span className={`${styles.pill} ${styles.pillBlue}`}>{a.certificate_code}</span>
+                              : <span className={styles.tdSub}>—</span>}
+                          </td>
                         </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
+                      ))
+                    ) : (
+                      <tr><td colSpan={4} className={styles.emptyRow}>No attempts found.</td></tr>
+                    )}
+                  </tbody>
+                </table>
               </div>
-            </section>
+            </div>
 
-            {/* Finance + Payments */}
-            <section className={styles.card}>
-              <div className={styles.detailsCard}>
-                <div className={styles.sectionHead}>
-                  <div>
-                    <div className={styles.sectionTitle}>Fees & Payments</div>
-                    <div className={styles.sectionSub}>Installments & due tracking</div>
-                  </div>
+            {/* Row 4: Payments */}
+            <div className={styles.card}>
+              <div className={styles.cardHead}>
+                <span className={styles.cardTitle}>Fees & Payments</span>
+                <span className={styles.cardSub}>Installments & due tracking</span>
+              </div>
 
-                  <div className={styles.feeMini}>
-                    <span className={styles.pill}>Total: ₹{totalFee}</span>
-                    <span className={`${styles.pill} ${styles.ok}`}>Paid: ₹{paidAmount}</span>
-                    <span className={`${styles.pill} ${styles.bad}`}>Due: ₹{dueAmount}</span>
-                    {nextDueDate && <span className={`${styles.pill} ${styles.neutral}`}>Next Due: {nextDueDate}</span>}
-                  </div>
+              <div className={styles.formGrid}>
+                <div className={styles.formField}>
+                  <label className={styles.formLabel}>Amount (₹)</label>
+                  <input className={styles.input} type="number" placeholder="0" value={payForm.amount}
+                    onChange={(e) => setPayForm((p) => ({ ...p, amount: e.target.value }))} />
                 </div>
-
-                <div className={styles.divider} />
-
-                <div className={styles.formGrid}>
-                  <input
-                    className={styles.input}
-                    type="number"
-                    placeholder="Amount"
-                    value={payForm.amount}
-                    onChange={(e) => setPayForm((p) => ({ ...p, amount: e.target.value }))}
-                  />
-                  <input
-                    className={styles.input}
-                    type="date"
-                    value={payForm.payment_date}
-                    onChange={(e) => setPayForm((p) => ({ ...p, payment_date: e.target.value }))}
-                  />
-                  <select
-                    className={styles.input}
-                    value={payForm.payment_mode}
-                    onChange={(e) => setPayForm((p) => ({ ...p, payment_mode: e.target.value }))}
-                  >
+                <div className={styles.formField}>
+                  <label className={styles.formLabel}>Payment Date</label>
+                  <input className={styles.input} type="date" value={payForm.payment_date}
+                    onChange={(e) => setPayForm((p) => ({ ...p, payment_date: e.target.value }))} />
+                </div>
+                <div className={styles.formField}>
+                  <label className={styles.formLabel}>Mode</label>
+                  <select className={styles.input} value={payForm.payment_mode}
+                    onChange={(e) => setPayForm((p) => ({ ...p, payment_mode: e.target.value }))}>
                     <option>Cash</option>
                     <option>UPI</option>
                     <option>Card</option>
                     <option>Bank Transfer</option>
                   </select>
-                  <input
-                    className={styles.input}
-                    placeholder="Reference ID"
-                    value={payForm.reference_id}
-                    onChange={(e) => setPayForm((p) => ({ ...p, reference_id: e.target.value }))}
-                  />
-                  <input
-                    className={styles.input}
-                    placeholder="Remarks"
-                    value={payForm.remarks}
-                    onChange={(e) => setPayForm((p) => ({ ...p, remarks: e.target.value }))}
-                  />
-                  <button
-                    className={`${styles.btn} ${styles.primary}`}
-                    onClick={addPayment}
-                    disabled={payBusy || !payForm.amount || !payForm.payment_date}
-                    type="button"
-                  >
-                    {payBusy ? 'Saving…' : 'Add Payment'}
+                </div>
+                <div className={styles.formField}>
+                  <label className={styles.formLabel}>Reference ID</label>
+                  <input className={styles.input} placeholder="Optional" value={payForm.reference_id}
+                    onChange={(e) => setPayForm((p) => ({ ...p, reference_id: e.target.value }))} />
+                </div>
+                <div className={styles.formField}>
+                  <label className={styles.formLabel}>Remarks</label>
+                  <input className={styles.input} placeholder="Optional" value={payForm.remarks}
+                    onChange={(e) => setPayForm((p) => ({ ...p, remarks: e.target.value }))} />
+                </div>
+                <div className={styles.formField} style={{ justifyContent: 'flex-end', display: 'flex', alignItems: 'flex-end' }}>
+                  <button className={styles.primaryBtn} onClick={addPayment}
+                    disabled={payBusy || !payForm.amount || !payForm.payment_date} type="button">
+                    {payBusy ? 'Saving…' : '+ Add Payment'}
                   </button>
                 </div>
+              </div>
 
-                <div className={styles.divider} />
+              <div className={styles.divider} />
 
-                <div className={styles.tableWrap}>
-                  <table className={styles.table}>
-                    <thead>
-                      <tr>
-                        <th>Date</th>
-                        <th>Amount</th>
-                        <th>Mode</th>
-                        <th>Ref</th>
-                        <th>Remarks</th>
-                        <th style={{ textAlign: 'right' }}>Action</th>
+              <div className={styles.tableWrap}>
+                <table className={styles.table}>
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Amount</th>
+                      <th>Mode</th>
+                      <th>Reference</th>
+                      <th>Remarks</th>
+                      <th style={{ textAlign: 'right' }}>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {payments.length ? payments.map((p) => (
+                      <tr key={p.id}>
+                        <td>{p.payment_date}</td>
+                        <td className={styles.tdBold}>₹{Number(p.amount).toLocaleString()}</td>
+                        <td>{p.payment_mode || '—'}</td>
+                        <td className={styles.tdSub}>{p.reference_id || '—'}</td>
+                        <td className={styles.tdSub}>{p.remarks || '—'}</td>
+                        <td style={{ textAlign: 'right' }}>
+                          <button className={styles.deleteBtn} type="button" disabled={payBusy}
+                            onClick={() => deletePayment(p.id)}>Delete</button>
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody>
-                      {payments.length ? (
-                        payments.map((p) => (
-                          <tr key={p.id}>
-                            <td>{p.payment_date}</td>
-                            <td>₹{p.amount}</td>
-                            <td>{p.payment_mode || '—'}</td>
-                            <td>{p.reference_id || '—'}</td>
-                            <td>{p.remarks || '—'}</td>
-                            <td style={{ textAlign: 'right' }}>
-                              <button
-                                className={`${styles.btn} ${styles.small}`}
-                                type="button"
-                                disabled={payBusy}
-                                onClick={() => deletePayment(p.id)}
-                              >
-                                Delete
-                              </button>
-                            </td>
-                          </tr>
-                        ))
-                      ) : (
-                        <tr><td colSpan={6} className={styles.emptyRow}>No payments yet.</td></tr>
-                      )}
-                    </tbody>
-                  </table>
+                    )) : (
+                      <tr><td colSpan={6} className={styles.emptyRow}>No payments recorded yet.</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Row 5: Attendance + Marks */}
+            <div className={styles.row2}>
+
+              {/* Attendance */}
+              <div className={styles.card}>
+                <div className={styles.cardHead}>
+                  <span className={styles.cardTitle}>Attendance</span>
+                  <span className={styles.cardSub}>Mark daily attendance</span>
+                </div>
+                <div className={styles.formStack}>
+                  <div className={styles.formField}>
+                    <label className={styles.formLabel}>Date</label>
+                    <input className={styles.input} type="date" value={attDate}
+                      onChange={(e) => setAttDate(e.target.value)} />
+                  </div>
+                  <div className={styles.formField}>
+                    <label className={styles.formLabel}>Status</label>
+                    <div className={styles.toggleRow}>
+                      <button
+                        type="button"
+                        className={`${styles.toggleBtn} ${attStatus === 'PRESENT' ? styles.toggleActive : ''}`}
+                        onClick={() => setAttStatus('PRESENT')}
+                      >Present</button>
+                      <button
+                        type="button"
+                        className={`${styles.toggleBtn} ${attStatus === 'ABSENT' ? styles.toggleAbsent : ''}`}
+                        onClick={() => setAttStatus('ABSENT')}
+                      >Absent</button>
+                    </div>
+                  </div>
+                  <button className={styles.primaryBtn} type="button"
+                    disabled={attBusy || !attDate} onClick={markAttendance}>
+                    {attBusy ? 'Saving…' : 'Save Attendance'}
+                  </button>
                 </div>
               </div>
-            </section>
 
-            {/* Attendance + Marks */}
-            <section className={styles.grid2}>
-              <section className={styles.card}>
-                <div className={styles.detailsCard}>
-                  <div className={styles.sectionHead}>
-                    <div>
-                      <div className={styles.sectionTitle}>Attendance</div>
-                      <div className={styles.sectionSub}>Mark daily attendance</div>
+              {/* Marks */}
+              <div className={styles.card}>
+                <div className={styles.cardHead}>
+                  <span className={styles.cardTitle}>Marks</span>
+                  <span className={styles.cardSub}>Add assessment marks</span>
+                </div>
+                <div className={styles.formStack}>
+                  <div className={styles.formField}>
+                    <label className={styles.formLabel}>Title</label>
+                    <input className={styles.input} placeholder="e.g. Module 1 Test" value={markForm.title}
+                      onChange={(e) => setMarkForm((p) => ({ ...p, title: e.target.value }))} />
+                  </div>
+                  <div className={styles.row2Inline}>
+                    <div className={styles.formField}>
+                      <label className={styles.formLabel}>Score</label>
+                      <input className={styles.input} type="number" placeholder="0" value={markForm.score}
+                        onChange={(e) => setMarkForm((p) => ({ ...p, score: e.target.value }))} />
+                    </div>
+                    <div className={styles.formField}>
+                      <label className={styles.formLabel}>Max Score</label>
+                      <input className={styles.input} type="number" placeholder="100" value={markForm.max_score}
+                        onChange={(e) => setMarkForm((p) => ({ ...p, max_score: e.target.value }))} />
                     </div>
                   </div>
-
-                  <div className={styles.divider} />
-
-                  <div className={styles.formGrid2}>
-                    <input
-                      className={styles.input}
-                      type="date"
-                      value={attDate}
-                      onChange={(e) => setAttDate(e.target.value)}
-                    />
-                    <select
-                      className={styles.input}
-                      value={attStatus}
-                      onChange={(e) => setAttStatus(e.target.value as any)}
-                    >
-                      <option value="PRESENT">PRESENT</option>
-                      <option value="ABSENT">ABSENT</option>
-                    </select>
-                    <button
-                      className={`${styles.btn} ${styles.primary}`}
-                      type="button"
-                      disabled={attBusy || !attDate}
-                      onClick={markAttendance}
-                    >
-                      {attBusy ? 'Saving…' : 'Save'}
-                    </button>
+                  <div className={styles.formField}>
+                    <label className={styles.formLabel}>Remark</label>
+                    <input className={styles.input} placeholder="Optional" value={markForm.remark}
+                      onChange={(e) => setMarkForm((p) => ({ ...p, remark: e.target.value }))} />
                   </div>
+                  <button className={styles.primaryBtn} type="button"
+                    disabled={markBusy || !markForm.title || !markForm.score} onClick={addMark}>
+                    {markBusy ? 'Saving…' : 'Save Marks'}
+                  </button>
                 </div>
-              </section>
+              </div>
 
-              <section className={styles.card}>
-                <div className={styles.detailsCard}>
-                  <div className={styles.sectionHead}>
-                    <div>
-                      <div className={styles.sectionTitle}>Marks</div>
-                      <div className={styles.sectionSub}>Add assessment marks</div>
-                    </div>
-                  </div>
-
-                  <div className={styles.divider} />
-
-                  <div className={styles.formGrid2}>
-                    <input
-                      className={styles.input}
-                      placeholder="Title (e.g. Module 1)"
-                      value={markForm.title}
-                      onChange={(e) => setMarkForm((p) => ({ ...p, title: e.target.value }))}
-                    />
-                    <input
-                      className={styles.input}
-                      type="number"
-                      placeholder="Score"
-                      value={markForm.score}
-                      onChange={(e) => setMarkForm((p) => ({ ...p, score: e.target.value }))}
-                    />
-                    <input
-                      className={styles.input}
-                      type="number"
-                      placeholder="Max"
-                      value={markForm.max_score}
-                      onChange={(e) => setMarkForm((p) => ({ ...p, max_score: e.target.value }))}
-                    />
-                    <input
-                      className={styles.input}
-                      placeholder="Remark (optional)"
-                      value={markForm.remark}
-                      onChange={(e) => setMarkForm((p) => ({ ...p, remark: e.target.value }))}
-                    />
-                    <button
-                      className={`${styles.btn} ${styles.primary}`}
-                      type="button"
-                      disabled={markBusy || !markForm.title || !markForm.score}
-                      onClick={addMark}
-                    >
-                      {markBusy ? 'Saving…' : 'Add Mark'}
-                    </button>
-                  </div>
-                </div>
-              </section>
-            </section>
-          </>
+            </div>
+          </div>
         )}
       </div>
     </RoleGuard>

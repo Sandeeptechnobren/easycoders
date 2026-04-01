@@ -59,14 +59,12 @@ function getJoinedDate(s: Student): string {
 function normalizeInterestLabel(interest: Student['interest']): string {
   const label = interest?.interest_status?.interest?.trim();
   if (!label) return 'Not Set';
-
   const l = label.toLowerCase();
   if (l === 'interested') return 'Interested';
   if (l === 'not interest' || l === 'not interested') return 'Not Interested';
   if (l === 'call back later') return 'Call Back Later';
   if (l === 'not reachable') return 'Not Reachable';
-
-  return label; // fallback if backend adds more
+  return label;
 }
 
 function getGreeting() {
@@ -76,23 +74,125 @@ function getGreeting() {
   return 'Good evening';
 }
 
+const KPI_CONFIG = [
+  {
+    key: 'total',
+    label: 'Total Students',
+    hint: 'All enrolled',
+    accent: '#6366f1',
+    bg: 'rgba(99,102,241,0.07)',
+    icon: (
+      <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0" />
+      </svg>
+    ),
+  },
+  {
+    key: 'Interested',
+    label: 'Interested',
+    hint: 'Ready to join',
+    accent: '#10b981',
+    bg: 'rgba(16,185,129,0.07)',
+    icon: (
+      <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    ),
+  },
+  {
+    key: 'Not Interested',
+    label: 'Not Interested',
+    hint: 'No follow-up',
+    accent: '#ef4444',
+    bg: 'rgba(239,68,68,0.07)',
+    icon: (
+      <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018a2 2 0 01.485.06l3.76.94m-7 10v5a2 2 0 002 2h.096c.5 0 .905-.405.905-.904 0-.715.211-1.413.608-2.008L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5" />
+      </svg>
+    ),
+  },
+  {
+    key: 'Call Back Later',
+    label: 'Call Back Later',
+    hint: 'Follow-up pending',
+    accent: '#f59e0b',
+    bg: 'rgba(245,158,11,0.07)',
+    icon: (
+      <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    ),
+  },
+  {
+    key: 'Not Reachable',
+    label: 'Not Reachable',
+    hint: 'Try again later',
+    accent: '#3b82f6',
+    bg: 'rgba(59,130,246,0.07)',
+    icon: (
+      <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 5.636a9 9 0 010 12.728M15.536 8.464a5 5 0 010 7.072M6.343 17.657a9 9 0 010-12.728M9.172 14.828a5 5 0 010-7.072" />
+      </svg>
+    ),
+  },
+  {
+    key: 'Not Set',
+    label: 'Not Set',
+    hint: 'Needs first call',
+    accent: '#94a3b8',
+    bg: 'rgba(148,163,184,0.07)',
+    icon: (
+      <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    ),
+  },
+];
+
+const QUICK_ACTIONS = [
+  {
+    icon: '👥',
+    title: 'Students Directory',
+    sub: 'Browse, filter and manage profiles',
+    href: '/hr/students',
+    tag: 'View',
+  },
+  {
+    icon: '📝',
+    title: 'Enrollment Requests',
+    sub: 'Review new enrollment applications',
+    href: null,
+    tag: 'Review',
+  },
+  {
+    icon: '📩',
+    title: 'Contact Inquiries',
+    sub: 'View messages submitted by users',
+    href: null,
+    tag: 'Inbox',
+  },
+  {
+    icon: '📊',
+    title: 'Reports',
+    sub: 'Export or view performance summaries',
+    href: null,
+    tag: 'Export',
+  },
+];
+
 export default function HrHomePage() {
   const [students, setStudents] = useState<Student[]>([]);
   const [colleges, setColleges] = useState<College[]>([]);
   const [selectedCollegeID, setSelectedCollegeID] = useState<string>('');
-
   const [loadingStudents, setLoadingStudents] = useState(true);
   const [loadingColleges, setLoadingColleges] = useState(true);
   const [error, setError] = useState('');
-
   const [userData, setUserData] = useState<{ name?: string } | null>(null);
 
- 
   useEffect(() => {
     try {
       const raw = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
       setUserData(raw ? JSON.parse(raw) : null);
-
       const savedCollege = typeof window !== 'undefined' ? localStorage.getItem('college_id') : '';
       if (savedCollege) setSelectedCollegeID(savedCollege);
     } catch {
@@ -102,407 +202,249 @@ export default function HrHomePage() {
 
   useEffect(() => {
     const controller = new AbortController();
-
-    const fetchColleges = async () => {
+    (async () => {
       try {
         setLoadingColleges(true);
-        const res = await fetch(
-          'https://api.easycoders.in/projects/backend/public/api/collegeList',
-          { signal: controller.signal }
-        );
-        if (!res.ok) throw new Error('Failed to fetch colleges');
+        const res = await fetch('https://api.easycoders.in/projects/backend/public/api/collegeList', { signal: controller.signal });
+        if (!res.ok) throw new Error('Failed');
         const json = await res.json();
         setColleges(json.data || []);
       } catch (e: any) {
-        if (e?.name !== 'AbortError') {
-          // you can set an error here if you want
-        }
+        if (e?.name !== 'AbortError') {}
       } finally {
         setLoadingColleges(false);
       }
-    };
-
-    fetchColleges();
+    })();
     return () => controller.abort();
   }, []);
 
   useEffect(() => {
     const controller = new AbortController();
-
-    const fetchStudents = async () => {
+    (async () => {
       try {
         setLoadingStudents(true);
         setError('');
-
         const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
         if (!token) throw new Error('Unauthorized');
-
-        const url =
-          'https://api.easycoders.in/projects/backend/public/api/hr/students' +
+        const url = 'https://api.easycoders.in/projects/backend/public/api/hr/students' +
           (selectedCollegeID ? `?college_id=${encodeURIComponent(selectedCollegeID)}` : '');
-
         const res = await fetch(url, {
           method: 'GET',
           signal: controller.signal,
-          headers: {
-            Accept: 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Accept: 'application/json', Authorization: `Bearer ${token}` },
         });
-
         if (res.status === 401 || res.status === 403) throw new Error('Unauthorized');
         if (!res.ok) throw new Error('Failed to load students');
-
         const json: StudentsListApiResponse = await res.json();
         setStudents(json.data || []);
       } catch (e: any) {
         if (e?.name === 'AbortError') return;
-
         setStudents([]);
-        setError(
-          e?.message === 'Unauthorized'
-            ? 'Session expired. Please login again.'
-            : 'Failed to load dashboard data.'
-        );
+        setError(e?.message === 'Unauthorized' ? 'Session expired. Please login again.' : 'Failed to load dashboard data.');
       } finally {
         setLoadingStudents(false);
       }
-    };
-
-    fetchStudents();
+    })();
     return () => controller.abort();
   }, [selectedCollegeID]);
 
   const loading = loadingStudents || loadingColleges;
 
-  // ✅ UPDATED KPIs: Interest based counts
   const interestStats = useMemo(() => {
     const total = students.length;
-
-    const buckets = {
-      Interested: 0,
-      'Not Interested': 0,
-      'Call Back Later': 0,
-      'Not Reachable': 0,
-      'Not Set': 0,
-      Other: 0,
-    };
-
+    const buckets: Record<string, number> = { Interested: 0, 'Not Interested': 0, 'Call Back Later': 0, 'Not Reachable': 0, 'Not Set': 0, Other: 0 };
     for (const s of students) {
       const label = normalizeInterestLabel(s.interest);
-      if (label in buckets) (buckets as any)[label] += 1;
+      if (label in buckets) buckets[label] += 1;
       else buckets.Other += 1;
     }
-
     return { total, ...buckets };
   }, [students]);
 
-  const avgScore = useMemo(() => {
-    const scores = students.map((s) => Number(s.score ?? 0)).filter((n) => Number.isFinite(n));
-    return scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
-  }, [students]);
-
-  const recent = useMemo(() => {
-    return [...students]
-      .sort((a, b) => {
-        const da = getJoinedDate(a);
-        const db = getJoinedDate(b);
-        if (!da && !db) return 0;
-        return da < db ? 1 : -1;
-      })
-      .slice(0, 6);
-  }, [students]);
-
   const greeting = getGreeting();
+  const today = new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
   return (
     <RoleGuard allowedRoles={[2]}>
       <div className={styles.wrap}>
-        {/* Header */}
+
+        {/* ── TOPBAR ── */}
         <header className={styles.topbar}>
-          <div className={styles.left}>
-            <div className={styles.crumbs}>
-              <Link href="/hr" className={styles.crumbLink}>
-                HR
-              </Link>
-              <span className={styles.crumbSep}>/</span>
-              <span className={styles.crumbNow}>Dashboard</span>
+          <div className={styles.topbarInner}>
+            <div className={styles.topLeft}>
+              <nav className={styles.crumbs}>
+                <Link href="/hr" className={styles.crumbLink}>HR</Link>
+                <span className={styles.crumbSep}>/</span>
+                <span className={styles.crumbNow}>Dashboard</span>
+              </nav>
+              <div className={styles.titleRow}>
+                <div>
+                  <h1 className={styles.title}>
+                    {greeting}, <span className={styles.nameAccent}>{userData?.name || 'User'}</span>
+                  </h1>
+                  <p className={styles.subtitle}>{today} · Student &amp; operations overview</p>
+                </div>
+              </div>
             </div>
 
-            <h1 className={styles.title}>
-              Hi {userData?.name || 'User'}, {greeting}
-            </h1>
-            <p className={styles.subtitle}>Student & operations overview</p>
-          </div>
-
-          <div className={styles.right}>
-            <Link href="/hr/students" className={`${styles.btn} ${styles.primary}`}>
-              Students Directory
-            </Link>
-            <Link href="/hr/students" className={styles.btn}>
-              Search
-            </Link>
+            <div className={styles.topRight}>
+              <Link href="/hr/students" className={styles.btnPrimary}>
+                <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0" />
+                </svg>
+                Students Directory
+              </Link>
+              <Link href="/hr/students" className={styles.btnGhost}>
+                <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                Search
+              </Link>
+            </div>
           </div>
         </header>
 
-       
-        <section className={styles.filters}>
-          <label className={styles.filterLabel} htmlFor="college-select">
-            College
-          </label>
-
-          <select
-            id="college-select"
-            className={styles.select}
-            value={selectedCollegeID}
-            onChange={(e) => {
-              const val = e.target.value;
-              setSelectedCollegeID(val);
-              localStorage.setItem('college_id', val);
-            }}
-          >
-            <option value="">All Colleges</option>
-            {colleges.map((c) => (
-              <option key={String(c.id)} value={String(c.id)}>
-                {c.college_name}
-              </option>
-            ))}
-          </select>
-
-          {selectedCollegeID && (
-            <button
-              className={styles.clearBtn}
-              type="button"
-              onClick={() => {
-                setSelectedCollegeID('');
-                localStorage.removeItem('college_id');
-              }}
-            >
-              Clear
-            </button>
-          )}
+        {/* ── FILTER BAR ── */}
+        <section className={styles.filterBar}>
+          <div className={styles.filterBarInner}>
+            <div className={styles.filterLeft}>
+              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} style={{ opacity: 0.5 }}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+              <label className={styles.filterLabel} htmlFor="college-select">Filter by College</label>
+            </div>
+            <div className={styles.filterRight}>
+              <div className={styles.selectWrapper}>
+                <select
+                  id="college-select"
+                  className={styles.select}
+                  value={selectedCollegeID}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setSelectedCollegeID(val);
+                    localStorage.setItem('college_id', val);
+                  }}
+                >
+                  <option value="">All Colleges</option>
+                  {colleges.map((c) => (
+                    <option key={String(c.id)} value={String(c.id)}>{c.college_name}</option>
+                  ))}
+                </select>
+                <svg className={styles.selectChev} width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+              {selectedCollegeID && (
+                <button className={styles.clearBtn} type="button" onClick={() => { setSelectedCollegeID(''); localStorage.removeItem('college_id'); }}>
+                  <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                  Clear
+                </button>
+              )}
+            </div>
+          </div>
         </section>
 
-        
+        {/* ── LOADING ── */}
         {loading && (
-          <section className={styles.card}>
-            <div className={styles.skeletonWrap}>
-              <div className={styles.skRow} />
-              <div className={styles.skRow} />
-              <div className={styles.skRow} />
-              <div className={styles.skRow} />
+          <div className={styles.loadingSection}>
+            <div className={styles.kpiGrid}>
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className={styles.skKpi} style={{ animationDelay: `${i * 80}ms` }} />
+              ))}
             </div>
-          </section>
+            <div className={styles.skCard} style={{ animationDelay: '480ms' }} />
+          </div>
         )}
 
+        {/* ── ERROR ── */}
         {!loading && error && (
-          <section className={styles.card}>
-            <div className={`${styles.state} ${styles.error}`}>
-              <div className={styles.stateTitle}>Could not load dashboard</div>
-              <div className={styles.stateText}>{error}</div>
-
-              <div className={styles.stateActions}>
-                <Link href="/login" className={`${styles.btn} ${styles.small}`}>
-                  Go to Login →
-                </Link>
-                <Link href="/hr/students" className={`${styles.btn} ${styles.small}`}>
-                  Open Students
-                </Link>
-              </div>
+          <div className={styles.errorWrap}>
+            <div className={styles.errorIcon}>
+              <svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+              </svg>
             </div>
-          </section>
+            <div className={styles.errorTitle}>Could not load dashboard</div>
+            <div className={styles.errorText}>{error}</div>
+            <div className={styles.errorActions}>
+              <Link href="/login" className={styles.btnPrimary}>Go to Login →</Link>
+              <Link href="/hr/students" className={styles.btnGhost}>Open Students</Link>
+            </div>
+          </div>
         )}
 
-        
+        {/* ── MAIN CONTENT ── */}
         {!loading && !error && (
           <>
-            <section className={styles.kpis}>
-  <div
-    className={styles.kpi}
-    style={{ borderLeft: '3px solid #6366f1' }}  
-  >
-    <div className={styles.kpiValue}>{interestStats.total}</div>
-    <div className={styles.kpiLabel}>Total Students</div>
-    <div className={styles.kpiHint}>All enrolled students</div>
-  </div>
-
-  <div
-    className={styles.kpi}
-    style={{ borderLeft: '3px solid #10b981' }} // Green
-  >
-    <div className={styles.kpiValue}>
-      {interestStats.Interested}
-    </div>
-    <div className={styles.kpiLabel}>Interested</div>
-    <div className={styles.kpiHint}>Ready to join</div>
-  </div>
-
-  <div
-    className={styles.kpi}
-    style={{ borderLeft: '3px solid #ef4444' }} // Red
-  >
-    <div className={styles.kpiValue}>
-      {interestStats['Not Interested']}
-    </div>
-    <div className={styles.kpiLabel}>Not Interested</div>
-    <div className={styles.kpiHint}>No follow-up needed</div>
-  </div>
-
-  <div
-    className={styles.kpi}
-    style={{ borderLeft: '3px solid #f59e0b' }} // Amber
-  >
-    <div className={styles.kpiValue}>
-      {interestStats['Call Back Later']}
-    </div>
-    <div className={styles.kpiLabel}>Call Back Later</div>
-    <div className={styles.kpiHint}>Follow-up pending</div>
-  </div>
-
-  <div
-    className={styles.kpi}
-    style={{ borderLeft: '3px solid #3b82f6' }} // Blue
-  >
-    <div className={styles.kpiValue}>
-      {interestStats['Not Reachable']}
-    </div>
-    <div className={styles.kpiLabel}>Not Reachable</div>
-    <div className={styles.kpiHint}>Try again later</div>
-  </div>
-
-  <div
-    className={styles.kpi}
-    style={{ borderLeft: '3px solid #6b7280' }} // Gray
-  >
-    <div className={styles.kpiValue}>
-      {interestStats['Not Set']}
-    </div>
-    <div className={styles.kpiLabel}>Not Set</div>
-    
-    <div className={styles.kpiHint}>Needs first call</div>
-  </div>
-
-  {interestStats.Other > 0 && (
-    <div
-      className={styles.kpi}
-      style={{ borderLeft: '3px solid #8b5cf6' }} // Violet
-    >
-      <div className={styles.kpiValue}>
-        {interestStats.Other}
-      </div>
-      <div className={styles.kpiLabel}>Other</div>
-      
-      <div className={styles.kpiHint}>New categories</div>
-    </div>
-  )}
-</section>
-
-            {/* <section className={styles.grid}> */}
-              {/* Quick Actions */}
-              <section className={styles.card}>
-                <div className={styles.cardHead}>
-                  <div>
-                    <div className={styles.cardTitle}>Quick Actions</div>
-                    <div className={styles.cardSub}>Frequently used HR workflows</div>
-                  </div>
-                </div>
-
-                <div className={styles.quickGrid}>
-                  <Link href="/hr/students" className={styles.quick}>
-                    <div className={styles.quickIcon}>👥</div>
-                    <div className={styles.quickText}>
-                      <div className={styles.quickTitle}>View Students</div>
-                      <div className={styles.quickSub}>Browse, filter and open profiles</div>
-                    </div>
-                    <div className={styles.chev}>→</div>
-                  </Link>
-
-                  <button
-                    className={styles.quick}
-                    type="button"
-                    onClick={() => alert('Hook this to Enrollment Requests later')}
-                  >
-                    <div className={styles.quickIcon}>📝</div>
-                    <div className={styles.quickText}>
-                      <div className={styles.quickTitle}>Enrollment Requests</div>
-                      <div className={styles.quickSub}>Review new enrollment applications</div>
-                    </div>
-                    <div className={styles.chev}>→</div>
-                  </button>
-
-                  <button
-                    className={styles.quick}
-                    type="button"
-                    onClick={() => alert('Hook this to Contact Inquiries later')}
-                  >
-                    <div className={styles.quickIcon}>📩</div>
-                    <div className={styles.quickText}>
-                      <div className={styles.quickTitle}>Contact Inquiries</div>
-                      <div className={styles.quickSub}>View messages submitted by users</div>
-                    </div>
-                    <div className={styles.chev}>→</div>
-                  </button>
-
-                  <button
-                    className={styles.quick}
-                    type="button"
-                    onClick={() => alert('Hook this to Reports later')}
-                  >
-                    <div className={styles.quickIcon}>📊</div>
-                    <div className={styles.quickText}>
-                      <div className={styles.quickTitle}>Reports</div>
-                      <div className={styles.quickSub}>Export or view performance summaries</div>
-                    </div>
-                    <div className={styles.chev}>→</div>
-                  </button>
-                </div>
-              </section>
-
-              {/* <section className={styles.card}>
-                <div className={styles.cardHead}>
-                  <div>
-                    <div className={styles.cardTitle}>Recent Students</div>
-                    <div className={styles.cardSub}>Latest joined / updated profiles</div>
-                  </div>
-
-                  <Link className={styles.link} href="/hr/students">
-                    View all
-                  </Link>
-                </div>
-
-                <div className={styles.list}>
-                  {recent.length ? (
-                    recent.map((s) => {
-                      const st = normalizeStatus(s.status);
-                      return (
-                        <Link
-                          key={String(s.id)}
-                          href={`/hr/students/${s.id}`}
-                          className={styles.row}
-                        >
-                          <div className={styles.avatar}>
-                            {(s.name?.[0] || 'S').toUpperCase()}
-                          </div>
-
-                          <div className={styles.rowMid}>
-                            <div className={styles.rowTitle}>{s.name}</div>
-                            <div className={styles.rowSub}>
-                              {(s.course || '—')} • {s.email}
-                            </div>
-                          </div>
-
-                          <span className={`${styles.pill} ${st === 'Active' ? styles.ok : styles.bad}`}>
-                            {st}
+            {/* KPIs */}
+            <section className={styles.kpiSection}>
+              <div className={styles.sectionHeader}>
+                <span className={styles.sectionTitle}>Student Overview</span>
+                <span className={styles.sectionMeta}>{interestStats.total} records total</span>
+              </div>
+              <div className={styles.kpiGrid}>
+                {KPI_CONFIG.map((cfg) => {
+                  const value = cfg.key === 'total'
+                    ? interestStats.total
+                    : (interestStats as any)[cfg.key] ?? 0;
+                  const pct = interestStats.total > 0 ? Math.round((value / interestStats.total) * 100) : 0;
+                  return (
+                    <div key={cfg.key} className={styles.kpiCard} style={{ '--accent': cfg.accent, '--bg': cfg.bg } as React.CSSProperties}>
+                      <div className={styles.kpiTop}>
+                        <div className={styles.kpiIconBox} style={{ color: cfg.accent, background: cfg.bg }}>
+                          {cfg.icon}
+                        </div>
+                        {cfg.key !== 'total' && (
+                          <span className={styles.kpiBadge} style={{ color: cfg.accent, background: cfg.bg }}>
+                            {pct}%
                           </span>
-                        </Link>
-                      );
-                    })
+                        )}
+                      </div>
+                      <div className={styles.kpiValue}>{value.toLocaleString()}</div>
+                      <div className={styles.kpiLabel}>{cfg.label}</div>
+                      <div className={styles.kpiHint}>{cfg.hint}</div>
+                      {cfg.key !== 'total' && (
+                        <div className={styles.kpiBar}>
+                          <div className={styles.kpiBarFill} style={{ width: `${pct}%`, background: cfg.accent }} />
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+
+            {/* Quick Actions */}
+            <section className={styles.actionsSection}>
+              <div className={styles.sectionHeader}>
+                <span className={styles.sectionTitle}>Quick Actions</span>
+                <span className={styles.sectionMeta}>Frequently used HR workflows</span>
+              </div>
+              <div className={styles.actionsGrid}>
+                {QUICK_ACTIONS.map((a, i) => {
+                  const inner = (
+                    <>
+                      <div className={styles.actionEmoji}>{a.icon}</div>
+                      <div className={styles.actionBody}>
+                        <div className={styles.actionTitle}>{a.title}</div>
+                        <div className={styles.actionSub}>{a.sub}</div>
+                      </div>
+                      <div className={styles.actionTag}>{a.tag}</div>
+                      <svg className={styles.actionArrow} width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                      </svg>
+                    </>
+                  );
+                  return a.href ? (
+                    <Link key={i} href={a.href} className={styles.actionCard}>{inner}</Link>
                   ) : (
-                    <div className={styles.empty}>No students found for this college.</div>
-                  )}
-                </div>
-              </section> */}
-            {/* </section> */}
+                    <button key={i} type="button" className={styles.actionCard} onClick={() => alert(`Hook this to ${a.title} later`)}>{inner}</button>
+                  );
+                })}
+              </div>
+            </section>
           </>
         )}
       </div>
