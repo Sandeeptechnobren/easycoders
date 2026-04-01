@@ -25,7 +25,7 @@ export default function RegisterPage() {
         e.preventDefault();
         try {
             await api.post('/register', { name, email, password, role:3, college_id: collegeId });
-            router.push('/login');
+            router.push('/');
         } catch (err: any) {
             setError(err.response?.data?.message || 'Registration failed');
         }

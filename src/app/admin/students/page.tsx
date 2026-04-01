@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import RoleGuard from '@/components/RoleGuard';
-import styles from '../../students/students.module.css';
+import styles from './students.module.css';
 import { useEffect, useMemo, useState } from 'react';
 import { fetchWithAuth } from '@/lib/api';
 import { computeInterestStats, normalizeInterestLabel, interestClass } from '@/lib/interest';
@@ -31,6 +31,7 @@ export default function AdminStudentsPage() {
   const loading = loadingStudents || loadingColleges;
 
   const [query, setQuery] = useState('');
+  const [interestFilter, setInterestFilter] = useState('');
   const [error, setError] = useState('');
   const [selectedCollegeID, setSelectedCollegeID] = useState<string>('');
   const [colleges, setColleges] = useState<College[]>([]);
@@ -60,11 +61,9 @@ export default function AdminStudentsPage() {
       try {
         setLoadingStudents(true);
         setError('');
-
         const url =
           'https://api.easycoders.in/projects/backend/public/api/hr/students' +
           (selectedCollegeID ? `?college_id=${encodeURIComponent(selectedCollegeID)}` : '');
-
         const json = await fetchWithAuth(url);
         setStudents(json.data || []);
       } catch (e: any) {
@@ -79,96 +78,71 @@ export default function AdminStudentsPage() {
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return students;
-    return students.filter((s) =>
-      [s.name, s.email, s.phone]
+    return students.filter((s) => {
+      const matchQuery = !q || [s.name, s.email, s.phone]
         .filter(Boolean)
-        .some((v) => String(v).toLowerCase().includes(q))
-    );
-  }, [students, query]);
+        .some((v) => String(v).toLowerCase().includes(q));
+      const label = normalizeInterestLabel(s?.interest?.interest_status?.interest);
+      const matchInterest = !interestFilter || label === interestFilter;
+      return matchQuery && matchInterest;
+    });
+  }, [students, query, interestFilter]);
 
   const interestStats = useMemo(() => computeInterestStats(filtered), [filtered]);
+
+  const kpis = [
+    { label: 'Total', value: interestStats.total, hint: 'Shown in list', accent: '#378ADD' },
+    { label: 'Interested', value: interestStats.Interested, hint: 'Ready to join', accent: '#639922' },
+    { label: 'Not Interested', value: interestStats['Not Interested'], hint: 'No follow-up', accent: '#E24B4A' },
+    { label: 'Call Back Later', value: interestStats['Call Back Later'], hint: 'Follow-up pending', accent: '#EF9F27' },
+    { label: 'Not Reachable', value: interestStats['Not Reachable'], hint: 'Try again later', accent: '#888780' },
+    { label: 'Not Set', value: interestStats['Not Set'], hint: 'Needs first call', accent: '#7F77DD' },
+  ];
 
   return (
     <RoleGuard allowedRoles={[1]}>
       <div className={styles.wrap}>
+
+        {/* ── Topbar ── */}
         <header className={styles.topbar}>
-          <div className={styles.left}>
-            <div className={styles.crumbs}>
-              <Link href="/admin" className={styles.crumbLink}>
-                Admin
-              </Link>
+          <div className={styles.topLeft}>
+            <nav className={styles.crumbs}>
+              <Link href="/admin" className={styles.crumbLink}>Admin</Link>
               <span className={styles.crumbSep}>/</span>
               <span className={styles.crumbNow}>Students</span>
-            </div>
-
-            <h1 className={styles.title}>Student Directory</h1>
-            <p className={styles.subtitle}>Search, filter and open a student profile.</p>
+            </nav>
+            <h1 className={styles.pageTitle}>Student Directory</h1>
+            <p className={styles.pageSub}>Search, filter and open a student profile</p>
           </div>
-
-          <div className={styles.right}>
-            <Link href="/admin/students" className={`${styles.btn} ${styles.primary}`}>
-              Refresh
-            </Link>
-          </div>
+          <Link href="/admin/students" className={styles.refreshBtn}>↻ Refresh</Link>
         </header>
 
+        {/* ── KPI Cards ── */}
         <section className={styles.kpis}>
-          <div className={styles.kpi} style={{ borderLeft: '5px solid #0ea5e9' }}>
-            <div className={styles.kpiLabel}>Total</div>
-            <div className={styles.kpiValue}>{interestStats.total}</div>
-            <div className={styles.kpiHint}>Shown in list</div>
-          </div>
-
-          <div className={styles.kpi} style={{ borderLeft: '5px solid #22c55e' }}>
-            <div className={styles.kpiLabel}>Interested</div>
-            <div className={styles.kpiValue}>{interestStats.Interested}</div>
-            <div className={styles.kpiHint}>Ready to join</div>
-          </div>
-
-          <div className={styles.kpi} style={{ borderLeft: '5px solid #ef4444' }}>
-            <div className={styles.kpiLabel}>Not Interested</div>
-            <div className={styles.kpiValue}>{interestStats['Not Interested']}</div>
-            <div className={styles.kpiHint}>No follow-up</div>
-          </div>
-
-          <div className={styles.kpi} style={{ borderLeft: '5px solid #f59e0b' }}>
-            <div className={styles.kpiLabel}>Call Back Later</div>
-            <div className={styles.kpiValue}>{interestStats['Call Back Later']}</div>
-            <div className={styles.kpiHint}>Follow-up pending</div>
-          </div>
-
-          <div className={styles.kpi} style={{ borderLeft: '5px solid #64748b' }}>
-            <div className={styles.kpiLabel}>Not Reachable</div>
-            <div className={styles.kpiValue}>{interestStats['Not Reachable']}</div>
-            <div className={styles.kpiHint}>Try again later</div>
-          </div>
-
-          <div className={styles.kpi} style={{ borderLeft: '5px solid #8b5cf6' }}>
-            <div className={styles.kpiLabel}>Not Set</div>
-            <div className={styles.kpiValue}>{interestStats['Not Set']}</div>
-            <div className={styles.kpiHint}>Needs first call</div>
-          </div>
-
-          {interestStats.Other > 0 && (
-            <div className={styles.kpi} style={{ borderLeft: '5px solid #0f172a' }}>
-              <div className={styles.kpiLabel}>Other</div>
-              <div className={styles.kpiValue}>{interestStats.Other}</div>
-              <div className={styles.kpiHint}>New categories</div>
+          {kpis.map((k) => (
+            <div key={k.label} className={styles.kpi}>
+              <div className={styles.kpiAccent} style={{ background: k.accent }} />
+              <div className={styles.kpiLabel}>{k.label}</div>
+              <div className={styles.kpiVal}>{k.value}</div>
+              <div className={styles.kpiHint}>{k.hint}</div>
             </div>
-          )}
+          ))}
         </section>
 
+        {/* ── Filters ── */}
         <section className={styles.filters}>
-          <input
-            className={styles.search}
-            placeholder="Search by name, email, phone..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
+          <div className={styles.searchWrap}>
+            <span className={styles.searchIcon}>⌕</span>
+            <input
+              className={styles.searchInput}
+              placeholder="Search by name, email, phone..."
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
+          </div>
 
           <select
-            className={styles.select}
+            className={styles.filterSelect}
             value={selectedCollegeID}
             onChange={(e) => {
               const val = e.target.value;
@@ -178,134 +152,159 @@ export default function AdminStudentsPage() {
           >
             <option value="">All Colleges</option>
             {colleges.map((c) => (
-              <option key={String(c.id)} value={String(c.id)}>
-                {c.college_name}
-              </option>
+              <option key={String(c.id)} value={String(c.id)}>{c.college_name}</option>
             ))}
           </select>
 
-          {selectedCollegeID && (
+          <select
+            className={styles.filterSelect}
+            value={interestFilter}
+            onChange={(e) => setInterestFilter(e.target.value)}
+          >
+            <option value="">All Statuses</option>
+            <option value="Interested">Interested</option>
+            <option value="Not Interested">Not Interested</option>
+            <option value="Call Back Later">Call Back Later</option>
+            <option value="Not Reachable">Not Reachable</option>
+            <option value="Not Set">Not Set</option>
+          </select>
+
+          {(selectedCollegeID || interestFilter) && (
             <button
               className={styles.clearBtn}
               type="button"
               onClick={() => {
                 setSelectedCollegeID('');
+                setInterestFilter('');
                 localStorage.removeItem('college_id');
               }}
             >
-              Clear
+              Clear filters
             </button>
           )}
         </section>
 
+        {/* ── Table Card ── */}
         <section className={styles.card}>
+
+          {/* Loading skeleton */}
           {loading && (
             <div className={styles.skeletonWrap}>
-              <div className={styles.skRow} />
-              <div className={styles.skRow} />
-              <div className={styles.skRow} />
-              <div className={styles.skRow} />
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className={styles.skRow} style={{ animationDelay: `${i * 0.08}s` }} />
+              ))}
             </div>
           )}
 
+          {/* Error state */}
           {!loading && error && (
-            <div className={`${styles.state} ${styles.error}`}>
-              <div className={styles.stateTitle}>Could not load students</div>
-              <div className={styles.stateText}>{error}</div>
-              <div style={{ marginTop: 12 }}>
-                <Link href="/login" className={`${styles.btn} ${styles.small}`}>
-                  Go to Login →
-                </Link>
-              </div>
+            <div className={styles.emptyState}>
+              <div className={styles.emptyIcon}>⚠</div>
+              <div className={styles.emptyTitle}>Could not load students</div>
+              <div className={styles.emptyText}>{error}</div>
+              <Link href="/login" className={styles.emptyAction}>Go to Login →</Link>
             </div>
           )}
 
+          {/* Empty state */}
           {!loading && !error && filtered.length === 0 && (
-            <div className={styles.state}>
-              <div className={styles.stateTitle}>No results</div>
-              <div className={styles.stateText}>Try changing search text or filters.</div>
+            <div className={styles.emptyState}>
+              <div className={styles.emptyIcon}>◎</div>
+              <div className={styles.emptyTitle}>No results</div>
+              <div className={styles.emptyText}>Try changing search text or filters.</div>
             </div>
           )}
 
+          {/* Table */}
           {!loading && !error && filtered.length > 0 && (
-            <div className={styles.tableWrap}>
-              <table className={styles.table}>
-                <thead>
-                  <tr>
-                    <th>Student</th>
-                    <th>Email</th>
-                    <th>Phone</th>
-                    <th>Interest</th>
-                    <th style={{ textAlign: 'right' }}>Action</th>
-                  </tr>
-                </thead>
+            <>
+              <div className={styles.resultMeta}>
+                <span>Showing <strong>{filtered.length}</strong> student{filtered.length !== 1 ? 's' : ''}</span>
+                <span className={styles.metaRight}>
+                  {selectedCollegeID && (
+                    <span className={styles.activeTag}>
+                      {colleges.find(c => String(c.id) === selectedCollegeID)?.college_name ?? 'College'}
+                    </span>
+                  )}
+                  {interestFilter && (
+                    <span className={styles.activeTag}>{interestFilter}</span>
+                  )}
+                </span>
+              </div>
 
-                <tbody>
-                  {filtered.map((s) => {
-                    const label = normalizeInterestLabel(s?.interest?.interest_status?.interest);
-                    return (
-                      <tr key={String(s.id)}>
-                        <td>
-                          <div className={styles.studentCell}>
-                            <div className={styles.avatar}>{(s.name?.[0] || 'S').toUpperCase()}</div>
-                            <div className={styles.studentMeta}>
-                              <div className={styles.studentName}>{s.name}</div>
-                              <div className={styles.studentSub}>{s.email} • {s.phone}</div>
+              {/* Desktop table */}
+              <div className={styles.tableWrap}>
+                <table className={styles.table}>
+                  <thead>
+                    <tr>
+                      <th>Student</th>
+                      <th>Email</th>
+                      <th>Phone</th>
+                      <th>Interest</th>
+                      <th style={{ textAlign: 'right' }}>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filtered.map((s) => {
+                      const label = normalizeInterestLabel(s?.interest?.interest_status?.interest);
+                      const initials = s.name?.split(' ').map((w: string) => w[0]).slice(0, 2).join('').toUpperCase() || 'S';
+                      return (
+                        <tr key={String(s.id)}>
+                          <td>
+                            <div className={styles.studentCell}>
+                              <div className={`${styles.avatar} ${styles[`avatar${initials[0]}`] || styles.avatarDefault}`}>
+                                {initials}
+                              </div>
+                              <div>
+                                <div className={styles.studentName}>{s.name}</div>
+                                <div className={styles.studentSub}>{s.phone}</div>
+                              </div>
                             </div>
-                          </div>
-                        </td>
+                          </td>
+                          <td className={styles.tdMuted}>{s.email}</td>
+                          <td className={styles.tdMuted}>{s.phone}</td>
+                          <td>
+                            <span className={`${styles.pill} ${styles[interestClass(label)]}`}>{label}</span>
+                          </td>
+                          <td style={{ textAlign: 'right' }}>
+                            <Link className={styles.actionBtn} href={`/admin/students/${s.id}`}>
+                              View →
+                            </Link>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
 
-                        <td className={styles.muted}>{s.email}</td>
-
-                        <td>
-                          <span className={`${styles.pill} ${styles.neutral}`}>{s.phone}</span>
-                        </td>
-
-                        <td>
-                          <span className={`${styles.pill} ${styles[interestClass(label)]}`}>{label}</span>
-                        </td>
-
-                        <td style={{ textAlign: 'right' }}>
-                          <Link className={`${styles.btn} ${styles.small}`} href={`/admin/students/${s.id}`}>
-                            View →
-                          </Link>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-
+              {/* Mobile cards */}
               <div className={styles.mobileList}>
                 {filtered.map((s) => {
                   const label = normalizeInterestLabel(s?.interest?.interest_status?.interest);
+                  const initials = s.name?.split(' ').map((w: string) => w[0]).slice(0, 2).join('').toUpperCase() || 'S';
                   return (
                     <Link key={String(s.id)} href={`/admin/students/${s.id}`} className={styles.mCard}>
                       <div className={styles.mTop}>
                         <div className={styles.mLeft}>
-                          <div className={styles.avatar}>{(s.name?.[0] || 'S').toUpperCase()}</div>
-                          <div className={styles.mText}>
+                          <div className={styles.avatar}>{initials}</div>
+                          <div>
                             <div className={styles.studentName}>{s.name}</div>
                             <div className={styles.studentSub}>{s.email}</div>
                           </div>
                         </div>
-
                         <span className={`${styles.pill} ${styles[interestClass(label)]}`}>{label}</span>
                       </div>
-
                       <div className={styles.mGrid}>
-                        <div>
-                          <span className={styles.k}>Phone</span>
-                          <span className={styles.v}>{s.phone}</span>
-                        </div>
+                        <div><span className={styles.mKey}>Phone</span><span className={styles.mVal}>{s.phone}</span></div>
+                        <div><span className={styles.mKey}>Email</span><span className={styles.mVal}>{s.email}</span></div>
                       </div>
-
                       <div className={styles.mAction}>View Details →</div>
                     </Link>
                   );
                 })}
               </div>
-            </div>
+            </>
           )}
         </section>
       </div>
