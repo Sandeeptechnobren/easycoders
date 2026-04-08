@@ -2,10 +2,7 @@
 
 import api from '@/lib/axios';
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
-
 type PayMethod = 'qr' | 'office';
-
-// Accept optional onClose prop so HomePage can control visibility
 interface RegistrationProps {
   onClose?: () => void;
 }
@@ -270,7 +267,6 @@ export default function Registration({ onClose }: RegistrationProps) {
                       </div>
                     </>
                   )}
-
                   {step === 3 && (
                     <>
                       <div className="sectionTitle">Step 3 — Payment</div>
@@ -357,7 +353,6 @@ export default function Registration({ onClose }: RegistrationProps) {
           )}
         </div>
       </div>
-
       <style jsx>{`
         .overlay {
           position: fixed; inset: 0;
@@ -367,7 +362,6 @@ export default function Registration({ onClose }: RegistrationProps) {
           animation: fadeIn 0.25s ease;
         }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
         .popup {
           background: #0b0f19; color: #e9eefc;
           width: 100%; max-width: 920px;
@@ -379,7 +373,6 @@ export default function Registration({ onClose }: RegistrationProps) {
           max-height: 92vh; overflow-y: auto;
         }
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-
         .close {
           position: absolute; top: 14px; right: 14px;
           background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12);
@@ -396,7 +389,6 @@ export default function Registration({ onClose }: RegistrationProps) {
           padding: 5px 12px; border-radius: 100px; font-size: 12px; font-weight: 600;
           margin-bottom: 12px; color: #c7d2fe;
         }
-
         .marquee-container {
           overflow: hidden; background: rgba(99,102,241,0.1);
           border-radius: 8px; padding: 8px 0; margin-bottom: 12px;
@@ -406,12 +398,9 @@ export default function Registration({ onClose }: RegistrationProps) {
           white-space: nowrap; display: inline-block; font-size: 14px; font-weight: 600;
         }
         @keyframes scroll { from { transform: translateX(100%); } to { transform: translateX(-100%); } }
-
         .subtitle { margin-bottom: 16px; color: rgba(233,238,252,0.7); font-size: 14px; }
-
         .cards { display: grid; grid-template-columns: 1fr; gap: 12px; }
         @media (min-width: 640px) { .cards { grid-template-columns: 1fr 1fr; } }
-
         .card {
           background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
           border-radius: 14px; padding: 16px;
@@ -421,7 +410,6 @@ export default function Registration({ onClose }: RegistrationProps) {
         .card h4 { color: #e9eefc; margin: 0 0 8px; font-size: 15px; }
         .card p { font-size: 13px; color: rgba(233,238,252,0.65); margin-bottom: 10px; }
         .card ul { color: rgba(233,238,252,0.8); padding-left: 16px; font-size: 13px; display: grid; gap: 4px; }
-
         .actions { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; justify-content: flex-end; }
         .cta {
           background: #e9eefc; color: #0b0f19; border: none;
@@ -437,7 +425,6 @@ export default function Registration({ onClose }: RegistrationProps) {
         }
         .secondary:hover { border-color: rgba(255,255,255,0.4); }
         .secondary:disabled { opacity: 0.6; cursor: not-allowed; }
-
         .topRow { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin-top: 8px; }
         .formTitle { margin: 0; font-size: 17px; font-weight: 800; }
         .stepper { display: flex; align-items: center; gap: 8px; }
@@ -448,16 +435,13 @@ export default function Registration({ onClose }: RegistrationProps) {
         .lbl { font-size: 12px; color: rgba(233,238,252,0.75); }
         .line { width: 22px; height: 2px; background: rgba(255,255,255,0.12); border-radius: 999px; }
         .line.active { background: rgba(99,102,241,0.7); }
-
         .grid2 { margin-top: 14px; display: grid; grid-template-columns: 1fr; gap: 12px; }
         @media (min-width: 860px) { .grid2 { grid-template-columns: 1.2fr 0.8fr; align-items: start; } }
-
         .form { display: grid; gap: 10px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.09); border-radius: 16px; padding: 16px; }
         .sectionTitle { font-size: 12px; font-weight: 700; color: rgba(233,238,252,0.8); text-transform: uppercase; letter-spacing: 0.06em; }
         .form input { background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.14); border-radius: 11px; padding: 11px 13px; color: #e9eefc; outline: none; font-family: inherit; font-size: 14px; transition: border-color 0.15s; }
         .form input:focus { border-color: rgba(99,102,241,0.6); box-shadow: 0 0 0 3px rgba(99,102,241,0.14); }
         .form input::placeholder { color: rgba(233,238,252,0.35); }
-
         .summary { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.09); border-radius: 16px; padding: 16px; position: sticky; top: 14px; }
         .summaryTitle { font-size: 13px; font-weight: 800; margin-bottom: 12px; }
         .sumCard { background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.09); border-radius: 12px; padding: 12px; display: grid; gap: 8px; margin-bottom: 10px; }
@@ -465,35 +449,29 @@ export default function Registration({ onClose }: RegistrationProps) {
         .k { color: rgba(233,238,252,0.55); }
         .v { color: rgba(233,238,252,0.9); text-align: right; max-width: 60%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
         .linkBtn { background: transparent; border: none; color: rgba(233,238,252,0.6); text-decoration: underline; cursor: pointer; padding: 4px 0; font-size: 12px; }
-
         .notice { display: flex; gap: 10px; align-items: flex-start; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2); padding: 11px 12px; border-radius: 12px; }
         .noticeIcon { font-size: 16px; margin-top: 1px; }
         .noticeText { color: rgba(233,238,252,0.85); font-size: 13px; line-height: 1.4; }
-
         .payMethods { display: grid; gap: 8px; }
         .payOption { display: flex; gap: 10px; align-items: flex-start; padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); cursor: pointer; transition: border-color 0.15s; }
         .payOption input { margin-top: 3px; flex-shrink: 0; }
         .payOption.active { border-color: rgba(99,102,241,0.65); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
         .payOptTitle { font-weight: 700; font-size: 13px; }
         .payOptSub { font-size: 12px; color: rgba(233,238,252,0.6); margin-top: 2px; }
-
         .qrHiddenBox { border: 1px dashed rgba(255,255,255,0.16); border-radius: 13px; padding: 12px; background: rgba(255,255,255,0.02); }
         .revealBtn { width: 100%; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.06); color: #e9eefc; padding: 10px 12px; border-radius: 10px; cursor: pointer; font-weight: 700; font-size: 13px; }
         .qrHint { margin-top: 10px; font-size: 12px; color: rgba(233,238,252,0.5); }
         .qrReveal { margin-top: 12px; display: grid; place-items: center; }
         .qrWrap { background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.12); border-radius: 14px; padding: 12px; }
         .qrImg { width: 200px; height: 200px; border-radius: 10px; object-fit: cover; }
-
         .txnWrap { display: grid; gap: 6px; }
         .txnLabel { font-size: 12px; color: rgba(233,238,252,0.7); padding-left: 2px; }
         .txnInput { background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.14); border-radius: 11px; padding: 11px 13px; color: #e9eefc; outline: none; font-size: 14px; }
         .txnInput:focus { border-color: rgba(99,102,241,0.6); }
         .txnHint { font-size: 11px; color: rgba(233,238,252,0.5); padding-left: 2px; }
-
         .officeInfo { border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.03); padding: 12px; }
         .officeBadge { display: inline-block; background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.22); padding: 5px 10px; border-radius: 100px; font-size: 12px; font-weight: 700; margin-bottom: 8px; color: #86efac; }
-        .officeText { color: rgba(233,238,252,0.7); font-size: 13px; line-height: 1.4; }
-
+        .officeText { color: rgba(233,238,252,0.7); font-size: 13px; line-height: 1.4;
         .selectWrap { position: relative; display: grid; gap: 6px; }
         .selectLabel { font-size: 12px; color: rgba(233,238,252,0.7); }
         .selectButton { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 10px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.14); border-radius: 11px; padding: 11px 13px; color: #e9eefc; outline: none; cursor: pointer; transition: border 0.15s; font-size: 14px; }

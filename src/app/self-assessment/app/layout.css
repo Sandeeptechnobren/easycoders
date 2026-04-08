@@ -9,10 +9,9 @@
   transition: background 0.3s ease;
 }
 
-/* Sidebar Structure */
 .sidebar {
   width: 200px;
-  height: 100%; /* Fill the 100vh */
+  height: 100%;
   background: var(--sidebar-bg);
   display: flex;
   flex-direction: column;
@@ -20,18 +19,16 @@
   padding: 8px;
   border-right: 1px solid var(--border);
   transition: width 0.3s ease;
-  flex-shrink: 0; /* Prevents sidebar from squishing */
+  flex-shrink: 0; 
 }
 
-/* Collapsed Sidebar State */
 .assessmentApp.collapsed .sidebar {
   width: 60px;
 }
 
-/* Sidebar Sections */
 .sidebarTop {
   flex: 1;
-  overflow-y: auto; /* Allows menu items to scroll if they overflow */
+  overflow-y: auto;
   overflow-x: hidden;
 }
 
@@ -43,14 +40,13 @@
   border-top: 1px solid var(--border);
 }
 
-/* Main Content Area - THE SCROLLABLE PART */
 .main {
   flex: 1;
   height: 100%;
-  overflow-y: auto; /* Independent vertical scrolling */
+  overflow-y: auto;
   overflow-x: hidden;
   background: var(--bg);
-  padding: 24px; /* Standardized spacing for all pages */
+  padding: 24px;
 }
 
 .aiInputArea {
