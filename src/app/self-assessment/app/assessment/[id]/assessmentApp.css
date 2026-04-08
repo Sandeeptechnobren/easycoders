@@ -175,6 +175,12 @@
   flex-direction: column;
   justify-content: space-between;
   padding: 20px !important;
+  position: relative;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  background: #fff;
+  transition: transform 0.2s, box-shadow 0.2s;
+  overflow: hidden;
 }
 
 .assessmentCard:hover {

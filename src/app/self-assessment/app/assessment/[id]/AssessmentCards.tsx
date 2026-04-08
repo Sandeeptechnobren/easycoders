@@ -1,5 +1,6 @@
 
 'use client';
+import './assessmentApp.css';
 import api from '@/lib/axios';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -41,7 +42,6 @@ export default function AssessmentCards() {
       .finally(() => setLoading(false));
   }, [router]);
 
-  // NEW: Download Certificate Logic
   const handleDownload = async (assessmentId: number) => {
     setDownloadingId(assessmentId);
     try {
@@ -51,7 +51,6 @@ export default function AssessmentCards() {
       });
 
       if (res.data.status === 'success' && res.data.download_url) {
-        // Open the PDF in a new tab or trigger download
         window.open(res.data.download_url, '_blank');
       } else {
         alert('Certificate not found or still generating.');

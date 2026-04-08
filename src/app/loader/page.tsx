@@ -1,189 +1,178 @@
 'use client';
 
 export default function Loader() {
-    return (
-        <div className="loader-root">
-            <div className="logo-wrapper">
-                {/* CENTER GROUP */}
-                <div className="center-group">
-                    {/* SVG LOGO */}
-                    <svg
-                        width="140"
-                        height="140"
-                        viewBox="0 0 140 140"
-                        className="logo-svg"
-                    >
-                        <polygon
-                            points="70,5 125,37 125,103 70,135 15,103 15,37"
-                            className="hexagon"
-                        />
-                        <circle cx="70" cy="70" r="34" className="core-glow" />
-                        <text
-                            x="50%"
-                            y="50%"
-                            textAnchor="middle"
-                            dominantBaseline="middle"
-                            className="logo-text"
-                        >
-                            EC
-                        </text>
-                    </svg>
+  return (
+    <div className="ldr-root">
+      <div className="ldr-card">
 
-                    {/* ORBITS */}
-                    <span className="orbit orbit-1" />
-                    <span className="orbit orbit-2" />
-                    <span className="orbit orbit-3" />
-                </div>
-            </div>
+        {/* Spinner ring with logo inside */}
+        <div className="ldr-spinner-wrap">
+          <svg className="ldr-ring" viewBox="0 0 80 80">
+            {/* Track */}
+            <circle cx="40" cy="40" r="34" className="ldr-track" />
+            {/* Animated arc */}
+            <circle cx="40" cy="40" r="34" className="ldr-arc" />
+          </svg>
 
-            {/* TEXT */}
-            <div className="brand-text">
-                <span className="brand-main">Easy Coders</span>
-                <span className="brand-sub">Learn • Build • Grow</span>
-            </div>
-
-            <style>{`
-                .loader-root {
-                    min-height: 100vh;
-                    background: #050505;
-                    display: flex;
-                    flex-direction: column;
-                    justify-content: center;
-                    align-items: center;
-                }
-
-                .logo-wrapper {
-                    width: 160px;
-                    height: 160px;
-                    position: relative;
-                }
-
-                .center-group {
-                    position: absolute;
-                    top: 50%;
-                    left: 50%;
-                    transform: translate(-50%, -50%);
-                    width: 160px;
-                    height: 160px;
-                }
-
-                /* SVG */
-                .logo-svg {
-                    position: absolute;
-                    top: 50%;
-                    left: 50%;
-                    transform: translate(-50%, -50%);
-                }
-
-                .hexagon {
-                    fill: none;
-                    stroke: #00c2ff;
-                    stroke-width: 2;
-                    filter: drop-shadow(0 0 12px rgba(0,194,255,0.6));
-                    animation: pulse 2.4s ease-in-out infinite;
-                }
-
-                .core-glow {
-                    fill: rgba(0,194,255,0.18);
-                    filter: blur(8px);
-                    animation: glow 2s ease-in-out infinite;
-                }
-
-                .logo-text {
-                    fill: #14f4ff;
-                    font-size: 32px;
-                    font-weight: 800;
-                    font-family: system-ui;
-                    text-shadow: 0 0 12px rgba(20,244,255,0.8);
-                }
-
-                /* ORBITS */
-                .orbit {
-                    position: absolute;
-                    top: 50%;
-                    left: 50%;
-                    width: 10px;
-                    height: 10px;
-                    border-radius: 50%;
-                    transform-origin: center;
-                }
-
-                .orbit::before {
-                    content: '';
-                    position: absolute;
-                    width: 100%;
-                    height: 100%;
-                    border-radius: 50%;
-                    background: currentColor;
-                    box-shadow: 0 0 12px currentColor;
-                }
-
-                .orbit-1 {
-                    color: #00ff9d;
-                    animation: orbit1 1.8s linear infinite;
-                }
-
-                .orbit-2 {
-                    color: #00c2ff;
-                    animation: orbit2 2.4s linear infinite reverse;
-                }
-
-                .orbit-3 {
-                    color: #ffb703;
-                    animation: orbit3 3s linear infinite;
-                }
-
-                /* TEXT */
-                .brand-text {
-                    margin-top: 26px;
-                    text-align: center;
-                    animation: fade-up 1.6s ease forwards;
-                }
-
-                .brand-main {
-                    display: block;
-                    font-size: 1.4rem;
-                    font-weight: 700;
-                    color: #00c2ff;
-                    letter-spacing: 1px;
-                }
-
-                .brand-sub {
-                    font-size: 0.85rem;
-                    color: #9ca3af;
-                }
-
-                /* ANIMATIONS */
-                @keyframes orbit1 {
-                    from { transform: translate(-50%, -50%) rotate(0deg) translateX(70px); }
-                    to   { transform: translate(-50%, -50%) rotate(360deg) translateX(70px); }
-                }
-
-                @keyframes orbit2 {
-                    from { transform: translate(-50%, -50%) rotate(0deg) translateX(55px); }
-                    to   { transform: translate(-50%, -50%) rotate(360deg) translateX(55px); }
-                }
-
-                @keyframes orbit3 {
-                    from { transform: translate(-50%, -50%) rotate(0deg) translateX(85px); }
-                    to   { transform: translate(-50%, -50%) rotate(360deg) translateX(85px); }
-                }
-
-                @keyframes pulse {
-                    0%,100% { opacity: 0.6; }
-                    50% { opacity: 1; }
-                }
-
-                @keyframes glow {
-                    0%,100% { opacity: 0.4; }
-                    50% { opacity: 0.8; }
-                }
-
-                @keyframes fade-up {
-                    from { opacity: 0; transform: translateY(8px); }
-                    to { opacity: 1; transform: translateY(0); }
-                }
-            `}</style>
+          {/* Logo in centre */}
+          <div className="ldr-badge">
+            <img src="/images/eclogo.png" alt="Easy Coders" className="ldr-logo-img" />
+          </div>
         </div>
-    );
+
+        {/* Brand name */}
+        <p className="ldr-brand">Easy Coders</p>
+
+        {/* Animated dots */}
+        <div className="ldr-dots">
+          <span /><span /><span />
+        </div>
+      </div>
+
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;800&display=swap');
+
+        .ldr-root {
+          min-height: 100vh;
+          width: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: #f8fafc;
+          font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+        }
+
+        .ldr-card {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 18px;
+        }
+
+        /* ── SPINNER ── */
+        .ldr-spinner-wrap {
+          position: relative;
+          width: 88px;
+          height: 88px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .ldr-ring {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          animation: ldr-rotate 1.4s linear infinite;
+        }
+
+        .ldr-track {
+          fill: none;
+          stroke: #e2e8f0;
+          stroke-width: 5;
+        }
+
+        .ldr-arc {
+          fill: none;
+          stroke: url(#ldr-grad);
+          stroke-width: 5;
+          stroke-linecap: round;
+          stroke-dasharray: 213.6;
+          stroke-dashoffset: 160;
+          animation: ldr-dash 1.4s ease-in-out infinite;
+        }
+
+        @keyframes ldr-rotate {
+          to { transform: rotate(360deg); }
+        }
+
+        @keyframes ldr-dash {
+          0%   { stroke-dashoffset: 200; }
+          50%  { stroke-dashoffset: 50; }
+          100% { stroke-dashoffset: 200; }
+        }
+
+        /* ── LOGO BADGE ── */
+        .ldr-badge {
+          width: 54px;
+          height: 54px;
+          border-radius: 16px;
+          background: #fff;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 4px 18px rgba(99, 102, 241, 0.25);
+          animation: ldr-pulse 1.6s ease-in-out infinite;
+          overflow: hidden;
+        }
+
+        .ldr-logo-img {
+          width: 38px;
+          height: 38px;
+          object-fit: contain;
+          animation: ldr-morph 1.6s ease-in-out infinite;
+        }
+
+        @keyframes ldr-pulse {
+          0%, 100% { transform: scale(1);    box-shadow: 0 4px 18px rgba(99,102,241,0.25); }
+          50%       { transform: scale(1.08); box-shadow: 0 8px 28px rgba(99,102,241,0.45); }
+        }
+
+        @keyframes ldr-morph {
+          0%, 100% { transform: scale(1)    rotate(0deg);   opacity: 1;   }
+          25%       { transform: scale(1.12) rotate(-6deg);  opacity: 0.85; }
+          50%       { transform: scale(0.92) rotate(0deg);   opacity: 1;   }
+          75%       { transform: scale(1.12) rotate(6deg);   opacity: 0.85; }
+        }
+
+        /* ── BRAND TEXT ── */
+        .ldr-brand {
+          font-size: 15px;
+          font-weight: 700;
+          color: #1e293b;
+          letter-spacing: 0.02em;
+          margin: 0;
+        }
+
+        /* ── DOTS ── */
+        .ldr-dots {
+          display: flex;
+          gap: 6px;
+          align-items: center;
+        }
+
+        .ldr-dots span {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background: #7c3aed;
+          animation: ldr-bounce 1.2s ease-in-out infinite;
+          display: block;
+        }
+
+        .ldr-dots span:nth-child(1) { animation-delay: 0s;    background: #4f46e5; }
+        .ldr-dots span:nth-child(2) { animation-delay: 0.2s;  background: #7c3aed; }
+        .ldr-dots span:nth-child(3) { animation-delay: 0.4s;  background: #a855f7; }
+
+        @keyframes ldr-bounce {
+          0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+          40%            { transform: scale(1.2); opacity: 1;   }
+        }
+
+        /* SVG gradient definition (inline via foreignObject trick — use defs inside svg) */
+        .ldr-ring defs { display: block; }
+      `}</style>
+
+      {/* SVG gradient — must be in DOM for stroke: url(#) to work */}
+      <svg width="0" height="0" style={{ position: 'absolute' }}>
+        <defs>
+          <linearGradient id="ldr-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%"   stopColor="#4f46e5" />
+            <stop offset="100%" stopColor="#a855f7" />
+          </linearGradient>
+        </defs>
+      </svg>
+    </div>
+  );
 }

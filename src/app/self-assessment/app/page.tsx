@@ -1,10 +1,8 @@
 'use client';
 import { useEffect, useState } from 'react';
 import AssessmentCards from './assessment/[id]/AssessmentCards';
-
 export default function AssessmentDashboard() {
   const [userName, setUserName] = useState('');
-
   useEffect(() => {
     const storedName = localStorage.getItem('logged_in_user');
     const storedEmail = localStorage.getItem('assessment_user');
@@ -16,20 +14,16 @@ export default function AssessmentDashboard() {
       setUserName('Learner');
     }
   }, []);
-
   const currentHour = new Date().getHours();
   const greeting =
     currentHour < 12 ? 'Good Morning' :
     currentHour < 17 ? 'Good Afternoon' : 'Good Evening';
-
   const getInitials = (name: string) =>
     name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'LC';
-
   return (
     <>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
-
         .ad-wrap {
           font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
           background: #f1f5f9;
