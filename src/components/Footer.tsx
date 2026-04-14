@@ -50,9 +50,10 @@ export default function Footer() {
                     <div className='col-md-2'>
                         <h4>Our Courses</h4>
                         <ul>
-                            <li>Data Analytics</li>
-                            <li>Excel Advance</li>
-                            <li>Design UI/UX</li>
+                            <li>MERN Development</li>
+                            <li>PHP/Laravel Development</li>
+                            <li>Python/Django</li>
+                            <li>Android Development</li>
                         </ul>
                     </div>
 
@@ -67,6 +68,10 @@ export default function Footer() {
                             <a href="tel:+917523930301">📞 7523930301</a>
                             <br />
                             <a href="mailto:team@easycoders.in">✉️ team@easycoders.in</a>
+                            <br />
+                            <a href="https://www.instagram.com/easycodersjaunpur/"> Follow us on Instagram</a>
+                            <br />
+                            <a href="https://www.youtube.com/@easycoders"> Subscribe on YouTube</a>
                         </address>
                     </div>
                 </div>
