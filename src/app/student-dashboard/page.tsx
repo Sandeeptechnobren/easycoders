@@ -306,13 +306,22 @@ export default function StudentDashboard() {
                   <div className="sd-action-icon" style={{ background: '#f5f3ff' }}>🎫</div>
                   <div style={{ flex: 1 }}>
                     <div className="sd-action-label">Support Tickets</div>
-                    <div className="sd-action-desc">Get help from your trainers</div>
+                    <div className="sd-action-desc">Raise a query or get help</div>
+                  </div>
+                  <span className="sd-action-arrow">→</span>
+                </Link>
+
+                <Link href="/students/attendance" className="sd-action-item" style={{ display: 'flex' }}>
+                  <div className="sd-action-icon" style={{ background: '#f0fdf4' }}>📍</div>
+                  <div style={{ flex: 1 }}>
+                    <div className="sd-action-label">Attendance</div>
+                    <div className="sd-action-desc">Punch in / out & view history</div>
                   </div>
                   <span className="sd-action-arrow">→</span>
                 </Link>
 
                 <Link href="/students/courses" className="sd-action-item" style={{ display: 'flex' }}>
-                  <div className="sd-action-icon" style={{ background: '#f0fdf4' }}>📖</div>
+                  <div className="sd-action-icon" style={{ background: '#fff7ed' }}>📖</div>
                   <div style={{ flex: 1 }}>
                     <div className="sd-action-label">My Courses</div>
                     <div className="sd-action-desc">Browse enrolled courses</div>

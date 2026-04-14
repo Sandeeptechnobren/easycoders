@@ -56,28 +56,38 @@ export default function Navbar() {
     { name: "Home", href: "/student-dashboard" },
     { name: "My Tasks", href: "/students/tasks" },
     { name: "Tickets", href: "/students/tickets" },
+    { name: "Attendance", href: "/students/attendance" },
     { name: "Logout", onClick: handleLogout },
   ];
 
   const trainerLinks: NavLink[] = [
     { name: "Home", href: "/trainer" },
+    { name: "Tasks", href: "/trainer/tasks" },
+    { name: "Syllabus", href: "/trainer/syllabus" },
+    { name: "Attendance", href: "/trainer/attendance" },
     { name: "Logout", onClick: handleLogout },
   ];
 
   const hrLinks: NavLink[] = [
     { name: "Home", href: "/hr" },
     { name: "Students", href: "/hr/students" },
-    { name: "Admission", href: "/hr/enrollmentRequests" },
+    { name: "Admissions", href: "/hr/admissions" },
+    { name: "Attendance", href: "/hr/attendance" },
+    { name: "Tickets", href: "/hr/tickets" },
+    { name: "Batches", href: "/admin/batches" },
     { name: "Payments", href: "/hr/fee" },
     { name: "Logout", onClick: handleLogout },
   ];
 
   const adminLinks: NavLink[] = [
     { name: "Home", href: "/admin" },
-    { name: "Tasks", href: "/admin/tasks" },
-    { name: "Contact Inquiries", href: "/admin/contactInquiries" },
-    { name: "Enrollment Requests", href: "/admin/enrollmentRequests" },
-    { name: "Student Management", href: "/admin/studentManagement" },
+    { name: "Batches", href: "/admin/batches" },
+    { name: "Admissions", href: "/hr/admissions" },
+    { name: "Assessments", href: "/admin/assessments" },
+    { name: "Permissions", href: "/admin/permissions" },
+    { name: "Attendance", href: "/hr/attendance" },
+    { name: "Tickets", href: "/hr/tickets" },
+    { name: "Students", href: "/admin/studentManagement" },
     { name: "Logout", onClick: handleLogout },
   ];
 
