@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from 'react';
 import styles from './Dropdown.module.css';
-
 type Option = {
   label: string;
   value: string | number;

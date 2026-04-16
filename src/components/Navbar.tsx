@@ -66,8 +66,9 @@ export default function Navbar() {
 
   const hrLinks: NavLink[] = [
     { name: "Home", href: "/hr" },
-    { name: "Students", href: "/hr/students" },
-    { name: "Admission", href: "/hr/enrollmentRequests" },
+    { name: "Seminar Students", href: "/hr/students" },
+    { name: "Batch", href: "/hr/batchManagement" },
+    { name: "Enrolled Students", href: "/hr/enrolledStudents" },
     { name: "Payments", href: "/hr/fee" },
     { name: "Logout", onClick: handleLogout },
   ];

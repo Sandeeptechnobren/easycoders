@@ -135,12 +135,9 @@ export default function DirectAdmissionPage() {
 
   const formatINR = (n: number) =>
     '₹' + n.toLocaleString('en-IN');
-
   return (
     <RoleGuard allowedRoles={[1, 2, 4]}>
       <div className={styles.wrap}>
-
-        {/* ── Top Bar ── */}
         <header className={styles.topbar}>
           <div className={styles.left}>
             <div className={styles.crumbs}>
@@ -157,8 +154,6 @@ export default function DirectAdmissionPage() {
             </div>
           </div>
         </header>
-
-        {/* ── Progress Steps ── */}
         <div className={styles.progressBar}>
           {['Student Info', 'Course & College', 'Payment', 'Confirm'].map((step, i) => (
             <div key={step} className={`${styles.progStep} ${i === 0 ? styles.active : ''}`}>
@@ -167,8 +162,6 @@ export default function DirectAdmissionPage() {
             </div>
           ))}
         </div>
-
-        {/* ── Student Info Card ── */}
         <section className={styles.card}>
           <div className={styles.cardHeader}>
             <div className={styles.cardIcon}>👤</div>
@@ -225,8 +218,6 @@ export default function DirectAdmissionPage() {
             </div>
           </div>
         </section>
-
-        {/* ── Course Card ── */}
         <section className={styles.card}>
           <div className={styles.cardHeader}>
             <div className={styles.cardIcon}>📚</div>
@@ -255,8 +246,6 @@ export default function DirectAdmissionPage() {
             </div>
           </div>
         </section>
-
-        {/* ── Payment Card ── */}
         <section className={styles.card}>
           <div className={styles.cardHeader}>
             <div className={styles.cardIcon}>💳</div>
@@ -288,8 +277,6 @@ export default function DirectAdmissionPage() {
                 />
               </div>
             </div>
-
-            {/* Payment Mode Pills */}
             <div className={styles.modeGroup}>
               <label className={styles.label}>
                 Payment Mode <span className={styles.req}>*</span>
@@ -322,8 +309,6 @@ export default function DirectAdmissionPage() {
                 />
               </div>
             )}
-
-            {/* Fee Summary */}
             {showFeeSummary && (
               <div className={styles.feeSummary}>
                 <span className={styles.feeLabel}>Fee Breakdown</span>
@@ -352,8 +337,6 @@ export default function DirectAdmissionPage() {
             )}
           </div>
         </section>
-
-        {/* ── Submit Bar ── */}
         <div className={styles.submitBar}>
           <div className={styles.submitHint}>
             All <strong>required fields</strong> must be filled to proceed
@@ -366,8 +349,6 @@ export default function DirectAdmissionPage() {
             {directBusy ? 'Creating…' : 'Create Admission'} <span className={styles.arrow}>→</span>
           </button>
         </div>
-
-        {/* ── Success Modal ── */}
         {showSuccess && directResult && (
           <div className={styles.modalOverlay} onClick={() => setShowSuccess(false)}>
             <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
