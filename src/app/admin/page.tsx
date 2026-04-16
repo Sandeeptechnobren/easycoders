@@ -112,10 +112,14 @@ export default function AdminHomePage() {
   ];
 
   const quickActions = [
-    { href: '/admin/enrollmentRequests', icon: '📝', title: 'Enrollment Requests', sub: 'Convert to student accounts' },
-    { href: '/admin/students',           icon: '👥', title: 'Student Management',  sub: 'Fees, payments & marks' },
-    { href: '/admin/fee',                icon: '💳', title: 'Fee Management',       sub: 'Record & track payments' },
-    { href: '/admin/directAdmission',    icon: '🎓', title: 'Direct Admission',     sub: 'Admit students directly' },
+    { href: '/hr/admissions',          icon: '🎓', title: 'Admissions',           sub: 'Create admissions, fee installments' },
+    { href: '/admin/batches',          icon: '🏫', title: 'Batches',              sub: 'Manage training batches & trainers' },
+    { href: '/admin/assessments',      icon: '📋', title: 'Assessments',          sub: 'Create/manage self-assessment tests' },
+    { href: '/admin/permissions',      icon: '🔐', title: 'Permissions',          sub: 'Role defaults & per-user overrides' },
+    { href: '/hr/attendance',          icon: '📍', title: 'Attendance',           sub: 'Records, manual mark, locations' },
+    { href: '/hr/tickets',             icon: '🎫', title: 'Tickets',              sub: 'Assign & resolve student queries' },
+    { href: '/admin/studentManagement',icon: '👥', title: 'Student Management',   sub: 'Profiles, fees & marks' },
+    { href: '/admin/enrollmentRequests',icon: '📝',title: 'Enrollment Requests',  sub: 'Legacy — convert to student accounts' },
   ];
 
   return (
@@ -136,8 +140,11 @@ export default function AdminHomePage() {
             <p className={styles.subtitle}>Admin operations overview</p>
           </div>
           <div className={styles.right}>
-            <Link href="/admin/enrollmentRequests" className={`${styles.btn} ${styles.primary}`}>
-              📝 Enrollment Requests
+            <Link href="/hr/admissions" className={`${styles.btn} ${styles.primary}`}>
+              🎓 Admissions
+            </Link>
+            <Link href="/admin/batches" className={`${styles.btn} ${styles.primary}`}>
+              🏫 Batches
             </Link>
             <Link href="/admin/students" className={styles.btn}>
               👥 Student Management

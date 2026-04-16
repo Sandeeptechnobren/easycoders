@@ -151,6 +151,13 @@ const KPI_CONFIG = [
 
 const QUICK_ACTIONS = [
   {
+    icon: '🎓',
+    title: 'Admissions',
+    sub: 'Create admissions, manage fee installments',
+    href: '/hr/admissions',
+    tag: 'Manage',
+  },
+  {
     icon: '👥',
     title: 'Students Directory',
     sub: 'Browse, filter and manage profiles',
@@ -158,25 +165,46 @@ const QUICK_ACTIONS = [
     tag: 'View',
   },
   {
+    icon: '🏫',
+    title: 'Batches',
+    sub: 'View and manage training batches',
+    href: '/admin/batches',
+    tag: 'Manage',
+  },
+  {
+    icon: '📍',
+    title: 'Attendance',
+    sub: 'View records, mark manually, manage locations',
+    href: '/hr/attendance',
+    tag: 'Manage',
+  },
+  {
+    icon: '🎫',
+    title: 'Tickets / Queries',
+    sub: 'Assign and respond to student tickets',
+    href: '/hr/tickets',
+    tag: 'Support',
+  },
+  {
+    icon: '💳',
+    title: 'Fee Payments',
+    sub: 'Record and track installment payments',
+    href: '/hr/fee',
+    tag: 'Finance',
+  },
+  {
     icon: '📝',
     title: 'Enrollment Requests',
-    sub: 'Review new enrollment applications',
-    href: null,
+    sub: 'Review legacy enrollment applications',
+    href: '/hr/enrollmentRequests',
     tag: 'Review',
   },
   {
     icon: '📩',
     title: 'Contact Inquiries',
     sub: 'View messages submitted by users',
-    href: null,
+    href: '/admin/contactInquiries',
     tag: 'Inbox',
-  },
-  {
-    icon: '📊',
-    title: 'Reports',
-    sub: 'Export or view performance summaries',
-    href: null,
-    tag: 'Export',
   },
 ];
 
@@ -437,10 +465,8 @@ export default function HrHomePage() {
                       </svg>
                     </>
                   );
-                  return a.href ? (
-                    <Link key={i} href={a.href} className={styles.actionCard}>{inner}</Link>
-                  ) : (
-                    <button key={i} type="button" className={styles.actionCard} onClick={() => alert(`Hook this to ${a.title} later`)}>{inner}</button>
+                  return (
+                    <Link key={i} href={a.href!} className={styles.actionCard}>{inner}</Link>
                   );
                 })}
               </div>
