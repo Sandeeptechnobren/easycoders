@@ -83,7 +83,7 @@ export default function Navbar() {
     { name: "Admissions", href: "/hr/admissions" },
     { name: "Assessments", href: "/admin/assessments" },
     { name: "Permissions", href: "/admin/permissions" },
-    { name: "Attendance", href: "/hr/attendance" },
+    { name: "Attendance", href: "/admin/attendance" },
     { name: "Tickets", href: "/hr/tickets" },
     { name: "Students", href: "/admin/studentManagement" },
     { name: "Logout", onClick: handleLogout },

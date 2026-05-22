@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import RoleGuard from '@/components/RoleGuard';
 import { fetchWithAuth } from '@/lib/api';
 
@@ -9,31 +9,118 @@ const BASE = 'https://api.easycoders.in/projects/backend/public/api';
 type AttendanceRecord = {
   id: number;
   date: string;
-  punch_in: string;
-  punch_out?: string;
-  location?: { id: number; name: string };
+  punch_in: string | null;
+  punch_out?: string | null;
+  location?: { id: number; name: string } | null;
   wifi_verified: boolean;
   gps_verified: boolean;
+};
+
+type Stats = {
+  from: string;
+  to: string;
+  total_days: number;
+  working_days: number;
+  sundays_skipped: number;
+  holidays_skipped: number;
+  present: number;
+  absent: number;
+};
+
+// ─── Helpers ────────────────────────────────────────────────────────────────
+const todayYmd = () => {
+  const d = new Date();
+  const yy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yy}-${mm}-${dd}`;
+};
+const daysAgoYmd = (n: number) => {
+  const d = new Date();
+  d.setDate(d.getDate() - n);
+  const yy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yy}-${mm}-${dd}`;
 };
 
 export default function StudentAttendancePage() {
   const [tab, setTab] = useState<'punch' | 'history'>('punch');
   const [records, setRecords] = useState<AttendanceRecord[]>([]);
+  const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(false);
+  const [statsLoading, setStatsLoading] = useState(false);
   const [punchMsg, setPunchMsg] = useState('');
   const [punchLoading, setPunchLoading] = useState(false);
   const [todayRecord, setTodayRecord] = useState<AttendanceRecord | null>(null);
 
-  const checkTodayRecord = async () => {
+  // Date range filters (default last 30 days inclusive)
+  const [from, setFrom] = useState(daysAgoYmd(30));
+  const [to, setTo]     = useState(todayYmd());
+
+  const checkTodayRecord = useCallback(async () => {
     try {
-      const today = new Date().toISOString().slice(0, 10);
-      const res = await fetchWithAuth(`${BASE}/attendance/my?from=${today}&to=${today}`);
-      const list: AttendanceRecord[] = res.data?.data || res.data || [];
-      setTodayRecord(list.find(r => r.date === today || r.punch_in?.startsWith(today)) || null);
-    } catch {}
+      const t = todayYmd();
+      const res = await fetchWithAuth(`${BASE}/attendance/my?from=${t}&to=${t}`);
+      const paginator = res.data;
+      const list: AttendanceRecord[] = Array.isArray(paginator)
+        ? paginator
+        : (paginator?.data ?? []);
+      const match = list.find(r => {
+        const recDate = (r.date || '').slice(0, 10);
+        return recDate === t || (r.punch_in?.startsWith(t) ?? false);
+      });
+      setTodayRecord(match || null);
+    } catch { /* ignore — UI shows "Not punched in yet" */ }
+  }, []);
+
+  const loadStats = useCallback(async (rangeFrom: string, rangeTo: string) => {
+    setStatsLoading(true);
+    try {
+      const res = await fetchWithAuth(`${BASE}/attendance/stats?from=${rangeFrom}&to=${rangeTo}`);
+      setStats(res.data as Stats);
+    } catch {
+      // Stats may be unavailable if the holidays table hasn't been migrated yet.
+      setStats(null);
+    } finally {
+      setStatsLoading(false);
+    }
+  }, []);
+
+  const loadHistory = useCallback(async (rangeFrom: string, rangeTo: string) => {
+    setLoading(true);
+    try {
+      const res = await fetchWithAuth(`${BASE}/attendance/my?from=${rangeFrom}&to=${rangeTo}`);
+      const paginator = res.data;
+      const list: AttendanceRecord[] = Array.isArray(paginator)
+        ? paginator
+        : (paginator?.data ?? []);
+      setRecords(list);
+    } catch {
+      setRecords([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Initial: today's record + 30-day stats
+  useEffect(() => { checkTodayRecord(); }, [checkTodayRecord]);
+  useEffect(() => { loadStats(from, to); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // History loads whenever user enters the tab (uses current from/to)
+  useEffect(() => { if (tab === 'history') loadHistory(from, to); }, [tab, loadHistory, from, to]);
+
+  const applyRange = () => {
+    loadStats(from, to);
+    if (tab === 'history') loadHistory(from, to);
   };
 
-  useEffect(() => { checkTodayRecord(); }, []);
+  const resetRange = () => {
+    const f = daysAgoYmd(30), t = todayYmd();
+    setFrom(f); setTo(t);
+    loadStats(f, t);
+    if (tab === 'history') loadHistory(f, t);
+  };
 
   const getGPS = (): Promise<{ latitude: number; longitude: number } | null> =>
     new Promise(resolve => {
@@ -41,7 +128,7 @@ export default function StudentAttendancePage() {
       navigator.geolocation.getCurrentPosition(
         pos => resolve({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }),
         () => resolve(null),
-        { timeout: 8000 }
+        { timeout: 8000, enableHighAccuracy: true }
       );
     });
 
@@ -49,14 +136,21 @@ export default function StudentAttendancePage() {
     setPunchLoading(true); setPunchMsg('');
     try {
       const gps = await getGPS();
+      if (!gps) {
+        setPunchMsg('Location access denied. Please enable GPS in your browser — both office WiFi AND GPS are required.');
+        setPunchLoading(false);
+        return;
+      }
       await fetchWithAuth(`${BASE}/attendance`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(gps || {}),
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(gps),
       });
       setPunchMsg('Punched in successfully!');
       checkTodayRecord();
+      loadStats(from, to);
     } catch (e: any) {
-      setPunchMsg(e.message || 'Punch-in failed. Ensure you are on the office WiFi or GPS zone.');
+      setPunchMsg(e.message || 'Punch-in failed. You must be on the office WiFi AND within the configured GPS zone.');
     } finally { setPunchLoading(false); }
   };
 
@@ -66,35 +160,92 @@ export default function StudentAttendancePage() {
       await fetchWithAuth(`${BASE}/attendance/punch-out`, { method: 'POST' });
       setPunchMsg('Punched out successfully!');
       checkTodayRecord();
-    } catch (e: any) { setPunchMsg(e.message || 'Punch-out failed.'); } finally { setPunchLoading(false); }
+    } catch (e: any) {
+      setPunchMsg(e.message || 'Punch-out failed.');
+    } finally { setPunchLoading(false); }
   };
 
-  const loadHistory = async () => {
-    setLoading(true);
-    try {
-      const res = await fetchWithAuth(`${BASE}/attendance/my`);
-      setRecords(res.data?.data || res.data || []);
-    } catch {} finally { setLoading(false); }
-  };
-
-  useEffect(() => { if (tab === 'history') loadHistory(); }, [tab]);
-
-  const duration = (punchIn: string, punchOut?: string) => {
-    if (!punchOut) return '—';
+  const duration = (punchIn?: string | null, punchOut?: string | null) => {
+    if (!punchIn || !punchOut) return '—';
     const diff = Math.round((new Date(punchOut).getTime() - new Date(punchIn).getTime()) / 60000);
+    if (isNaN(diff) || diff < 0) return '—';
     return `${Math.floor(diff / 60)}h ${diff % 60}m`;
   };
 
-  const isPunchedIn = todayRecord && !todayRecord.punch_out;
-  const isPunchedOut = todayRecord && todayRecord.punch_out;
+  const isPunchedIn  = todayRecord && !todayRecord.punch_out;
+  const isPunchedOut = todayRecord && !!todayRecord.punch_out;
+
+  const attendancePct = stats && stats.working_days > 0
+    ? Math.round((stats.present / stats.working_days) * 100)
+    : null;
 
   return (
     <RoleGuard allowedRoles={[3]}>
       <div className="admin-wrap">
-        <div className="container-fluid py-4 px-4" style={{ maxWidth: 800 }}>
+        <div className="container-fluid py-4 px-4" style={{ maxWidth: 900 }}>
           <div className="mb-4">
             <h3 className="fw-bold mb-1">My Attendance</h3>
-            <p className="text-muted mb-0">Punch in/out and view your attendance history</p>
+            <p className="text-muted mb-0">Punch in/out, view stats, and your attendance history</p>
+          </div>
+
+          {/* ── Stats Card ── */}
+          <div className="card mb-4">
+            <div className="card-body">
+              <div className="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                <div>
+                  <div className="fw-semibold">Attendance Summary</div>
+                  <small className="text-muted">
+                    {stats ? `${stats.from} → ${stats.to}` : `${from} → ${to}`}
+                  </small>
+                </div>
+                {attendancePct !== null && (
+                  <span className={`badge fs-6 ${attendancePct >= 75 ? 'bg-success' : attendancePct >= 50 ? 'bg-warning text-dark' : 'bg-danger'}`}>
+                    {attendancePct}% attendance
+                  </span>
+                )}
+              </div>
+
+              {statsLoading ? (
+                <div className="text-muted small">Loading stats…</div>
+              ) : !stats ? (
+                <div className="text-muted small">
+                  Stats unavailable for this range. (If you just deployed, the holidays table may not be migrated yet.)
+                </div>
+              ) : (
+                <div className="row g-3 text-center">
+                  <div className="col-6 col-md">
+                    <div className="border rounded p-2">
+                      <div className="text-muted small">Present</div>
+                      <div className="fw-bold fs-4 text-success">{stats.present}</div>
+                    </div>
+                  </div>
+                  <div className="col-6 col-md">
+                    <div className="border rounded p-2">
+                      <div className="text-muted small">Absent</div>
+                      <div className="fw-bold fs-4 text-danger">{stats.absent}</div>
+                    </div>
+                  </div>
+                  <div className="col-6 col-md">
+                    <div className="border rounded p-2">
+                      <div className="text-muted small">Working Days</div>
+                      <div className="fw-bold fs-4">{stats.working_days}</div>
+                    </div>
+                  </div>
+                  <div className="col-6 col-md">
+                    <div className="border rounded p-2">
+                      <div className="text-muted small">Holidays</div>
+                      <div className="fw-bold fs-4 text-primary">{stats.holidays_skipped}</div>
+                    </div>
+                  </div>
+                  <div className="col-6 col-md">
+                    <div className="border rounded p-2">
+                      <div className="text-muted small">Sundays</div>
+                      <div className="fw-bold fs-4 text-secondary">{stats.sundays_skipped}</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           <ul className="nav nav-tabs mb-4">
@@ -117,19 +268,19 @@ export default function StudentAttendancePage() {
                 )}
                 {isPunchedIn && (
                   <div className="alert alert-success d-inline-block mb-4">
-                    Punched in at {new Date(todayRecord.punch_in).toLocaleTimeString()}
-                    {todayRecord.location && ` · ${todayRecord.location.name}`}
+                    Punched in at {todayRecord!.punch_in ? new Date(todayRecord!.punch_in).toLocaleTimeString() : '—'}
+                    {todayRecord!.location && ` · ${todayRecord!.location.name}`}
                     <div className="small mt-1">
-                      {todayRecord.wifi_verified && <span className="badge bg-info me-1">WiFi verified</span>}
-                      {todayRecord.gps_verified && <span className="badge bg-success">GPS verified</span>}
+                      {todayRecord!.wifi_verified && <span className="badge bg-info me-1">WiFi verified</span>}
+                      {todayRecord!.gps_verified && <span className="badge bg-success">GPS verified</span>}
                     </div>
                   </div>
                 )}
                 {isPunchedOut && (
                   <div className="alert alert-secondary d-inline-block mb-4">
-                    In: {new Date(todayRecord.punch_in).toLocaleTimeString()} ·
-                    Out: {new Date(todayRecord.punch_out!).toLocaleTimeString()} ·
-                    Duration: {duration(todayRecord.punch_in, todayRecord.punch_out)}
+                    In: {todayRecord!.punch_in ? new Date(todayRecord!.punch_in).toLocaleTimeString() : '—'} ·
+                    Out: {todayRecord!.punch_out ? new Date(todayRecord!.punch_out).toLocaleTimeString() : '—'} ·
+                    Duration: {duration(todayRecord!.punch_in, todayRecord!.punch_out)}
                   </div>
                 )}
 
@@ -156,7 +307,7 @@ export default function StudentAttendancePage() {
                 </div>
 
                 <p className="text-muted small mt-4">
-                  Attendance is verified by office WiFi/IP. GPS is used as fallback.
+                  Both office WiFi <strong>AND</strong> GPS must match the configured location to punch in.
                 </p>
               </div>
             </div>
@@ -164,7 +315,21 @@ export default function StudentAttendancePage() {
 
           {tab === 'history' && (
             <>
-              <button className="btn btn-outline-secondary btn-sm mb-3" onClick={loadHistory}>Refresh</button>
+              <div className="d-flex gap-3 mb-3 flex-wrap align-items-end">
+                <div>
+                  <label className="form-label small text-muted mb-1">From</label>
+                  <input type="date" className="form-control form-control-sm" value={from}
+                    onChange={e => setFrom(e.target.value)} max={to} />
+                </div>
+                <div>
+                  <label className="form-label small text-muted mb-1">To</label>
+                  <input type="date" className="form-control form-control-sm" value={to}
+                    onChange={e => setTo(e.target.value)} min={from} max={todayYmd()} />
+                </div>
+                <button className="btn btn-sm btn-primary" onClick={applyRange}>Apply</button>
+                <button className="btn btn-sm btn-outline-secondary" onClick={resetRange}>Last 30 days</button>
+              </div>
+
               {loading ? (
                 <div className="text-center py-4 text-muted">Loading...</div>
               ) : (
@@ -176,10 +341,10 @@ export default function StudentAttendancePage() {
                       </thead>
                       <tbody>
                         {records.length === 0 ? (
-                          <tr><td colSpan={6} className="text-center text-muted py-4">No records found.</td></tr>
+                          <tr><td colSpan={6} className="text-center text-muted py-4">No records found in this range.</td></tr>
                         ) : records.map(r => (
                           <tr key={r.id}>
-                            <td>{r.date}</td>
+                            <td>{(r.date || '').slice(0, 10)}</td>
                             <td className="small">{r.punch_in ? new Date(r.punch_in).toLocaleTimeString() : '—'}</td>
                             <td className="small">{r.punch_out ? new Date(r.punch_out).toLocaleTimeString() : <span className="text-warning">Active</span>}</td>
                             <td className="small">{duration(r.punch_in, r.punch_out)}</td>
