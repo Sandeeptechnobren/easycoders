@@ -287,8 +287,12 @@ export default function HomePage() {
            project rule violation. */
         .reg-trigger {
           position: fixed;
-          bottom: 28px;
-          right: 28px;
+          /* Stack ABOVE the floating SelfAssessmentBubble (right: 20px,
+             bottom: 20px, ~56px tall). Without this offset both buttons
+             sit at the bottom-right corner and the bubble (z=1000) covers
+             this Register button (z=888). */
+          bottom: 92px;
+          right: 20px;
           z-index: 888;
           display: flex;
           align-items: center;
@@ -334,7 +338,9 @@ export default function HomePage() {
         @media (max-width: 560px) {
           .stats-inner { grid-template-columns: 1fr 1fr; }
           .hero { padding: 80px 0 60px; }
-          .reg-trigger { bottom: 16px; right: 16px; padding: 11px 18px; font-size: 13px; }
+          /* Mobile: bubble is still at right: 20px / bottom: 20px (~54px tall),
+             so keep the Register button stacked above with ~10px gap. */
+          .reg-trigger { bottom: 84px; right: 16px; padding: 11px 18px; font-size: 13px; }
         }
       `}</style>
 
