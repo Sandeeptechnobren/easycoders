@@ -54,7 +54,15 @@ export default function AssessmentPage() {
       });
       if (res.data.status) {
         setSubmitted(true);
-        localStorage.setItem('score', res.data.score);
+        // Cache the bits the success screen needs so a hard-refresh
+        // doesn't lose them. The score is the RAW COUNT of correct
+        // answers (NOT a percentage) — see AssessmentService::submit
+        // ByAssessment. The success screen computes the percentage
+        // itself from score + total_marks.
+        localStorage.setItem('score', String(res.data.score));
+        localStorage.setItem('score_total', String(assessment.total_marks ?? 0));
+        localStorage.setItem('score_passing', String(assessment.passing_score ?? 40));
+        localStorage.setItem('score_assessment_id', String(assessment.id));
       }
     } catch (error) {
       console.error('Submission failed', error);
