@@ -7,32 +7,41 @@ interface AuthState {
   role: string | null;
   user: any | null;
   token: string | null;
+  permissions: string[];
   isLoading: boolean;
 }
 
-const AuthContext = createContext<{
+type AuthContextValue = {
   role: string | null;
   user: any | null;
   token: string | null;
+  permissions: string[];
   isLoading: boolean;
   login: (userRole: string, userData: any, token: string) => void;
   logout: () => void;
-} | null>(null);
+};
+
+const AuthContext = createContext<AuthContextValue | null>(null);
+
+const API_USER_URL = 'https://api.easycoders.in/projects/backend/public/api/user';
 
 export const AuthProvider = ({ children }: any) => {
   const [authState, setAuthState] = useState<AuthState>({
     role: null,
     user: null,
     token: null,
+    permissions: [],
     isLoading: true,
   });
-  
+
   const router = useRouter();
 
-  // Validate token with backend
+  // Validate token with backend. The backend's /api/user response now
+  // includes a `permissions: string[]` array (union of Spatie role
+  // permissions + per-user grants minus per-user revokes).
   const validateToken = async (token: string) => {
     try {
-      const response = await fetch('https://api.easycoders.in/projects/backend/public/api/user', {
+      const response = await fetch(API_USER_URL, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -55,18 +64,21 @@ export const AuthProvider = ({ children }: any) => {
     const initializeAuth = async () => {
       try {
         const storedToken = localStorage.getItem('token');
-        const storedUser = localStorage.getItem('user');
-        const storedRole = localStorage.getItem('role');
+        const storedUser  = localStorage.getItem('user');
+        const storedRole  = localStorage.getItem('role');
 
         if (storedToken && storedUser && storedRole) {
-          // Validate token with backend
           const validation = await validateToken(storedToken);
-          
+
           if (validation.valid) {
+            const perms = Array.isArray(validation.userData?.permissions)
+              ? validation.userData.permissions
+              : [];
             setAuthState({
               role: storedRole,
               user: storedUser ? JSON.parse(storedUser) : null,
               token: storedToken,
+              permissions: perms,
               isLoading: false,
             });
           } else {
@@ -78,20 +90,20 @@ export const AuthProvider = ({ children }: any) => {
               role: null,
               user: null,
               token: null,
+              permissions: [],
               isLoading: false,
             });
-            
-            // Only redirect if not on login page
+
             if (window.location.pathname !== '/') {
               router.replace('/');
             }
           }
         } else {
-          // No stored auth data
           setAuthState({
             role: null,
             user: null,
             token: null,
+            permissions: [],
             isLoading: false,
           });
         }
@@ -101,6 +113,7 @@ export const AuthProvider = ({ children }: any) => {
           role: null,
           user: null,
           token: null,
+          permissions: [],
           isLoading: false,
         });
       }
@@ -110,15 +123,28 @@ export const AuthProvider = ({ children }: any) => {
   }, [router]);
 
   const login = (userRole: string, userData: any, token: string) => {
+    // Set immediate state from the login response so the UI can transition
+    // right away. Permissions are then populated asynchronously.
     setAuthState({
       role: userRole,
       user: userData,
       token: token,
+      permissions: [],
       isLoading: false,
     });
     localStorage.setItem('token', token);
     localStorage.setItem('user', JSON.stringify(userData));
     localStorage.setItem('role', userRole);
+
+    // Fire-and-forget: fetch /api/user to learn this user's permission set
+    // and merge it into state. The next page render will see them.
+    validateToken(token)
+      .then(({ valid, userData: fresh }) => {
+        if (valid && Array.isArray(fresh?.permissions)) {
+          setAuthState((prev) => ({ ...prev, permissions: fresh.permissions }));
+        }
+      })
+      .catch(() => { /* swallow — permissions just stay empty until next mount */ });
   };
 
   const logout = () => {
@@ -126,6 +152,7 @@ export const AuthProvider = ({ children }: any) => {
       role: null,
       user: null,
       token: null,
+      permissions: [],
       isLoading: false,
     });
     localStorage.clear();
@@ -133,14 +160,17 @@ export const AuthProvider = ({ children }: any) => {
   };
 
   return (
-    <AuthContext.Provider value={{ 
-      role: authState.role, 
-      user: authState.user, 
-      token: authState.token,
-      isLoading: authState.isLoading,
-      login, 
-      logout 
-    }}>
+    <AuthContext.Provider
+      value={{
+        role: authState.role,
+        user: authState.user,
+        token: authState.token,
+        permissions: authState.permissions,
+        isLoading: authState.isLoading,
+        login,
+        logout,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
