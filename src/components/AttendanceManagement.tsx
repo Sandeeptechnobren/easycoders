@@ -54,6 +54,44 @@ const todayYmd = () => {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 };
 
+// Role display — production DB stores role as a numeric string ('1'..'4')
+// for some users and a literal string ('admin'/'hr'/'student'/'trainer')
+// for others. This maps both shapes to a human label.
+const ROLE_NAMES: Record<string, string> = {
+  '1': 'Admin',   'admin':   'Admin',
+  '2': 'HR',      'hr':      'HR',
+  '3': 'Student', 'student': 'Student',
+  '4': 'Trainer', 'trainer': 'Trainer',
+};
+const roleLabel = (role?: string | number | null): string => {
+  if (role === null || role === undefined || role === '') return '—';
+  const key = String(role).trim().toLowerCase();
+  if (ROLE_NAMES[key]) return ROLE_NAMES[key];
+  return key.charAt(0).toUpperCase() + key.slice(1);
+};
+
+// Indian national holidays for 2026. Lunar / Islamic dates are best-effort
+// approximations — the admin can adjust each date in the picker before adding.
+const INDIAN_HOLIDAYS_2026: Array<{ date: string; name: string; description: string; approximate?: boolean }> = [
+  { date: '2026-01-01', name: "New Year's Day",           description: 'Calendar new year' },
+  { date: '2026-01-14', name: 'Makar Sankranti / Pongal', description: 'Harvest festival' },
+  { date: '2026-01-26', name: 'Republic Day',             description: 'National holiday' },
+  { date: '2026-02-17', name: 'Maha Shivratri',           description: 'Hindu festival',          approximate: true },
+  { date: '2026-03-04', name: 'Holi',                     description: 'Festival of colors',     approximate: true },
+  { date: '2026-03-21', name: 'Eid al-Fitr',              description: 'Islamic festival',       approximate: true },
+  { date: '2026-04-03', name: 'Good Friday',              description: 'Christian holiday',      approximate: true },
+  { date: '2026-04-14', name: 'Ambedkar Jayanti',         description: 'National holiday' },
+  { date: '2026-05-01', name: 'Labour Day',               description: 'International Workers Day' },
+  { date: '2026-05-27', name: 'Eid al-Adha (Bakrid)',     description: 'Islamic festival',       approximate: true },
+  { date: '2026-08-15', name: 'Independence Day',         description: 'National holiday' },
+  { date: '2026-08-26', name: 'Janmashtami',              description: 'Hindu festival',         approximate: true },
+  { date: '2026-10-02', name: 'Gandhi Jayanti',           description: 'National holiday' },
+  { date: '2026-10-20', name: 'Dussehra (Vijaya Dashami)',description: 'Hindu festival',         approximate: true },
+  { date: '2026-11-08', name: 'Diwali',                   description: 'Festival of lights',     approximate: true },
+  { date: '2026-11-24', name: 'Guru Nanak Jayanti',       description: 'Sikh holiday',           approximate: true },
+  { date: '2026-12-25', name: 'Christmas',                description: 'Christian holiday' },
+];
+
 export default function AttendanceManagement() {
   const [tab, setTab] = useState<'records' | 'manual' | 'locations' | 'holidays'>('records');
 
@@ -101,6 +139,14 @@ export default function AttendanceManagement() {
   const [holForm, setHolForm] = useState({ date: '', name: '', description: '' });
   const [holMsg, setHolMsg] = useState('');
   const [holSaving, setHolSaving] = useState(false);
+
+  // National holidays bulk-add modal
+  const [showNationalModal, setShowNationalModal] = useState(false);
+  const [nationalChoices, setNationalChoices] = useState<
+    Array<{ date: string; name: string; description: string; checked: boolean; alreadyExists: boolean }>
+  >([]);
+  const [bulkAdding, setBulkAdding] = useState(false);
+  const [bulkMsg, setBulkMsg] = useState('');
 
   // ── Records ──────────────────────────────────────────────────────────────
   const loadRecords = useCallback(async () => {
@@ -353,6 +399,22 @@ export default function AttendanceManagement() {
     } catch (e: any) { alert(e.message || 'Failed.'); }
   };
 
+  // Toggle a location between active and inactive (PATCH-like via existing PUT endpoint).
+  const toggleLocActive = async (loc: Location) => {
+    const verb = loc.is_active ? 'Deactivate' : 'Activate';
+    if (!confirm(`${verb} the location "${loc.name}"?`)) return;
+    try {
+      await fetchWithAuth(`${BASE}/attendance/locations/${loc.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_active: !loc.is_active }),
+      });
+      loadLocations();
+    } catch (e: any) {
+      alert(e.message || `${verb} failed.`);
+    }
+  };
+
   // ── Holidays modal ───────────────────────────────────────────────────────
   const openCreateHol = () => {
     setEditHol(null);
@@ -396,6 +458,57 @@ export default function AttendanceManagement() {
       await fetchWithAuth(`${BASE}/holidays/${id}`, { method: 'DELETE' });
       loadHolidays();
     } catch (e: any) { alert(e.message || 'Failed.'); }
+  };
+
+  // Open the national-holidays modal, pre-filling defaults from the curated
+  // INDIAN_HOLIDAYS_2026 list and marking ones already in the DB as "exists".
+  const openNationalModal = () => {
+    const existing = new Set(holidays.map(h => (h.date || '').slice(0, 10)));
+    setNationalChoices(
+      INDIAN_HOLIDAYS_2026.map(h => ({
+        date: h.date,
+        name: h.name,
+        description: h.description + (h.approximate ? ' (date is approximate — verify before saving)' : ''),
+        checked: !existing.has(h.date),
+        alreadyExists: existing.has(h.date),
+      }))
+    );
+    setBulkMsg('');
+    setShowNationalModal(true);
+  };
+
+  // Bulk-add all selected holidays. Each POST is independent; failures are
+  // tallied separately so a duplicate doesn't abort the rest.
+  const bulkAddSelected = async () => {
+    const selected = nationalChoices.filter(c => c.checked && !c.alreadyExists);
+    if (selected.length === 0) {
+      setShowNationalModal(false);
+      return;
+    }
+    setBulkAdding(true);
+    setBulkMsg('');
+    let added = 0;
+    const failures: string[] = [];
+    for (const h of selected) {
+      try {
+        await fetchWithAuth(`${BASE}/holidays`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ date: h.date, name: h.name, description: h.description }),
+        });
+        added++;
+      } catch (e: any) {
+        failures.push(`${h.name} (${h.date}) — ${e?.message || 'failed'}`);
+      }
+    }
+    setBulkAdding(false);
+    if (failures.length === 0) {
+      setShowNationalModal(false);
+      loadHolidays();
+      return;
+    }
+    setBulkMsg(`Added ${added}. Failed ${failures.length}:\n` + failures.join('\n'));
+    loadHolidays();
   };
 
   // ── Helpers ──────────────────────────────────────────────────────────────
@@ -493,7 +606,7 @@ export default function AttendanceManagement() {
                               <div className="fw-semibold">{r.user?.name || '—'} <small className="text-muted">#{r.user?.id}</small></div>
                               <small className="text-muted">{r.user?.email}</small>
                             </td>
-                            <td><span className="badge bg-secondary text-capitalize">{r.user?.role || '—'}</span></td>
+                            <td><span className="badge bg-secondary">{roleLabel(r.user?.role)}</span></td>
                             <td className="small">{(r.date || '').slice(0, 10)}</td>
                             <td className="small">{r.punch_in ? new Date(r.punch_in).toLocaleTimeString() : '—'}</td>
                             <td className="small">{r.punch_out ? new Date(r.punch_out).toLocaleTimeString() : <span className="text-warning">Active</span>}</td>
@@ -536,7 +649,7 @@ export default function AttendanceManagement() {
                       <div className="d-flex justify-content-between align-items-center border rounded p-2 bg-light">
                         <div>
                           <div className="fw-semibold">{selectedUser.name} <small className="text-muted">#{selectedUser.id}</small></div>
-                          <small className="text-muted">{selectedUser.email}{selectedUser.phone ? ` · ${selectedUser.phone}` : ''}{selectedUser.role ? ` · ${selectedUser.role}` : ''}</small>
+                          <small className="text-muted">{selectedUser.email}{selectedUser.phone ? ` · ${selectedUser.phone}` : ''}{selectedUser.role ? ` · ${roleLabel(selectedUser.role)}` : ''}</small>
                         </div>
                         <button type="button" className="btn btn-sm btn-outline-secondary"
                           onClick={() => { setSelectedUser(null); setManualSearch(''); setManualResults([]); }}>
@@ -560,7 +673,7 @@ export default function AttendanceManagement() {
                                 className="d-block w-100 text-start btn btn-sm border-bottom rounded-0"
                                 onClick={() => { setSelectedUser(u); setManualSearch(''); setManualResults([]); }}>
                                 <div className="fw-semibold">{u.name} <small className="text-muted">#{u.id}</small></div>
-                                <small className="text-muted">{u.email}{u.phone ? ` · ${u.phone}` : ''}{u.role ? ` · ${u.role}` : ''}</small>
+                                <small className="text-muted">{u.email}{u.phone ? ` · ${u.phone}` : ''}{u.role ? ` · ${roleLabel(u.role)}` : ''}</small>
                               </button>
                             ))}
                           </div>
@@ -632,8 +745,12 @@ export default function AttendanceManagement() {
                             IPs: {loc.allowed_ips!.join(', ')}
                           </div>
                         )}
-                        <div className="d-flex gap-2 mt-3">
+                        <div className="d-flex gap-2 mt-3 flex-wrap">
                           <button className="btn btn-sm btn-outline-primary" onClick={() => openEditLoc(loc)}>Edit</button>
+                          <button className={`btn btn-sm ${loc.is_active ? 'btn-outline-warning' : 'btn-outline-success'}`}
+                            onClick={() => toggleLocActive(loc)}>
+                            {loc.is_active ? 'Deactivate' : 'Activate'}
+                          </button>
                           <button className="btn btn-sm btn-outline-danger" onClick={() => deleteLoc(loc.id)}>Delete</button>
                         </div>
                       </div>
@@ -652,7 +769,10 @@ export default function AttendanceManagement() {
                   <strong>{new Date().getFullYear()}</strong>
                   <small className="text-muted ms-2">{holidays.length} holiday{holidays.length === 1 ? '' : 's'} configured</small>
                 </div>
-                <button className="btn btn-primary" onClick={openCreateHol}>+ Add Holiday</button>
+                <div className="d-flex gap-2 flex-wrap">
+                  <button className="btn btn-outline-primary" onClick={openNationalModal}>📅 From National Holidays</button>
+                  <button className="btn btn-primary" onClick={openCreateHol}>+ Add Holiday</button>
+                </div>
               </div>
 
               {holidaysLoading ? (
@@ -774,6 +894,91 @@ export default function AttendanceManagement() {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── National Holidays Modal ── */}
+      {showNationalModal && (
+        <div className="modal fade show d-block" style={{ background: 'rgba(0,0,0,.5)' }}>
+          <div className="modal-dialog modal-dialog-centered modal-lg">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">National Holidays — 2026</h5>
+                <button className="btn-close" onClick={() => setShowNationalModal(false)} />
+              </div>
+              <div className="modal-body" style={{ maxHeight: 480, overflowY: 'auto' }}>
+                <p className="small text-muted mb-2">
+                  Select the holidays to add to {new Date().getFullYear()}. Lunar / Islamic dates are best-effort approximations — edit the date column before adding if your calendar differs. Holidays already configured are pre-disabled.
+                </p>
+
+                {bulkMsg && (
+                  <div className="alert alert-warning py-2 small" style={{ whiteSpace: 'pre-wrap' }}>{bulkMsg}</div>
+                )}
+
+                <table className="table table-sm align-middle">
+                  <thead className="table-light">
+                    <tr>
+                      <th style={{ width: 40 }}></th>
+                      <th style={{ width: 140 }}>Date</th>
+                      <th>Name</th>
+                      <th>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {nationalChoices.map((c, i) => (
+                      <tr key={i} className={c.alreadyExists ? 'text-muted' : ''}>
+                        <td>
+                          <input type="checkbox"
+                            checked={c.checked}
+                            disabled={c.alreadyExists}
+                            onChange={e => {
+                              const next = [...nationalChoices];
+                              next[i] = { ...next[i], checked: e.target.checked };
+                              setNationalChoices(next);
+                            }} />
+                        </td>
+                        <td>
+                          <input type="date" className="form-control form-control-sm"
+                            value={c.date}
+                            disabled={c.alreadyExists}
+                            onChange={e => {
+                              const next = [...nationalChoices];
+                              next[i] = { ...next[i], date: e.target.value };
+                              setNationalChoices(next);
+                            }} />
+                        </td>
+                        <td>
+                          {c.name}
+                          {c.alreadyExists && <span className="badge bg-success ms-2">added</span>}
+                        </td>
+                        <td className="small text-muted">{c.description}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <div className="d-flex gap-2">
+                  <button type="button" className="btn btn-sm btn-outline-secondary"
+                    onClick={() => setNationalChoices(nc => nc.map(c => c.alreadyExists ? c : ({ ...c, checked: true })))}>
+                    Select All
+                  </button>
+                  <button type="button" className="btn btn-sm btn-outline-secondary"
+                    onClick={() => setNationalChoices(nc => nc.map(c => ({ ...c, checked: false })))}>
+                    Deselect All
+                  </button>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={() => setShowNationalModal(false)}>Close</button>
+                <button type="button" className="btn btn-primary"
+                  onClick={bulkAddSelected}
+                  disabled={bulkAdding || nationalChoices.filter(c => c.checked && !c.alreadyExists).length === 0}>
+                  {bulkAdding
+                    ? 'Adding…'
+                    : `Add ${nationalChoices.filter(c => c.checked && !c.alreadyExists).length} Holiday${nationalChoices.filter(c => c.checked && !c.alreadyExists).length === 1 ? '' : 's'}`}
+                </button>
+              </div>
             </div>
           </div>
         </div>
