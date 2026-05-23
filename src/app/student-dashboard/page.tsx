@@ -4,16 +4,36 @@ import Link from 'next/link';
 import RoleGuard from '@/components/RoleGuard';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import api from '@/lib/axios';
 
 export default function StudentDashboard() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
+
+  // Real ticket counters (was previously hardcoded to 0 on the dashboard).
+  const [openTickets,    setOpenTickets]    = useState(0);
+  const [activeTickets,  setActiveTickets]  = useState(0);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setLoading(false);
     }, 800);
     return () => clearTimeout(timer);
+  }, []);
+
+  // Fetch the student's own tickets in the background and count by status.
+  // Failures fall back to the previous hardcoded zero — non-blocking.
+  useEffect(() => {
+    api.get('/student/myTickets')
+      .then(res => {
+        const list: Array<{ status?: string }> = res.data?.data ?? [];
+        setOpenTickets(list.filter(t => t.status === 'open').length);
+        setActiveTickets(list.filter(t =>
+          t.status === 'open' || t.status === 'assigned' ||
+          t.status === 'in_progress' || t.status === 'resolved'
+        ).length);
+      })
+      .catch(() => { /* leave at 0 */ });
   }, []);
 
   if (loading) {
@@ -274,8 +294,8 @@ export default function StudentDashboard() {
               <div className="sd-stat-accent" style={{ background: '#7c3aed' }} />
               <div className="sd-stat-icon" style={{ background: '#f5f3ff' }}>🎫</div>
               <div className="sd-stat-label">Open Tickets</div>
-              <div className="sd-stat-value" style={{ color: '#7c3aed' }}>0</div>
-              <div className="sd-stat-sub">Support requests</div>
+              <div className="sd-stat-value" style={{ color: '#7c3aed' }}>{openTickets}</div>
+              <div className="sd-stat-sub">{activeTickets > openTickets ? `${activeTickets} active total` : 'Support requests'}</div>
             </div>
           </div>
 

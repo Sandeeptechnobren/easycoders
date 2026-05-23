@@ -2,6 +2,7 @@
 import LoginModal from "@/components/LoginModal";
 import SearchBox from "@/components/SearchBox";
 import { useAuth } from "@/context/AuthContext";
+import { useHasPermission } from "@/lib/permissions";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -60,11 +61,17 @@ export default function Navbar() {
     { name: "Logout", onClick: handleLogout },
   ];
 
+  // Show the Tickets entry in the trainer nav only if the trainer has been
+  // granted ticket access (manage_queries or respond_queries) by an admin —
+  // either whole-role via Spatie or per-user via UserPermissionOverride.
+  const canAccessTickets = useHasPermission(['manage_queries', 'respond_queries']);
+
   const trainerLinks: NavLink[] = [
     { name: "Home", href: "/trainer" },
     { name: "Tasks", href: "/trainer/tasks" },
     { name: "Syllabus", href: "/trainer/syllabus" },
     { name: "Attendance", href: "/trainer/attendance" },
+    ...(canAccessTickets ? [{ name: "Tickets", href: "/trainer/tickets" }] : []),
     { name: "Logout", onClick: handleLogout },
   ];
 
@@ -84,7 +91,7 @@ export default function Navbar() {
     { name: "Assessments", href: "/admin/assessments" },
     { name: "Permissions", href: "/admin/permissions" },
     { name: "Attendance", href: "/admin/attendance" },
-    { name: "Tickets", href: "/hr/tickets" },
+    { name: "Tickets", href: "/admin/tickets" },
     { name: "Students", href: "/admin/studentManagement" },
     { name: "Logout", onClick: handleLogout },
   ];
