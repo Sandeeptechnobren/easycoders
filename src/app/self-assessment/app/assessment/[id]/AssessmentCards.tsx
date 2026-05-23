@@ -211,18 +211,41 @@ export default function AssessmentCards() {
 
     {isCompleted && (
       <button
-        onClick={() => handleDownload(item.id)}
+        onClick={() => {
+          if (downloadError) {
+            // Cert download failed (most commonly score below threshold).
+            // Clear the inline error and take the user back into the
+            // assessment so they can re-attempt and earn the cert.
+            setDownloadErrors(prev => {
+              const next = { ...prev };
+              delete next[item.id];
+              return next;
+            });
+            router.push(`/self-assessment/app/assessment/${item.id}`);
+          } else {
+            handleDownload(item.id);
+          }
+        }}
         disabled={downloadingId === item.id}
         className="startBtn"
         style={{
           flex: 1,
-          background: downloadError ? '#94a3b8' : '#22c55e',
+          /* Indigo when in "retake" state so it visually matches the
+             primary action style of the Start button — green for the
+             happy "download certificate" path. */
+          background: downloadError
+            ? 'linear-gradient(135deg,#4f46e5,#7c3aed)'
+            : '#22c55e',
           color: '#fff',
           cursor: downloadingId === item.id ? 'wait' : 'pointer',
         }}
         aria-describedby={downloadError ? `cert-err-${item.id}` : undefined}
       >
-        {downloadingId === item.id ? 'Preparing…' : (downloadError ? 'Retry' : 'Certificate')}
+        {downloadingId === item.id
+          ? 'Preparing…'
+          : downloadError
+          ? 'Retake assessment →'
+          : 'Certificate'}
       </button>
     )}
   </div>
