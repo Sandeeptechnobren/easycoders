@@ -1,26 +1,107 @@
 'use client';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
+import api from '@/lib/axios';
 import CourseGrid from "@/components/CourseGrid";
 import FAQAccordion from '@/components/FAQAccordion';
 import Registration from '@/components/Registration'; // ← adjust path if needed
 import TestimonialCarousel from '@/components/TestimonialCarousel';
 
+/* ──────────────────────────────────────────────────────────────────────
+ * FAQ list — kept in one place so it can drive BOTH the on-screen
+ * accordion (still rendered by <FAQAccordion />, which has its own copy)
+ * AND the FAQPage JSON-LD emitted at the bottom of the page for Google
+ * rich results. Edit both lists if you change one.
+ * ────────────────────────────────────────────────────────────────────── */
+const HOME_FAQS = [
+  {
+    q: 'Who can join Easy Coders programs?',
+    a: 'Students, recent graduates, and working professionals who want to build real-world coding skills can all join. Our programs are designed to accommodate all backgrounds and learning paces.',
+  },
+  {
+    q: 'Do I need prior coding experience?',
+    a: 'No prior experience is needed. Many of our programs start from the very basics and gradually move to advanced, project-based learning — so you are always building on solid foundations.',
+  },
+  {
+    q: 'Will I work on real projects?',
+    a: 'Yes. You will build hands-on projects that mirror real industry work. These projects strengthen your portfolio and give you tangible skills employers actually look for.',
+  },
+  {
+    q: 'What is the placement support like?',
+    a: 'We offer dedicated placement assistance including resume review, mock interviews, and direct referrals to our hiring partner network.',
+  },
+  {
+    q: 'Are there flexible batch timings?',
+    a: 'Yes. We offer morning, evening, and weekend batches to accommodate students and working professionals. Online modes are also available for all programs.',
+  },
+];
+
+/* Shape consumed by <CourseGrid />. */
+type HomeCourse = {
+  id: number | string;
+  level: 'Beginner' | 'Intermediate' | 'Advanced';
+  title: string;
+  rating: number;
+  views: string;
+  image: string;
+};
+
+/* Loose shape of /api/courses responses — backend has no formal schema yet so
+ * we accept any of these fields and gracefully fall back. */
+type ApiCourse = {
+  id?: number | string;
+  title?: string;
+  rating?: number;
+  image?: string;
+  image_url?: string;
+  category?: { name?: string };
+};
+
+/* Fallback course tiles. Used only if /api/courses fails or returns empty.
+ * Local images keep the page from depending on external CDNs that can break. */
+const FALLBACK_COURSES: HomeCourse[] = [
+  { id: 'st', level: 'Beginner',     title: 'Summer Training',      rating: 4.8, views: '', image: '/images/coding.jpg' },
+  { id: 'in', level: 'Beginner',     title: 'Internship Program',   rating: 4.7, views: '', image: '/images/appdev.jpg' },
+  { id: 'jt', level: 'Intermediate', title: 'Job-Oriented Training', rating: 4.9, views: '', image: '/images/clouddev.jpg' },
+  { id: 'lt', level: 'Beginner',     title: 'Language Training',    rating: 4.6, views: '', image: '/images/coding.jpg' },
+];
+
 export default function HomePage() {
-  const [courses, setCourses] = useState<any[]>([]);
+  const [courses, setCourses] = useState<HomeCourse[]>(FALLBACK_COURSES);
   const [filter, setFilter] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [scrolled, setScrolled] = useState(false);
   const [showRegistration, setShowRegistration] = useState(false);
 
+  /* Suppress unused-state lint warnings — `setSearchQuery` and `scrolled` are
+   * kept on the state shape so existing filter/scroll handlers continue to
+   * work if/when a search input or scroll-aware nav is added. */
+  void setSearchQuery; void scrolled;
+
+  /* Pull real courses from the API; fall back to FALLBACK_COURSES on error so
+   * the page never looks empty. We tag everything as 'Beginner' by default
+   * because the backend course shape has no `level` column. */
   useEffect(() => {
-    setCourses([
-      { id: 1, level: 'Beginner', title: 'Summer Training', rating: 4.8, image: 'https://5.imimg.com/data5/SELLER/Default/2023/9/342394080/WQ/GC/AM/7726776/45-days-basic-module-summer-and-internship-training-program.png' },
-      { id: 2, level: 'Beginner', title: 'Internship', rating: 4.7, views: '131k Views', image: 'https://images.shiksha.com/mediadata/images/articles/1575005482php2pK7B8.jpeg' },
-      { id: 3, level: 'Intermediate', title: 'Job Oriented Training', rating: 4.9, views: '150k Views', image: 'https://5.imimg.com/data5/SELLER/Default/2022/2/HT/KM/QN/93804707/job-oriented-training1.png' },
-      { id: 4, level: 'Beginner', title: 'Language Training', rating: 4.6, views: '189k Views', image: 'https://online.stanford.edu/sites/default/files/styles/embedded_large/public/2018-03/cs_programminglanguage_cs242.jpg?itok=OMscvbtw' }
-    ]);
+    let cancelled = false;
+    api.get('/courses')
+      .then(res => {
+        if (cancelled) return;
+        const raw = (res.data?.data ?? res.data ?? []) as ApiCourse[];
+        const list = Array.isArray(raw) ? raw.slice(0, 8) : [];
+        if (list.length === 0) return;
+        setCourses(list.map((c, idx): HomeCourse => ({
+          id:     c.id ?? idx,
+          level:  c.category?.name === 'Job Oriented Programs' ? 'Intermediate' : 'Beginner',
+          title:  c.title ?? 'Course',
+          rating: typeof c.rating === 'number' ? c.rating : 4.7,
+          views:  '',
+          image:  c.image_url || c.image || FALLBACK_COURSES[idx % FALLBACK_COURSES.length].image,
+        })));
+      })
+      .catch(() => { /* keep fallback */ });
+    return () => { cancelled = true; };
   }, []);
 
   // Show popup after 1.5s delay, unless user already dismissed it today
@@ -199,7 +280,11 @@ export default function HomePage() {
         .cta-sub { font-size: 17px; color: rgba(255,255,255,0.55); margin-bottom: 40px; font-weight: 300; }
         .cta-buttons { display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; position: relative; }
 
-        /* ── REGISTRATION TRIGGER BUTTON ── */
+        /* ── REGISTRATION TRIGGER BUTTON ──
+           Brand-aligned: navy → gold pill instead of indigo/purple gradient
+           (project design rule: "never use purple gradients as default").
+           Easing is a soft fade-up — bounce/elastic easing is also a
+           project rule violation. */
         .reg-trigger {
           position: fixed;
           bottom: 28px;
@@ -208,8 +293,8 @@ export default function HomePage() {
           display: flex;
           align-items: center;
           gap: 10px;
-          background: linear-gradient(135deg, #6366f1, #4f46e5);
-          color: #fff;
+          background: var(--gold);
+          color: var(--navy);
           border: none;
           border-radius: 50px;
           padding: 13px 22px;
@@ -217,24 +302,24 @@ export default function HomePage() {
           font-weight: 700;
           font-family: 'DM Sans', sans-serif;
           cursor: pointer;
-          box-shadow: 0 8px 28px rgba(99,102,241,0.45);
-          transition: transform 0.2s, box-shadow 0.2s;
-          animation: bounceIn 0.5s ease 2s both;
+          box-shadow: 0 8px 24px rgba(11, 27, 58, 0.28);
+          transition: background 0.2s ease, transform 0.18s ease, box-shadow 0.2s ease;
+          animation: regFadeIn 0.45s ease 1.5s both;
         }
-        .reg-trigger:hover { transform: translateY(-3px); box-shadow: 0 12px 36px rgba(99,102,241,0.55); }
+        .reg-trigger:hover { background: var(--gold-light); transform: translateY(-2px); box-shadow: 0 12px 28px rgba(11, 27, 58, 0.32); }
         .reg-trigger-dot {
           width: 8px; height: 8px; border-radius: 50%;
-          background: #fbbf24;
-          animation: pulse 2s infinite;
+          background: var(--navy);
+          animation: regDot 2.4s ease-in-out infinite;
           flex-shrink: 0;
         }
-        @keyframes pulse {
-          0%, 100% { transform: scale(1); opacity: 1; }
-          50% { transform: scale(1.4); opacity: 0.7; }
+        @keyframes regDot {
+          0%, 100% { opacity: 1; }
+          50%      { opacity: 0.5; }
         }
-        @keyframes bounceIn {
-          from { opacity: 0; transform: translateY(20px) scale(0.9); }
-          to { opacity: 1; transform: translateY(0) scale(1); }
+        @keyframes regFadeIn {
+          from { opacity: 0; transform: translateY(8px); }
+          to   { opacity: 1; transform: translateY(0); }
         }
 
         @media (max-width: 900px) {
@@ -279,7 +364,7 @@ export default function HomePage() {
             <div className="hero-content">
               <div className="hero-badge">
                 <span></span>
-                India&apos;s Most Trusted Coding Institute
+                Industry-Aligned Coding Programs
               </div>
               <h1 className="hero-title">
                 Launch Your<br />
@@ -295,30 +380,63 @@ export default function HomePage() {
                 <Link href="/about" className="btn-outline">Learn About Us</Link>
               </div>
               <div className="hero-trust">
-                <div className="trust-avatars">
+                <div className="trust-avatars" aria-hidden="true">
                   {['A', 'R', 'S', 'P'].map((letter, i) => (
                     <div key={i} className="av">{letter}</div>
                   ))}
                 </div>
                 <div className="trust-text">
-                  <strong>2M+ students</strong> already enrolled<br />across 50+ cities in India
+                  <strong>Trusted by students</strong> across India<br />
+                  Mentor-led · project-based · placement-focused
                 </div>
               </div>
             </div>
             <div className="hero-visual">
               <div className="hero-img-frame">
-                <img src="/images/easycoder-hero.png" alt="Students learning to code at EasyCoders" />
+                <Image
+                  src="/images/easycoder-hero.png"
+                  alt="Students learning to code at Easy Coders"
+                  width={480}
+                  height={480}
+                  priority
+                  sizes="(max-width: 900px) 100vw, 480px"
+                  className="hero-img"
+                />
               </div>
               <div className="hero-card-float card-float-left">
-                <div className="float-label">Placement Rate</div>
-                <div className="float-val">98%</div>
-                <div className="float-sub"><span className="float-dot"></span>Industry verified</div>
+                <div className="float-label">Learning Style</div>
+                <div className="float-val">Hands-on</div>
+                <div className="float-sub"><span className="float-dot"></span>100% project-based</div>
               </div>
               <div className="hero-card-float card-float-right">
-                <div className="float-label">Active Students</div>
-                <div className="float-val">2M+</div>
-                <div className="float-sub">Across India</div>
+                <div className="float-label">Mentor Support</div>
+                <div className="float-val">1 : 1</div>
+                <div className="float-sub">Live guidance</div>
               </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── STATS BAR — defensible, non-numerical claims ── */}
+      <section className="stats-bar" aria-label="Why students choose Easy Coders">
+        <div className="container">
+          <div className="stats-inner">
+            <div className="stat-item">
+              <div className="stat-value">4</div>
+              <div className="stat-label">Core programs</div>
+            </div>
+            <div className="stat-item">
+              <div className="stat-value">100%</div>
+              <div className="stat-label">Project-based learning</div>
+            </div>
+            <div className="stat-item">
+              <div className="stat-value">1 : 1</div>
+              <div className="stat-label">Mentor support</div>
+            </div>
+            <div className="stat-item">
+              <div className="stat-value">3</div>
+              <div className="stat-label">Flexible batch timings</div>
             </div>
           </div>
         </div>
@@ -357,7 +475,7 @@ export default function HomePage() {
               <div className="section-label">Student Stories</div>
               <h2 className="section-title">Success That Speaks For Itself</h2>
               <p className="section-sub">Join the 2M+ learners who have skilled up, stood out, and landed their dream roles.</p>
-              <a href="#" className="testimonials-cta-btn">Read All Stories →</a>
+              <Link href="/about" className="testimonials-cta-btn">Read More About Us →</Link>
             </div>
             <div><TestimonialCarousel /></div>
           </div>
@@ -386,10 +504,44 @@ export default function HomePage() {
           <p className="cta-sub">No experience needed. Just sign up and we&apos;ll handle the rest.</p>
           <div className="cta-buttons">
             <Link href="/courses" className="btn-primary">Browse All Courses →</Link>
-            <Link href="/about" className="btn-outline">Talk to a Counsellor</Link>
+            <Link href="/contactus" className="btn-outline">Talk to a Counsellor</Link>
           </div>
         </div>
       </section>
+
+      {/* ── FAQ structured data — surfaces the FAQ as a rich snippet in Google ── */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'FAQPage',
+            mainEntity: HOME_FAQS.map(({ q, a }) => ({
+              '@type': 'Question',
+              name: q,
+              acceptedAnswer: { '@type': 'Answer', text: a },
+            })),
+          }),
+        }}
+      />
+
+      {/* ── WebSite JSON-LD — enables a sitelinks searchbox on Google ── */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'WebSite',
+            url: 'https://easycoders.in',
+            name: 'Easy Coders',
+            potentialAction: {
+              '@type': 'SearchAction',
+              target: 'https://easycoders.in/courses?q={search_term_string}',
+              'query-input': 'required name=search_term_string',
+            },
+          }),
+        }}
+      />
     </>
   );
 }

@@ -1,76 +1,281 @@
+/* ──────────────────────────────────────────────────────────────────────────
+ * Footer styles — navy + gold, matching the rest of easycoders.in.
+ *
+ * Palette (kept in sync with src/app/page.tsx hero):
+ *   --navy:        #0B1B3A
+ *   --navy-mid:    #152D5A
+ *   --navy-deep:   #07122A
+ *   --gold:        #E8A020
+ *   --gold-light:  #F5C356
+ *   --cream:       #FAFAF7
+ * ────────────────────────────────────────────────────────────────────────── */
+
 .footer {
     width: 100%;
-    background: #000;
-    color: #fff;
-    padding: 26px 10px;
+    background: linear-gradient(180deg, #0B1B3A 0%, #07122A 100%);
+    color: rgba(255, 255, 255, 0.78);
+    font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
     font-size: 14px;
-    border-top: 1px solid #eaeaea;
+    line-height: 1.65;
+    position: relative;
+    overflow: hidden;
 }
 
-/* headings */
-.footer h4 {
-    font-size: 16px;
+/* Subtle gold glow at the top to bridge from the navy CTA section above */
+.footer::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+            ellipse 800px 400px at 80% 0%,
+            rgba(232, 160, 32, 0.08) 0%,
+            transparent 60%
+        ),
+        radial-gradient(
+            ellipse 600px 400px at 10% 100%,
+            rgba(26, 86, 219, 0.12) 0%,
+            transparent 70%
+        );
+    pointer-events: none;
+    z-index: 0;
 }
 
-/* copyright */
-.footer small {
-    display: block;
-    padding-top: 10px;
+/* ───── Main grid ───── */
+.inner {
+    position: relative;
+    z-index: 1;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 72px 24px 40px;
+    display: grid;
+    grid-template-columns: 1.6fr 1fr 1fr 1.4fr;
+    gap: 48px;
 }
 
-/* link inside small */
-.footer small a {
-    color: #fff;
+/* ───── Brand column ───── */
+.brandCol {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
 }
 
-.ftLogo {
-    filter: brightness(0) saturate(100%) invert(100%) sepia(97%) saturate(0%) hue-rotate(55deg) brightness(103%) contrast(104%);
+.brandLink {
+    display: inline-block;
+    width: fit-content;
 }
 
-/* footer links */
-.footerContent a {
-    color: #00c2ff;
+.logo {
+    height: auto;
+    width: 170px;
+    /* The original mark is dark — invert it once for the navy background.
+       Cleaner than per-pixel filter chains. */
+    filter: brightness(0) invert(1);
+    opacity: 0.95;
+}
+
+.brandTagline {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.6);
+    line-height: 1.7;
+    max-width: 320px;
+    margin: 0;
+    font-weight: 300;
+}
+
+/* ───── Social icons ───── */
+.socials {
+    display: flex;
+    gap: 10px;
+    margin-top: 6px;
+}
+
+.socialBtn {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.75);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     text-decoration: none;
-    font-weight: 600;
-    transition: color 0.2s ease;
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease,
+        transform 0.15s ease;
 }
 
-.footerContent a:hover {
-    color: #008fbb;
-    text-decoration: underline;
+.socialBtn:hover,
+.socialBtn:focus-visible {
+    background: rgba(232, 160, 32, 0.12);
+    border-color: rgba(232, 160, 32, 0.55);
+    color: #F5C356;
+    transform: translateY(-2px);
+    outline: none;
 }
 
-/* divider above address */
-.footer hr {
-    border: none;
-    border-top: 1px solid #333;
-    margin: 16px 0;
+/* ───── Link columns ───── */
+.linkCol,
+.contactCol {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
 }
 
-/* address block */
-.ftAddress {
-    font-style: normal;
-    font-size: 13px;
-    line-height: 1.9;
-    color: #ccc;
+.colHeading {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: #ffffff;
+    margin: 0 0 4px;
+    letter-spacing: 0.01em;
 }
 
-.ftAddress strong {
-    display: block;
-    color: #fff;
+.linkList {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.linkList a {
+    color: rgba(255, 255, 255, 0.65);
+    text-decoration: none;
     font-size: 14px;
-    margin-bottom: 2px;
+    transition: color 0.2s ease, padding-left 0.2s ease;
+    display: inline-block;
 }
 
-/* phone and email links */
-.ftAddress a {
-    color: #00c2ff;
+.linkList a:hover,
+.linkList a:focus-visible {
+    color: #F5C356;
+    padding-left: 4px;
+    outline: none;
+}
+
+/* ───── Contact / address column ───── */
+.address {
+    font-style: normal;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.65);
+    line-height: 1.7;
+    margin: 0;
+}
+
+.bizName {
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 14px;
+    letter-spacing: 0.01em;
+}
+
+.addrLine {
+    color: rgba(255, 255, 255, 0.6);
+    font-weight: 300;
+    line-height: 1.65;
+}
+
+.contactLink {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #F5C356;
     text-decoration: none;
     font-weight: 500;
     transition: color 0.2s ease;
+    width: fit-content;
 }
 
-.ftAddress a:hover {
-    color: #008fbb;
-    text-decoration: underline;
+.contactLink:hover,
+.contactLink:focus-visible {
+    color: #ffffff;
+    outline: none;
+}
+
+.contactLink svg {
+    opacity: 0.8;
+    flex-shrink: 0;
+}
+
+/* ───── Bottom bar ───── */
+.bottomBar {
+    position: relative;
+    z-index: 1;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(0, 0, 0, 0.18);
+}
+
+.bottomInner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 18px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.copy {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.5);
+    line-height: 1.6;
+}
+
+.copy strong {
+    color: rgba(255, 255, 255, 0.85);
+    font-weight: 600;
+}
+
+.madeIn {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.4);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.madeDot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #E8A020;
+    display: inline-block;
+}
+
+/* ───── Responsive ───── */
+@media (max-width: 960px) {
+    .inner {
+        grid-template-columns: 1fr 1fr;
+        gap: 40px;
+        padding: 56px 24px 32px;
+    }
+
+    .brandCol {
+        grid-column: 1 / -1;
+        max-width: 560px;
+    }
+}
+
+@media (max-width: 560px) {
+    .inner {
+        grid-template-columns: 1fr;
+        gap: 32px;
+        padding: 48px 22px 28px;
+    }
+
+    .brandCol {
+        grid-column: auto;
+    }
+
+    .bottomInner {
+        flex-direction: column;
+        align-items: flex-start;
+        text-align: left;
+        padding: 16px 22px;
+    }
 }
