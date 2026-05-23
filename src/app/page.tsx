@@ -287,8 +287,11 @@ export default function HomePage() {
            project rule violation. */
         .reg-trigger {
           position: fixed;
-          bottom: 28px;
-          right: 28px;
+          /* Sits above the SelfAssessmentBubble (52px tall at bottom: 20px)
+             so both are visible on the home page instead of the bubble
+             covering this button. */
+          bottom: 88px;
+          right: 20px;
           z-index: 888;
           display: flex;
           align-items: center;
@@ -334,7 +337,8 @@ export default function HomePage() {
         @media (max-width: 560px) {
           .stats-inner { grid-template-columns: 1fr 1fr; }
           .hero { padding: 80px 0 60px; }
-          .reg-trigger { bottom: 16px; right: 16px; padding: 11px 18px; font-size: 13px; }
+          /* Mobile: bubble is 48px tall, so stack at bottom: 80px (16 + 48 + 16 gap). */
+          .reg-trigger { bottom: 80px; right: 16px; padding: 11px 18px; font-size: 13px; }
         }
       `}</style>
 
