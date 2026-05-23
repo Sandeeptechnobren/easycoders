@@ -83,10 +83,11 @@ export default function TicketManagement() {
   const [assignMsg, setAssignMsg]       = useState('');
 
   // Respond
-  const [replyText, setReplyText]   = useState('');
+  const [replyText, setReplyText]     = useState('');
   const [closeTicket, setCloseTicket] = useState(false);
-  const [replying, setReplying]     = useState(false);
-  const [replyMsg, setReplyMsg]     = useState('');
+  const [markResolved, setMarkResolved] = useState(false);
+  const [replying, setReplying]       = useState(false);
+  const [replyMsg, setReplyMsg]       = useState('');
 
   // ── Load ticket list ─────────────────────────────────────────────────────
   const load = useCallback(async () => {
@@ -135,7 +136,7 @@ export default function TicketManagement() {
     } catch {
       setSelected(t);
     }
-    setReplyText(''); setCloseTicket(false); setReplyMsg(''); setAssignMsg('');
+    setReplyText(''); setCloseTicket(false); setMarkResolved(false); setReplyMsg(''); setAssignMsg('');
     setAssignUserId(String(t.assignedTo?.id || ''));
     setShowDetail(true);
   };
@@ -164,9 +165,13 @@ export default function TicketManagement() {
     try {
       await fetchWithAuth(`${BASE}/tickets/${selected.id}/respond`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: replyText, close_ticket: closeTicket }),
+        body: JSON.stringify({
+          message: replyText,
+          close_ticket:   closeTicket,
+          mark_resolved:  markResolved,
+        }),
       });
-      setReplyText(''); setCloseTicket(false);
+      setReplyText(''); setCloseTicket(false); setMarkResolved(false);
       setReplyMsg('Response sent.');
       const res = await fetchWithAuth(`${BASE}/tickets/${selected.id}`);
       setSelected(res.data || selected);
@@ -342,11 +347,24 @@ export default function TicketManagement() {
                         {replyMsg && <div className={`alert py-2 ${replyMsg.includes('sent') ? 'alert-success' : 'alert-danger'}`}>{replyMsg}</div>}
                         <textarea className="form-control mb-2" rows={3} placeholder="Write a response..."
                           value={replyText} onChange={e => setReplyText(e.target.value)} required />
-                        <div className="d-flex justify-content-between align-items-center">
-                          <div className="form-check">
-                            <input type="checkbox" className="form-check-input" id="close-ticket"
-                              checked={closeTicket} onChange={e => setCloseTicket(e.target.checked)} />
-                            <label className="form-check-label" htmlFor="close-ticket">Close ticket after response</label>
+                        <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                          <div className="d-flex gap-3 flex-wrap">
+                            <div className="form-check">
+                              <input type="checkbox" className="form-check-input" id="mark-resolved"
+                                checked={markResolved}
+                                onChange={e => { setMarkResolved(e.target.checked); if (e.target.checked) setCloseTicket(false); }} />
+                              <label className="form-check-label" htmlFor="mark-resolved" title="Status → Resolved. Student confirms or reopens.">
+                                Mark as Resolved
+                              </label>
+                            </div>
+                            <div className="form-check">
+                              <input type="checkbox" className="form-check-input" id="close-ticket"
+                                checked={closeTicket}
+                                onChange={e => { setCloseTicket(e.target.checked); if (e.target.checked) setMarkResolved(false); }} />
+                              <label className="form-check-label" htmlFor="close-ticket" title="Status → Closed immediately. Skip student-confirm step.">
+                                Close ticket after response
+                              </label>
+                            </div>
                           </div>
                           <button type="submit" className="btn btn-primary btn-sm" disabled={replying}>
                             {replying ? 'Sending...' : 'Send Response'}
