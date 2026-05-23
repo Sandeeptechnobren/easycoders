@@ -8,7 +8,15 @@ const BASE = 'https://api.easycoders.in/projects/backend/public/api';
 
 type Permission = { id: number; name: string };
 type Role = { name: string; permissions: Permission[] };
-type UserSummary = { id: number; name: string; email: string; role: string; grant_count: number; revoke_count: number };
+type UserSummary = {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+  override_count?: number;
+  grants?: string[];
+  revokes?: string[];
+};
 type OverrideEntry = {
   permission: string;
   source: 'role' | 'override_grant' | 'override_revoke';
@@ -271,8 +279,8 @@ export default function PermissionsPage() {
                             <small className={selectedUserId === u.id ? 'text-white-50' : 'text-muted'}>{u.email}</small>
                           </div>
                           <div className="text-end">
-                            <span className="badge bg-success me-1">{u.grant_count} +</span>
-                            <span className="badge bg-danger">{u.revoke_count} -</span>
+                            <span className="badge bg-success me-1">{u.grants?.length ?? 0} +</span>
+                            <span className="badge bg-danger">{u.revokes?.length ?? 0} -</span>
                           </div>
                         </div>
                         <small className={`badge ${selectedUserId === u.id ? 'bg-light text-dark' : 'bg-secondary'} mt-1`}>
