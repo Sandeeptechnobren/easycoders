@@ -183,12 +183,12 @@ export default function TicketManagement() {
   const resolvedCount   = tickets.filter(t => t.status === 'resolved').length;
 
   return (
-    <PermissionGuard requires="manage_queries" fallback={
+    <PermissionGuard requires={['manage_queries', 'respond_queries']} fallback={
       <div className="container py-5 text-center">
         <h4 className="text-muted">No access to tickets</h4>
         <p className="text-muted small">
-          You don't have the <code>manage_queries</code> permission. Ask an admin to grant it
-          from the Permissions page.
+          You need either <code>manage_queries</code> or <code>respond_queries</code> to
+          access this page. Ask an admin to grant it from the Permissions page.
         </p>
       </div>
     }>

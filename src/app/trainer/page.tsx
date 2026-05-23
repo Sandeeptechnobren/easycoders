@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo } from 'react';
 import RoleGuard from '@/components/RoleGuard';
 import Link from 'next/link';
 import { fetchWithAuth } from '@/lib/api';
+import { useHasPermission } from '@/lib/permissions';
 import styles from './trainer-home.module.css';
 
 const BASE = 'https://api.easycoders.in/projects/backend/public/api';
@@ -32,6 +33,10 @@ export default function TrainerDashboard() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [userData, setUserData] = useState<any>(null);
+
+  // Show the Tickets shortcut only if this trainer has been granted ticket
+  // access by an admin (manage_queries or respond_queries).
+  const canAccessTickets = useHasPermission(['manage_queries', 'respond_queries']);
 
   const greeting = useMemo(() => {
     const h = new Date().getHours();
@@ -87,6 +92,9 @@ export default function TrainerDashboard() {
             <Link href="/trainer/tasks" className={`${styles.btn} ${styles.primary}`}>My Tasks</Link>
             <Link href="/trainer/syllabus" className={styles.btn}>Syllabus</Link>
             <Link href="/trainer/attendance" className={styles.btn}>Attendance</Link>
+            {canAccessTickets && (
+              <Link href="/trainer/tickets" className={styles.btn}>Tickets</Link>
+            )}
           </div>
         </header>
 
