@@ -116,7 +116,7 @@ export default function AdminHomePage() {
     { href: '/admin/batches',          icon: '🏫', title: 'Batches',              sub: 'Manage training batches & trainers' },
     { href: '/admin/assessments',      icon: '📋', title: 'Assessments',          sub: 'Create/manage self-assessment tests' },
     { href: '/admin/permissions',      icon: '🔐', title: 'Permissions',          sub: 'Role defaults & per-user overrides' },
-    { href: '/hr/attendance',          icon: '📍', title: 'Attendance',           sub: 'Records, manual mark, locations' },
+    { href: '/admin/attendance',       icon: '📍', title: 'Attendance',           sub: 'Records, manual mark, locations' },
     { href: '/hr/tickets',             icon: '🎫', title: 'Tickets',              sub: 'Assign & resolve student queries' },
     { href: '/admin/studentManagement',icon: '👥', title: 'Student Management',   sub: 'Profiles, fees & marks' },
     { href: '/admin/enrollmentRequests',icon: '📝',title: 'Enrollment Requests',  sub: 'Legacy — convert to student accounts' },

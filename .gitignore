@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# ── Claude Code configuration (local-only — never push to git) ──────────
+CLAUDE.md
+**/CLAUDE.md
+.claude/
+.claudeignore
