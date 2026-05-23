@@ -211,7 +211,10 @@ export default function AttendanceManagement() {
       (async () => {
         setManualSearching(true);
         try {
-          const res = await fetchWithAuth(`${BASE}/commanAPIs/users?search=${encodeURIComponent(manualSearch)}&limit=10`);
+          // Pinned to role=student — manual attendance marking is a
+          // student-scoped flow (the backend default-to-students fallback
+          // was removed in the UserSearchService fix).
+          const res = await fetchWithAuth(`${BASE}/commanAPIs/users?role=student&search=${encodeURIComponent(manualSearch)}&limit=10`);
           setManualResults(res.data || []);
         } catch { setManualResults([]); } finally { setManualSearching(false); }
       })();
