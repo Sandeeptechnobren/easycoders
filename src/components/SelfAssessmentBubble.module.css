@@ -1,217 +1,294 @@
-/* SelfAssessmentBubble.module.css
+/* ──────────────────────────────────────────────────────────────────────────
+ * SelfAssessmentBubble — floating quick-access bubble at bottom-right.
+ *
+ * Palette: navy + gold, matching the home/footer/courses/about/contactus.
+ * No purple gradients, no bounce/elastic easing (both project design-rule
+ * violations in the previous version).
+ *
+ * Trigger:  52×52 navy circle with a gold ring on hover.
+ * Menu:     pills slide out to the LEFT with cream/navy text + gold accent.
+ * Mobile:   bubble shrinks to 48×48; items wrap above the trigger.
+ * ────────────────────────────────────────────────────────────────────────── */
 
-.container {
-  position: fixed;
-  right: 20px;
-  bottom: 20px; 
-  z-index: 1000;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 12px;
+.wrap {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    z-index: 1000;
+    font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
 }
 
-.menuList {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 10px;
-  margin-bottom: 4px;
-}
-
-.assessmentBubble {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 16px;
-  border-radius: 50px; 
-  background: linear-gradient(135deg, #8B5CF6, #6D28D9);
-  color: white;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  box-shadow: 0 8px 20px rgba(139, 92, 246, 0.3);
-  transition: transform 0.2s ease, opacity 0.3s ease;
-  white-space: nowrap;
-}
-
-.assessmentBubble:hover {
-  transform: scale(1.05);
-}
-
-.mainTrigger {
-  min-width: 56px;
-  height: 56px;
-  padding: 0 20px;
-  border-radius: 28px;
-  background: #610b0b;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px; 
-  font-weight: bold;
-  cursor: pointer;
-  color: white;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  white-space: nowrap;
-}
-
-.mainTrigger.active {
-  min-width: 56px;
-  width: 56px; 
-  padding: 0;
-  transform: rotate(135deg);  
-  background: #ef4444;
-}
-
-.icon {
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;  
-  background: rgba(255, 255, 255, 0.2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-}
-
-.itemEnter {
-  animation: slideIn 0.3s ease forwards;
-}
-
-@keyframes slideIn {
-  from { 
-    opacity: 0; 
-    transform: translateY(10px) translateX(0); 
-  }
-  to { 
-    opacity: 1; 
-    transform: translateY(0) translateX(0); 
-  }
-} */
- .container {
-  position: fixed;
-  right: 20px;
-  bottom: 20px;
-  z-index: 1000;
-}
-
-/* Row layout so slider appears to the LEFT of bubble */
 .row {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
 }
 
-/* LEFT SLIDER WRAPPER */
-.menuSlider {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+/* ─── Menu (hidden by default) ─── */
+.menu {
+    display: flex;
+    align-items: center;
+    gap: 8px;
 
-  /* Hidden state */
-  opacity: 0;
-  pointer-events: none;
-  transform: translateX(18px); /* start slightly near bubble */
-  transition: opacity 200ms ease, transform 260ms ease;
-  transform-origin: right center;
+    /* Hidden state */
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(12px);
+    transition:
+        opacity 0.22s ease,
+        transform 0.28s ease;
 }
 
 .menuOpen {
-  opacity: 1;
-  pointer-events: auto;
-  transform: translateX(0); /* slide out to the left */
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateX(0);
 }
 
-/* Each menu item pill */
-.menuItem {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 16px;
-  border-radius: 999px;
-  border: none;
-  color: white;
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-  white-space: nowrap;
-
-  box-shadow: 0 8px 20px rgba(139, 92, 246, 0.28);
-
-  /* item animation */
-  opacity: 0;
-  transform: translateX(14px);
-  transition: transform 260ms ease, opacity 240ms ease, filter 200ms ease;
-}
-
-/* when menu open, animate items in */
-.menuOpen .menuItem {
-  opacity: 1;
-  transform: translateX(0);
-}
-
-.menuItem:hover {
-  filter: brightness(1.05);
-  transform: translateX(0) translateY(-1px);
-}
-
-/* icon */
-.icon {
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-}
-
-.itemText {
-  letter-spacing: 0.2px;
-}
-
-/* MAIN TRIGGER */
-.mainTrigger {
-  min-width: 56px;
-  height: 56px;
-  padding: 0 20px;
-  border-radius: 28px;
-  background: #610b0b;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
-  font-weight: 800;
-  cursor: pointer;
-  color: white;
-  border: none;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-  transition: all 0.28s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  white-space: nowrap;
-}
-
-.mainTrigger:hover {
-  transform: translateY(-1px);
-}
-
-.mainTrigger.active {
-  min-width: 56px;
-  width: 56px;
-  padding: 0;
-  background: #ef4444;
-}
-
-/* Mobile: make slider wrap nicely */
-@media (max-width: 480px) {
-  .menuItem {
-    padding: 10px 12px;
+/* ─── Each pill item ─── */
+.item {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 16px;
+    border-radius: 100px;
+    border: 1px solid rgba(11, 27, 58, 0.08);
+    background: #ffffff;
+    color: #0B1B3A;
     font-size: 13px;
-  }
-  .mainTrigger {
-    height: 54px;
-  }
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    box-shadow: 0 8px 22px rgba(11, 27, 58, 0.14);
+    font-family: inherit;
+
+    /* Per-item slide-in animation */
+    opacity: 0;
+    transform: translateX(10px);
+    transition:
+        opacity 0.24s ease,
+        transform 0.28s ease,
+        background 0.18s ease,
+        color 0.18s ease,
+        border-color 0.18s ease;
+}
+
+.menuOpen .item {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.item:hover,
+.item:focus-visible {
+    background: #0B1B3A;
+    color: #ffffff;
+    border-color: #0B1B3A;
+    outline: none;
+}
+
+.item:focus-visible {
+    box-shadow:
+        0 8px 22px rgba(11, 27, 58, 0.14),
+        0 0 0 3px rgba(232, 160, 32, 0.45);
+}
+
+.itemIcon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: rgba(232, 160, 32, 0.16);
+    color: #B97A0F;
+    flex-shrink: 0;
+    transition: background 0.18s ease, color 0.18s ease;
+}
+
+.item:hover .itemIcon,
+.item:focus-visible .itemIcon {
+    background: rgba(232, 160, 32, 0.28);
+    color: #F5C356;
+}
+
+.itemLabel {
+    letter-spacing: 0.01em;
+}
+
+/* ─── Main trigger (collapsed: 52×52 circle) ─── */
+.trigger {
+    position: relative;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #0B1B3A 0%, #152D5A 100%);
+    color: #F5C356;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow:
+        0 10px 24px rgba(11, 27, 58, 0.28),
+        inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    /* Plain ease — no bounce/elastic (project design rule). */
+    transition:
+        transform 0.22s ease,
+        box-shadow 0.22s ease,
+        background 0.22s ease;
+    font-family: inherit;
+}
+
+.trigger::before {
+    /* Soft gold halo on hover */
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    background: radial-gradient(circle at center, rgba(232, 160, 32, 0.35) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.22s ease;
+    pointer-events: none;
+    z-index: -1;
+}
+
+.trigger:hover {
+    transform: translateY(-2px);
+    box-shadow:
+        0 14px 32px rgba(11, 27, 58, 0.34),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.trigger:hover::before {
+    opacity: 1;
+}
+
+.trigger:focus-visible {
+    outline: none;
+    box-shadow:
+        0 10px 24px rgba(11, 27, 58, 0.28),
+        inset 0 1px 0 rgba(255, 255, 255, 0.08),
+        0 0 0 3px rgba(232, 160, 32, 0.55);
+}
+
+/* Open state — slightly larger, still navy */
+.triggerOpen {
+    background: linear-gradient(135deg, #07122A 0%, #0B1B3A 100%);
+    color: #ffffff;
+}
+
+/* Cross-fade between rocket / close icons */
+.iconWrap {
+    position: absolute;
+    inset: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.18s ease, transform 0.22s ease;
+}
+
+.iconWrapHidden {
+    opacity: 0;
+    transform: scale(0.85);
+}
+
+.iconClose {
+    color: #ffffff;
+}
+
+/* ─── Tooltip (collapsed state only) ─── */
+.tooltip {
+    position: absolute;
+    right: calc(100% + 12px);
+    top: 50%;
+    transform: translateY(-50%) translateX(6px);
+    background: #0B1B3A;
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 8px;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.18s ease, transform 0.22s ease;
+    box-shadow: 0 6px 18px rgba(11, 27, 58, 0.22);
+    letter-spacing: 0.01em;
+}
+
+.tooltip::after {
+    /* Small navy arrow pointing right at the trigger */
+    content: '';
+    position: absolute;
+    left: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    border: 5px solid transparent;
+    border-left-color: #0B1B3A;
+}
+
+.trigger:hover .tooltip {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0);
+}
+
+/* Hide tooltip while open — the items themselves are the tooltip now */
+.triggerOpen .tooltip {
+    opacity: 0 !important;
+}
+
+/* ─── Reduced motion ─── */
+@media (prefers-reduced-motion: reduce) {
+    .menu,
+    .item,
+    .trigger,
+    .iconWrap,
+    .tooltip,
+    .trigger::before {
+        transition: none;
+    }
+    .trigger:hover {
+        transform: none;
+    }
+}
+
+/* ─── Mobile ─── */
+@media (max-width: 480px) {
+    .wrap {
+        right: 16px;
+        bottom: 16px;
+    }
+    .trigger {
+        width: 48px;
+        height: 48px;
+    }
+    .item {
+        font-size: 12px;
+        padding: 8px 13px;
+    }
+    .itemLabel {
+        /* On very small screens, truncate aggressively */
+        max-width: 130px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+}
+
+/* ─── Stack vertically on very narrow viewports (two pills + bubble in one
+ *     row would overflow horizontally) */
+@media (max-width: 380px) {
+    .row {
+        flex-direction: column-reverse;
+        align-items: flex-end;
+        gap: 8px;
+    }
+    .menu {
+        flex-direction: column;
+        align-items: flex-end;
+        transform: translateY(8px);
+    }
+    .menuOpen {
+        transform: translateY(0);
+    }
 }
