@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -63,6 +64,17 @@ export default function SelfAssessmentLanding() {
         :global(html), :global(body) {
           background: #ffffff;
         }
+        /* Bulletproof anchor reset for THIS landing only. The global
+           Bootstrap CSS loaded from CDN in layout.tsx applies
+           default underlined blue link styling to every a element,
+           which was bleeding through onto our brand link and the
+           "I have an account" outline button. By targeting an anchor
+           inside .sa we win specificity (0,0,1,1) over the bare
+           "a" selector (0,0,0,1) regardless of styled-jsx scoping. */
+        :global(.sa a) {
+          color: inherit;
+          text-decoration: none;
+        }
         .sa {
           font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
           color: #0B1B3A;
@@ -88,40 +100,72 @@ export default function SelfAssessmentLanding() {
           position: absolute;
           top: 0; left: 0; right: 0;
           z-index: 5;
-          padding: 18px 32px;
+          padding: 18px 28px;
           display: flex;
           align-items: center;
           justify-content: space-between;
+          gap: 16px;
           color: rgba(255,255,255,0.9);
         }
         .sa-brand {
           display: inline-flex;
           align-items: center;
-          gap: 10px;
-          text-decoration: none;
-          color: inherit;
-          font-family: 'Playfair Display', Georgia, serif;
-          font-size: 18px;
-          font-weight: 700;
-          letter-spacing: -0.01em;
+          gap: 12px;
         }
-        .sa-brand-dot {
-          width: 8px;
-          height: 8px;
-          border-radius: 50%;
-          background: var(--gold);
+        .sa-brand:focus-visible {
+          outline: 2px solid var(--gold);
+          outline-offset: 4px;
+          border-radius: 6px;
+        }
+        .sa-brand-logo {
+          height: 30px;
+          width: auto;
+          /* The logo asset is dark; invert it to white so it reads on the
+             navy hero. Same trick the footer uses. */
+          filter: brightness(0) invert(1);
+          opacity: 0.95;
+        }
+        .sa-brand-divider {
+          width: 1px;
+          height: 20px;
+          background: rgba(255,255,255,0.25);
+        }
+        .sa-brand-sub {
+          color: rgba(255,255,255,0.75);
+          font-size: 12px;
+          font-weight: 700;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
         }
         .sa-back {
-          font-size: 13px;
-          color: rgba(255,255,255,0.65);
-          text-decoration: none;
-          transition: color 0.2s ease;
           display: inline-flex;
           align-items: center;
-          gap: 6px;
+          gap: 7px;
+          padding: 8px 14px 8px 12px;
+          border-radius: 100px;
+          background: rgba(255,255,255,0.06);
+          border: 1px solid rgba(255,255,255,0.14);
+          color: rgba(255,255,255,0.82);
+          font-size: 13px;
+          font-weight: 500;
+          transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.18s ease;
         }
         .sa-back:hover {
+          background: rgba(232,160,32,0.12);
+          border-color: rgba(232,160,32,0.45);
           color: var(--gold-light);
+          transform: translateY(-1px);
+        }
+        .sa-back:focus-visible {
+          outline: 2px solid var(--gold);
+          outline-offset: 2px;
+        }
+        .sa-back svg {
+          opacity: 0.85;
+          flex-shrink: 0;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .sa-back:hover { transform: none; }
         }
 
         /* ─── Hero ─── */
@@ -723,25 +767,23 @@ export default function SelfAssessmentLanding() {
         <section className="sa-hero">
           {/* Top bar */}
           <nav className="sa-topbar" aria-label="Easy Assess header">
-            <Link href="/" className="sa-brand" aria-label="Easy Coders home">
-              <span className="sa-brand-dot" aria-hidden="true" />
-              Easy Coders
-              <span style={{
-                color: 'rgba(255,255,255,0.45)',
-                fontFamily: 'DM Sans, sans-serif',
-                fontWeight: 400,
-                fontSize: 13,
-                marginLeft: 8,
-                letterSpacing: '0.01em',
-              }}>
-                · Easy Assess
-              </span>
+            <Link href="/" className="sa-brand" aria-label="Easy Coders — back to home">
+              <Image
+                src="/images/logo.svg"
+                alt="Easy Coders"
+                width={140}
+                height={46}
+                className="sa-brand-logo"
+                priority
+              />
+              <span className="sa-brand-divider" aria-hidden="true" />
+              <span className="sa-brand-sub">Easy Assess</span>
             </Link>
             <Link href="/" className="sa-back">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <polyline points="15 18 9 12 15 6" />
               </svg>
-              easycoders.in
+              Back to easycoders.in
             </Link>
           </nav>
 
