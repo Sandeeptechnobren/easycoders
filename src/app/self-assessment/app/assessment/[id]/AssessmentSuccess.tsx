@@ -31,12 +31,13 @@ import { useRouter } from 'next/navigation';
  * ────────────────────────────────────────────────────────────────────────── */
 
 type Outcome = {
-  score:        number;
-  total:        number;
-  passing:      number;
-  percent:      number;
-  passed:       boolean;
-  assessmentId: number | null;
+  score:           number;
+  total:           number;
+  passing:         number;
+  percent:         number;
+  passed:          boolean;
+  forceSubmitted:  boolean;
+  assessmentId:    number | null;
 };
 
 export default function AssessmentSuccess() {
@@ -52,6 +53,7 @@ export default function AssessmentSuccess() {
       const total   = Number(localStorage.getItem('score_total') ?? 0);
       const passing = Number(localStorage.getItem('score_passing') ?? 40);
       const aid     = localStorage.getItem('score_assessment_id');
+      const forced  = localStorage.getItem('score_force_submitted') === '1';
       const percent = total > 0 ? Math.round((score / total) * 100) : 0;
       setOutcome({
         score,
@@ -59,6 +61,7 @@ export default function AssessmentSuccess() {
         passing,
         percent,
         passed: percent >= passing,
+        forceSubmitted: forced,
         assessmentId: aid ? Number(aid) : null,
       });
     });
@@ -96,7 +99,7 @@ export default function AssessmentSuccess() {
     );
   }
 
-  const { score, total, passing, percent, passed, assessmentId } = outcome;
+  const { score, total, passing, percent, passed, forceSubmitted, assessmentId } = outcome;
 
   return (
     <div className="sa-result">
@@ -331,12 +334,43 @@ export default function AssessmentSuccess() {
           </div>
         </div>
 
+        {/* Forced-submission note sits ABOVE the pass/fail badge so
+            the user immediately understands why the assessment ended. */}
+        {forceSubmitted && (
+          <div
+            role="alert"
+            style={{
+              background:    '#FEF2F2',
+              border:        '1px solid #FECACA',
+              color:         '#991B1B',
+              padding:       '10px 14px',
+              borderRadius:  12,
+              fontSize:      13,
+              fontWeight:    500,
+              lineHeight:    1.5,
+              marginBottom:  14,
+              textAlign:     'left',
+              display:       'flex',
+              gap:           10,
+              alignItems:    'flex-start',
+            }}
+          >
+            <span aria-hidden="true" style={{ marginTop: 1, flexShrink: 0 }}>⚠️</span>
+            <span>
+              <strong>Auto-submitted after 3 strikes.</strong> Your assessment ended early because the
+              proctoring rules were broken. Your existing answers were still scored.
+            </span>
+          </div>
+        )}
+
         <span className={`sa-badge ${passed ? 'sa-badge-pass' : 'sa-badge-fail'}`}>
           {passed ? '✓ Passed' : 'Below passing threshold'}
         </span>
 
         <h1 className="sa-title">
-          {passed ? 'Congratulations!' : 'Almost there.'}
+          {forceSubmitted
+            ? (passed ? 'You passed — just.' : 'Assessment ended.')
+            : (passed ? 'Congratulations!' : 'Almost there.')}
         </h1>
         <p className="sa-sub">
           {passed
