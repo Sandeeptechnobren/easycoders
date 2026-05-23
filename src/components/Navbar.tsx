@@ -1,5 +1,6 @@
 "use client";
 import LoginModal from "@/components/LoginModal";
+import NotificationsBell from "@/components/NotificationsBell";
 import SearchBox from "@/components/SearchBox";
 import { useAuth } from "@/context/AuthContext";
 import { useHasPermission } from "@/lib/permissions";
@@ -598,6 +599,8 @@ export default function Navbar() {
 
             {/* Desktop Links */}
             <div className="nb-links">
+              {/* In-app notifications bell — only renders when logged in */}
+              <NotificationsBell />
               {navLinks.map((link) => {
                 const isLogout = link.name === "Logout";
                 const isLogin = link.name === "Login";
