@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/axios';
 import '../signup/signup.css';
@@ -12,6 +12,18 @@ export default function AssessmentLogin() {
   const [showPwd, setShowPwd]   = useState(false);
   const [error, setError]       = useState('');
   const [loading, setLoading]   = useState(false);
+
+  /* If the visitor already has a valid EasyAssess session, skip the
+   * login form entirely and drop them into the dashboard. Avoids the
+   * confusing "I'm already logged in, why am I being asked to sign in
+   * again?" experience now that the floating bubble routes here. */
+  useEffect(() => {
+    try {
+      const token = localStorage.getItem('assessment_token');
+      const user  = localStorage.getItem('assessment_user');
+      if (token && user) router.replace('/self-assessment/app');
+    } catch { /* localStorage unavailable — fall through to the form */ }
+  }, [router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
