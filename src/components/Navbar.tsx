@@ -25,6 +25,24 @@ export default function Navbar() {
   const [navSearch, setNavSearch] = useState("");
   const [isScrolled, setIsScrolled] = useState(false);
 
+  /* Keep the navbar's search input in sync with the URL's `?search=` param.
+   * Reads `window.location.search` directly (instead of useSearchParams)
+   * to avoid forcing a Suspense boundary around the whole Navbar — that
+   * would break the static prerender of /_not-found and other 404-style
+   * pages. Re-syncs on pathname changes AND on browser back/forward
+   * (popstate). The setState is deferred to a microtask to satisfy the
+   * cascading-renders lint rule. */
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const sync = () => {
+      const q = new URLSearchParams(window.location.search).get("search") ?? "";
+      queueMicrotask(() => setNavSearch(q));
+    };
+    sync();
+    window.addEventListener("popstate", sync);
+    return () => window.removeEventListener("popstate", sync);
+  }, [pathname]);
+
   const handleLogout = async () => {
     await logout();
     localStorage.removeItem("token");
