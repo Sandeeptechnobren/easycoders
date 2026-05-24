@@ -220,31 +220,21 @@ export default function Registration({ onClose }: RegistrationProps) {
 
           {!openForm ? (
             <>
-              {/* ── INITIAL VIEW: campaign hero + batches grid ── */}
-              <div className="hero">
-                <span className="eyebrow">
-                  <span className="eyebrow-dot" /> Registrations Open · 2026
-                </span>
-                <h2 id="reg-title" className="title">
-                  Summer Training &amp; <em>Internship 2026</em>
-                </h2>
-                <p className="subtitle">
-                  Mentor-led, project-based programs designed to take you from
-                  beginner to job-ready in one focused stretch. Limited seats —
-                  batches start in June.
-                </p>
-              </div>
-
-              {/* Batches starting soon */}
+              {/* ── INITIAL VIEW: summer-training batches only ── */}
               <div className="batchesHead">
-                <span className="batchesEyebrow">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="10" />
-                    <polyline points="12 6 12 12 16 14" />
-                  </svg>
-                  Starting soon
-                </span>
-                <p className="batchesNote">Pick a track to join — we&apos;ll confirm your seat after the form.</p>
+                <div>
+                  <span className="batchesEyebrow">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="10" />
+                      <polyline points="12 6 12 12 16 14" />
+                    </svg>
+                    Summer Training 2026 · Starting soon
+                  </span>
+                  <h2 id="reg-title" className="batchesTitle">
+                    Pick the batch <em>you want to join</em>
+                  </h2>
+                </div>
+                <p className="batchesNote">Limited seats — we&apos;ll confirm your spot after the registration form.</p>
               </div>
 
               <div className="batches">
@@ -539,13 +529,7 @@ export default function Registration({ onClose }: RegistrationProps) {
         }
         .close:hover { background: #0B1B3A; color: #ffffff; border-color: #0B1B3A; }
 
-        /* Hero block (initial view) */
-        .hero {
-          text-align: left;
-          max-width: 680px;
-          margin-bottom: 22px;
-          padding-right: 40px;
-        }
+        /* The form view still uses .eyebrow + .eyebrow-dot so keep them. */
         .eyebrow {
           display: inline-flex; align-items: center; gap: 7px;
           background: #FEF6E7;
@@ -556,38 +540,21 @@ export default function Registration({ onClose }: RegistrationProps) {
           text-transform: uppercase;
           padding: 5px 14px;
           border-radius: 100px;
-          margin-bottom: 14px;
+          margin-bottom: 4px;
         }
         .eyebrow-dot {
           width: 6px; height: 6px;
           border-radius: 50%;
           background: #E8A020;
         }
-        .title {
-          font-family: 'Playfair Display', Georgia, serif;
-          font-size: clamp(22px, 3.2vw, 30px);
-          font-weight: 700;
-          color: #0B1B3A;
-          line-height: 1.2;
-          letter-spacing: -0.01em;
-          margin: 0 0 8px;
-        }
-        .title em { color: #E8A020; font-style: italic; }
-        .subtitle {
-          font-size: 14px;
-          color: #4A5568;
-          line-height: 1.65;
-          margin: 0;
-          font-weight: 300;
-        }
 
-        /* Batches section */
+        /* Batches section header (now top of initial view) */
         .batchesHead {
           display: flex;
-          align-items: center;
+          align-items: flex-end;
           justify-content: space-between;
-          gap: 14px;
-          margin: 0 0 14px;
+          gap: 16px;
+          margin: 0 40px 18px 0;
           flex-wrap: wrap;
         }
         .batchesEyebrow {
@@ -600,12 +567,28 @@ export default function Registration({ onClose }: RegistrationProps) {
           text-transform: uppercase;
           padding: 6px 14px;
           border-radius: 100px;
+          margin-bottom: 10px;
         }
+        .batchesTitle {
+          font-family: 'Playfair Display', Georgia, serif;
+          font-size: clamp(22px, 3vw, 28px);
+          font-weight: 700;
+          color: #0B1B3A;
+          line-height: 1.2;
+          letter-spacing: -0.01em;
+          margin: 0;
+        }
+        .batchesTitle em { color: #E8A020; font-style: italic; }
         .batchesNote {
           font-size: 13px;
           color: #4A5568;
           margin: 0;
           font-weight: 300;
+          max-width: 280px;
+          text-align: right;
+        }
+        @media (max-width: 720px) {
+          .batchesNote { text-align: left; max-width: none; }
         }
         .batches {
           display: grid;
@@ -1059,7 +1042,8 @@ export default function Registration({ onClose }: RegistrationProps) {
         /* Mobile tweaks */
         @media (max-width: 540px) {
           .popup { padding: 24px 22px 22px; border-radius: 18px; }
-          .title { font-size: 20px; }
+          .batchesHead { margin-right: 0; }
+          .batchesTitle { font-size: 20px; }
           .actions, .formActions { flex-direction: column; align-items: stretch; }
           .cta, .secondary { width: 100%; justify-content: center; }
           .close { top: 10px; right: 10px; }
