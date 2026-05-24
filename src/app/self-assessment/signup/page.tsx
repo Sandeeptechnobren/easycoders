@@ -26,6 +26,19 @@ export default function AssessmentSignup() {
 
   useEffect(() => { getColleges(); }, []);
 
+  /* If the visitor already has an EasyAssess session, skip the signup
+   * form entirely and drop them into the dashboard. Defensive guard so
+   * a logged-in user clicking the "Register for Assessment" link on
+   * the login page (or any direct nav to /signup) doesn't see a fresh
+   * signup form. Matches the same guard on the login page. */
+  useEffect(() => {
+    try {
+      const token = localStorage.getItem('assessment_token');
+      const user  = localStorage.getItem('assessment_user');
+      if (token && user) router.replace('/self-assessment/app');
+    } catch { /* ignore — localStorage unavailable */ }
+  }, [router]);
+
   const handleChange = (e: any) =>
     setForm(p => ({ ...p, [e.target.name]: e.target.value }));
 

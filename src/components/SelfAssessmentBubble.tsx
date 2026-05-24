@@ -33,7 +33,13 @@ const LINKS: QuickLink[] = [
   {
     id: 'self-assess',
     label: 'Self-assessment',
-    path: '/self-assessment',
+    // Skip the marketing landing — users coming via the floating bubble
+    // already know what they want. Send them straight to the login form.
+    // The login page itself short-circuits to /self-assessment/app if
+    // they already have a valid session, and links to /signup for new
+    // users. The public /self-assessment landing still exists for
+    // organic / SEO traffic.
+    path: '/self-assessment/login',
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <circle cx="12" cy="12" r="10" />
