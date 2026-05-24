@@ -72,6 +72,16 @@ export default function CoursesList() {
     [courses]
   );
 
+  /* ─── Search query from URL (`?search=...`) ───────────────────────────── */
+  // The navbar's SearchBox navigates to `/courses?search=<query>`. Read it
+  // here as the single source of truth so the URL stays shareable and
+  // back/forward navigation works naturally.
+  const searchQuery = useMemo(
+    () => (searchParams.get('search') || '').trim(),
+    [searchParams]
+  );
+  const hasSearch = searchQuery.length > 0;
+
   /* ─── Sync URL → tab (on first load + back/forward nav) ───────────────── */
   useEffect(() => {
     if (availableCategories.length === 0) return;
@@ -87,6 +97,14 @@ export default function CoursesList() {
     const next = new URLSearchParams(Array.from(searchParams.entries()));
     next.set('category', categorySlug(cat));
     router.replace(`/courses?${next.toString()}`, { scroll: false });
+  }, [router, searchParams]);
+
+  /* ─── Clear search → drop `?search=` from URL ─────────────────────────── */
+  const clearSearch = useCallback(() => {
+    const next = new URLSearchParams(Array.from(searchParams.entries()));
+    next.delete('search');
+    const qs = next.toString();
+    router.replace(`/courses${qs ? `?${qs}` : ''}`, { scroll: false });
   }, [router, searchParams]);
 
   /* ─── Tab strip keyboard navigation (arrows, Home/End) ────────────────── */
@@ -105,10 +123,24 @@ export default function CoursesList() {
     btn?.focus();
   };
 
-  const filtered = useMemo(
-    () => courses.filter(c => c.category?.name === activeTab),
-    [courses, activeTab]
-  );
+  /* When a search query is present we flatten across all categories so the
+   * user sees every program that matches (otherwise the same course in
+   * three categories would be hidden behind the wrong tab). When there is
+   * no search, fall back to the normal tab-based view. */
+  const filtered = useMemo(() => {
+    if (hasSearch) {
+      const q = searchQuery.toLowerCase();
+      return courses.filter(c => {
+        const haystack = [
+          c.title || '',
+          c.description || '',
+          c.category?.name || '',
+        ].join(' ').toLowerCase();
+        return haystack.includes(q);
+      });
+    }
+    return courses.filter(c => c.category?.name === activeTab);
+  }, [courses, activeTab, hasSearch, searchQuery]);
 
   return (
     <section className="cl-wrap" aria-labelledby="courses-heading">
@@ -209,6 +241,68 @@ export default function CoursesList() {
           color: var(--slate);
         }
         .cl-meta strong { color: var(--navy); font-weight: 600; }
+
+        /* ─── Search-results header ─── */
+        .cl-search-meta {
+          display: flex;
+          align-items: flex-end;
+          justify-content: space-between;
+          gap: 16px;
+          margin-bottom: 28px;
+          padding: 18px 22px;
+          background: var(--white);
+          border: 1px solid var(--border);
+          border-radius: 14px;
+          box-shadow: 0 2px 12px rgba(11, 27, 58, 0.05);
+          flex-wrap: wrap;
+        }
+        .cl-search-eyebrow {
+          display: inline-block;
+          font-size: 11px;
+          font-weight: 700;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          color: var(--gold);
+          margin-bottom: 6px;
+        }
+        .cl-search-title {
+          font-family: 'Playfair Display', Georgia, serif;
+          font-size: clamp(18px, 2.2vw, 22px);
+          font-weight: 600;
+          color: var(--navy);
+          margin: 0;
+          line-height: 1.3;
+          letter-spacing: -0.01em;
+        }
+        .cl-search-title em {
+          font-style: italic;
+          color: var(--gold);
+          font-weight: 700;
+        }
+        .cl-search-clear {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          background: var(--navy-soft);
+          color: var(--slate);
+          border: 1px solid var(--border);
+          border-radius: 100px;
+          padding: 8px 14px;
+          font-family: inherit;
+          font-size: 12px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+        }
+        .cl-search-clear:hover {
+          background: var(--navy);
+          color: var(--white);
+          border-color: var(--navy);
+        }
+        .cl-search-clear:focus-visible {
+          outline: 2px solid var(--gold);
+          outline-offset: 2px;
+        }
 
         /* ─── Grid ─── */
         .cl-grid {
@@ -467,8 +561,10 @@ export default function CoursesList() {
       `}</style>
 
       <div className="cl-container">
-        {/* Tab strip — never rendered while loading initial state, to avoid layout shift */}
-        {availableCategories.length > 0 && (
+        {/* Tab strip — hidden while a search query is active so the search
+            result list isn't constrained to one category. Hidden also while
+            loading to avoid layout shift. */}
+        {!hasSearch && availableCategories.length > 0 && (
           <div className="cl-tabs-row">
             <div
               ref={tabsRef}
@@ -501,8 +597,29 @@ export default function CoursesList() {
           </div>
         )}
 
-        {/* Results meta */}
-        {state === 'ready' && filtered.length > 0 && (
+        {/* Search-results header — only when a search is active */}
+        {hasSearch && state === 'ready' && (
+          <div className="cl-search-meta">
+            <div>
+              <span className="cl-search-eyebrow">Search results</span>
+              <h2 className="cl-search-title">
+                {filtered.length > 0
+                  ? <>{filtered.length} {filtered.length === 1 ? 'match' : 'matches'} for <em>&ldquo;{searchQuery}&rdquo;</em></>
+                  : <>No matches for <em>&ldquo;{searchQuery}&rdquo;</em></>}
+              </h2>
+            </div>
+            <button type="button" className="cl-search-clear" onClick={clearSearch}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+              Clear search
+            </button>
+          </div>
+        )}
+
+        {/* Tab-mode results meta */}
+        {!hasSearch && state === 'ready' && filtered.length > 0 && (
           <div className="cl-meta">
             <p>
               Showing <strong>{filtered.length}</strong> course{filtered.length !== 1 ? 's' : ''} in <strong>{activeTab}</strong>
@@ -541,8 +658,20 @@ export default function CoursesList() {
               </div>
             )}
 
-            {/* Empty state (filter has zero hits) */}
-            {state === 'ready' && filtered.length === 0 && availableCategories.length > 0 && (
+            {/* Empty state — search returned zero matches */}
+            {state === 'ready' && hasSearch && filtered.length === 0 && (
+              <div className="cl-state">
+                <div className="cl-state-icon" aria-hidden="true">🔍</div>
+                <h2 className="cl-state-title">No courses match &ldquo;{searchQuery}&rdquo;</h2>
+                <p className="cl-state-msg">Try a different keyword or clear the search to see every program.</p>
+                <button type="button" className="cl-retry" onClick={clearSearch}>
+                  Clear search
+                </button>
+              </div>
+            )}
+
+            {/* Empty state — tab filter (no search) has zero hits */}
+            {state === 'ready' && !hasSearch && filtered.length === 0 && availableCategories.length > 0 && (
               <div className="cl-state">
                 <div className="cl-state-icon" aria-hidden="true">📚</div>
                 <h2 className="cl-state-title">No courses in this category yet</h2>
