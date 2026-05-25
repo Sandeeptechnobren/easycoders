@@ -57,6 +57,17 @@ export function AdminSection({
           --border:     #E5E9F2;
           --white:      #FFFFFF;
         }
+        /* ─── Bulletproof anchor reset ─────────────────────────────────────
+           Bootstrap loaded via CDN in layout.tsx applies a global
+           a { color: var(--bs-link-color); text-decoration: underline }
+           which bleeds onto every <Link>-wrapped element here. The more
+           specific class rules below still win, but text-decoration
+           cascades from the parent anchor, so we strip it at .adm-page.
+           Same fix used on /admin and /self-assessment. */
+        :global(.adm-page a) {
+          color: inherit;
+          text-decoration: none;
+        }
         .adm-page {
           min-height: 100vh;
           background: var(--navy-soft);
