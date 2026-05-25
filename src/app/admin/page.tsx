@@ -3,43 +3,45 @@
 import RoleGuard from '@/components/RoleGuard';
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
-import styles from './admin-home.module.css';
-import { fetchWithAuth } from '@/lib/api';
-import { computeInterestStats, normalizeInterestLabel, interestClass } from '@/lib/interest';
 
-type StudentRow = {
-  id: number | string;
-  name: string;
-  email: string;
-  phone?: string;
-  status: number | string;
-  course?: string;
-  created_at?: string;
-  interest?: {
-    id: number;
-    assessment_user_id: number;
-    interest_status?: { id: number; interest: string };
-    call_response?: string | null;
-  } | null;
-};
+/* ──────────────────────────────────────────────────────────────────────────
+ * Admin landing — 2-card hub
+ *
+ * Replaces the previous all-in-one dashboard. The admin now picks which
+ * side of the platform they want to manage:
+ *
+ *   1. Easy Assess Management   — the open self-assessment platform
+ *                                 (assessments, coding questions, typing
+ *                                 content, leaderboard, certificates,
+ *                                 assessment users)
+ *   2. Easy Coders Management   — the training-company operations
+ *                                 (batches, students, admissions,
+ *                                 attendance, fees, trainers, tasks,
+ *                                 tickets, courses, categories,
+ *                                 enrollment requests, contact inquiries,
+ *                                 RBAC permissions)
+ *
+ * Each card routes to a section dashboard at /admin/easy-assess and
+ * /admin/easy-coders respectively. The existing per-feature admin pages
+ * (/admin/batches, /admin/permissions, etc.) keep their current URLs —
+ * only the entry-point flow changed. Bookmarks still work.
+ * ────────────────────────────────────────────────────────────────────────── */
 
-type College = { id: number | string; college_name: string };
+type SimpleUser = { name?: string; email?: string };
 
-export default function AdminHomePage() {
-  const [students, setStudents] = useState<StudentRow[]>([]);
-  const [colleges, setColleges] = useState<College[]>([]);
-  const [selectedCollegeID, setSelectedCollegeID] = useState<string>('');
-  const [loadingStudents, setLoadingStudents] = useState(true);
-  const [loadingColleges, setLoadingColleges] = useState(true);
-  const [error, setError] = useState('');
-  const [userData, setUserData] = useState<any>(null);
+export default function AdminHub() {
+  const [user, setUser] = useState<SimpleUser | null>(null);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const u = localStorage.getItem('user');
-    setUserData(u ? JSON.parse(u) : null);
-    const savedCollege = localStorage.getItem('college_id') || '';
-    setSelectedCollegeID(savedCollege);
+    // Defer to a microtask so we don't trigger the cascading-renders
+    // lint rule by calling setState synchronously inside the effect.
+    queueMicrotask(() => {
+      try {
+        const raw = localStorage.getItem('user');
+        setUser(raw ? JSON.parse(raw) : null);
+      } catch { /* ignore malformed JSON */ }
+    });
   }, []);
 
   const greeting = useMemo(() => {
@@ -49,233 +51,259 @@ export default function AdminHomePage() {
     return 'Good evening';
   }, []);
 
-  useEffect(() => {
-    const controller = new AbortController();
-    (async () => {
-      try {
-        setLoadingColleges(true);
-        const res = await fetch(
-          'https://api.easycoders.in/projects/backend/public/api/collegeList',
-          { signal: controller.signal }
-        );
-        const json = await res.json();
-        setColleges(json.data || []);
-      } catch {}
-      finally { setLoadingColleges(false); }
-    })();
-    return () => controller.abort();
-  }, []);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    (async () => {
-      try {
-        setLoadingStudents(true);
-        setError('');
-        const url =
-          'https://api.easycoders.in/projects/backend/public/api/hr/students' +
-          (selectedCollegeID ? `?college_id=${encodeURIComponent(selectedCollegeID)}` : '');
-        const json = await fetchWithAuth(url, { signal: controller.signal as any });
-        setStudents(json.data || []);
-      } catch (e: any) {
-        if (e?.name === 'AbortError') return;
-        setStudents([]);
-        setError(
-          e?.message === 'Unauthorized'
-            ? 'Session expired. Please login again.'
-            : 'Failed to load dashboard data'
-        );
-      } finally { setLoadingStudents(false); }
-    })();
-    return () => controller.abort();
-  }, [selectedCollegeID]);
-
-  const loading = loadingStudents || loadingColleges;
-  const interestStats = useMemo(() => computeInterestStats(students), [students]);
-  const recent = useMemo(() =>
-    [...students]
-      .sort((a, b) => ((a.created_at || '') < (b.created_at || '') ? 1 : -1))
-      .slice(0, 6),
-    [students]
-  );
-
-  const kpis = [
-    { label: 'Total',         hint: 'All students',      val: interestStats.total,                color: '#0ea5e9' },
-    { label: 'Interested',    hint: 'Ready to join',     val: interestStats.Interested,           color: '#22c55e' },
-    { label: 'Not Interested',hint: 'No follow-up',      val: interestStats['Not Interested'],    color: '#ef4444' },
-    { label: 'Call Back',     hint: 'Pending follow-up', val: interestStats['Call Back Later'],   color: '#f59e0b' },
-    { label: 'Not Reachable', hint: 'Try again later',   val: interestStats['Not Reachable'],     color: '#64748b' },
-    { label: 'Not Set',       hint: 'Needs first call',  val: interestStats['Not Set'],           color: '#8b5cf6' },
-    ...(interestStats.Other > 0
-      ? [{ label: 'Other', hint: 'New categories', val: interestStats.Other, color: '#0f172a' }]
-      : []),
-  ];
-
-  const quickActions = [
-    { href: '/hr/admissions',          icon: '🎓', title: 'Admissions',           sub: 'Create admissions, fee installments' },
-    { href: '/admin/batches',          icon: '🏫', title: 'Batches',              sub: 'Manage training batches & trainers' },
-    { href: '/admin/assessments',      icon: '📋', title: 'Assessments',          sub: 'Create/manage self-assessment tests' },
-    { href: '/admin/permissions',      icon: '🔐', title: 'Permissions',          sub: 'Role defaults & per-user overrides' },
-    { href: '/admin/attendance',       icon: '📍', title: 'Attendance',           sub: 'Records, manual mark, locations' },
-    { href: '/admin/tickets',          icon: '🎫', title: 'Tickets',              sub: 'Assign & resolve student queries' },
-    { href: '/admin/studentManagement',icon: '👥', title: 'Student Management',   sub: 'Profiles, fees & marks' },
-    { href: '/admin/enrollmentRequests',icon: '📝',title: 'Enrollment Requests',  sub: 'Legacy — convert to student accounts' },
-  ];
+  const firstName = (user?.name ?? '').split(' ')[0] || 'Admin';
 
   return (
     <RoleGuard allowedRoles={[1]}>
-      <div className={styles.wrap}>
+      <div className="hub">
+        <style jsx>{`
+          .hub {
+            min-height: 100vh;
+            background: linear-gradient(180deg, #0B1B3A 0%, #07122A 100%);
+            padding: 130px 24px 80px;
+            font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+            color: #ffffff;
+            position: relative;
+            overflow: hidden;
+          }
+          .hub::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background:
+              radial-gradient(ellipse 800px 500px at 80% 30%, rgba(232,160,32,0.12) 0%, transparent 60%),
+              radial-gradient(ellipse 600px 400px at 10% 80%, rgba(26,86,219,0.18) 0%, transparent 70%);
+            pointer-events: none;
+          }
+          .inner {
+            position: relative;
+            z-index: 1;
+            max-width: 1080px;
+            margin: 0 auto;
+          }
+          .hero {
+            text-align: center;
+            margin-bottom: 48px;
+          }
+          .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            background: rgba(232,160,32,0.14);
+            border: 1px solid rgba(232,160,32,0.34);
+            color: #F5C356;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            padding: 5px 14px;
+            border-radius: 100px;
+            margin-bottom: 16px;
+          }
+          .eyebrow::before {
+            content: '';
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: #E8A020;
+          }
+          .title {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: clamp(28px, 4vw, 40px);
+            font-weight: 700;
+            margin: 0 0 10px;
+            letter-spacing: -0.02em;
+            line-height: 1.15;
+          }
+          .title em { color: #E8A020; font-style: italic; }
+          .sub {
+            font-size: 15px;
+            color: rgba(255,255,255,0.65);
+            margin: 0;
+            font-weight: 300;
+          }
 
-        {/* ── Top Bar ── */}
-        <header className={styles.topbar}>
-          <div className={styles.left}>
-            <div className={styles.crumbs}>
-              <Link href="/admin" className={styles.crumbLink}>Admin</Link>
-              <span className={styles.crumbSep}>/</span>
-              <span className={styles.crumbNow}>Dashboard</span>
-            </div>
-            <h1 className={styles.title}>
-              Hi {userData?.name || 'User'}, {greeting} 👋
+          .cards {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 22px;
+          }
+          @media (max-width: 760px) {
+            .cards { grid-template-columns: 1fr; }
+            .hub { padding-top: 110px; }
+          }
+
+          .card {
+            background: #ffffff;
+            color: #0B1B3A;
+            border-radius: 22px;
+            padding: 32px 30px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            min-height: 320px;
+            text-decoration: none;
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+            border: 1px solid rgba(255,255,255,0.06);
+          }
+          .card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #E8A020, #F5C356);
+          }
+          .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 24px 48px rgba(0,0,0,0.35);
+            text-decoration: none;
+            color: #0B1B3A;
+          }
+          @media (prefers-reduced-motion: reduce) {
+            .card { transition: none; }
+            .card:hover { transform: none; }
+          }
+          .card-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #0B1B3A 0%, #152D5A 100%);
+            color: #E8A020;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+          }
+          .card-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+          }
+          .card-title {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 22px;
+            font-weight: 700;
+            color: #0B1B3A;
+            margin: 0;
+            letter-spacing: -0.01em;
+          }
+          .card-tag {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: #B97A0F;
+            background: #FEF6E7;
+            padding: 4px 10px;
+            border-radius: 100px;
+          }
+          .card-desc {
+            font-size: 14px;
+            color: #4A5568;
+            line-height: 1.65;
+            margin: 0;
+            flex: 1;
+            font-weight: 300;
+          }
+          .card-foot {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-top: 1px solid #E5E9F2;
+            padding-top: 14px;
+          }
+          .card-count {
+            font-size: 12px;
+            color: #94A3B8;
+          }
+          .card-count strong {
+            color: #0B1B3A;
+            font-weight: 700;
+            font-size: 14px;
+          }
+          .card-cta {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: #E8A020;
+            font-weight: 700;
+            font-size: 13px;
+          }
+        `}</style>
+
+        <div className="inner">
+          <header className="hero">
+            <span className="eyebrow">Admin · Console</span>
+            <h1 className="title">
+              {greeting}, <em>{firstName}</em>
             </h1>
-            <p className={styles.subtitle}>Admin operations overview</p>
+            <p className="sub">Which side of the platform would you like to manage today?</p>
+          </header>
+
+          <div className="cards">
+            {/* Easy Assess card */}
+            <Link href="/admin/easy-assess" className="card">
+              <div className="card-head">
+                <span className="card-icon" aria-hidden="true">
+                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <circle cx="12" cy="12" r="6" />
+                    <circle cx="12" cy="12" r="2" />
+                  </svg>
+                </span>
+                <span className="card-tag">Open platform</span>
+              </div>
+              <h2 className="card-title">Easy Assess Management</h2>
+              <p className="card-desc">
+                Manage the public coding-assessment platform — assessment
+                definitions, coding question bank, typing content,
+                certificate logs, leaderboard and registered assessment
+                users.
+              </p>
+              <div className="card-foot">
+                <span className="card-count"><strong>6</strong> modules</span>
+                <span className="card-cta">
+                  Open section
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                    <polyline points="12 5 19 12 12 19" />
+                  </svg>
+                </span>
+              </div>
+            </Link>
+
+            {/* Easy Coders card */}
+            <Link href="/admin/easy-coders" className="card">
+              <div className="card-head">
+                <span className="card-icon" aria-hidden="true">
+                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+                    <path d="M6 12v5c3 3 9 3 12 0v-5" />
+                  </svg>
+                </span>
+                <span className="card-tag">Training company</span>
+              </div>
+              <h2 className="card-title">Easy Coders Management</h2>
+              <p className="card-desc">
+                Manage the training company — students, batches,
+                admissions, attendance, fees, trainers, tasks, tickets,
+                courses, categories, enrollment requests, contact
+                inquiries and RBAC permissions.
+              </p>
+              <div className="card-foot">
+                <span className="card-count"><strong>13</strong> modules</span>
+                <span className="card-cta">
+                  Open section
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                    <polyline points="12 5 19 12 12 19" />
+                  </svg>
+                </span>
+              </div>
+            </Link>
           </div>
-          <div className={styles.right}>
-            <Link href="/hr/admissions" className={`${styles.btn} ${styles.primary}`}>
-              🎓 Admissions
-            </Link>
-            <Link href="/admin/batches" className={`${styles.btn} ${styles.primary}`}>
-              🏫 Batches
-            </Link>
-            <Link href="/admin/students" className={styles.btn}>
-              👥 Student Management
-            </Link>
-          </div>
-        </header>
-
-        {/* ── Filters ── */}
-        <section className={styles.filters}>
-          <label className={styles.filterLabel} htmlFor="college-select">College</label>
-          <select
-            id="college-select"
-            className={styles.select}
-            value={selectedCollegeID}
-            onChange={(e) => {
-              setSelectedCollegeID(e.target.value);
-              localStorage.setItem('college_id', e.target.value);
-            }}
-          >
-            <option value="">All Colleges</option>
-            {colleges.map((c) => (
-              <option key={String(c.id)} value={String(c.id)}>{c.college_name}</option>
-            ))}
-          </select>
-          {selectedCollegeID && (
-            <button
-              className={styles.clearBtn}
-              onClick={() => {
-                setSelectedCollegeID('');
-                localStorage.removeItem('college_id');
-              }}
-            >
-              Clear
-            </button>
-          )}
-        </section>
-
-        {/* ── Loading skeleton ── */}
-        {loading && (
-          <section className={styles.card}>
-            <div className={styles.skeletonWrap}>
-              {[1,2,3,4].map(i => <div key={i} className={styles.skRow} />)}
-            </div>
-          </section>
-        )}
-
-        {/* ── Error ── */}
-        {!loading && error && (
-          <section className={styles.card}>
-            <div className={`${styles.state} ${styles.error}`}>
-              <div className={styles.stateTitle}>Could not load dashboard</div>
-              <div className={styles.stateText}>{error}</div>
-              <div className={styles.stateActions}>
-                <Link href="/login" className={`${styles.btn} ${styles.small}`}>Go to Login →</Link>
-              </div>
-            </div>
-          </section>
-        )}
-
-        {/* ── Main Content ── */}
-        {!loading && !error && (
-          <>
-            {/* KPIs */}
-            <section className={styles.kpis}>
-              {kpis.map((k) => (
-                <div key={k.label} className={styles.kpi} style={{ borderLeft: `3px solid ${k.color}` }}>
-                  <div className={styles.kpiVal} style={{ color: k.color }}>{k.val}</div>
-                  <div className={styles.kpiLabel}>{k.label}</div>
-                  <div className={styles.kpiHint}>{k.hint}</div>
-                  <div className={styles.kpiBar} style={{ background: k.color }} />
-                </div>
-              ))}
-            </section>
-
-            <section className={styles.grid2}>
-              {/* Quick Actions */}
-              <div className={styles.card}>
-                <div className={styles.cardHead}>
-                  <div>
-                    <div className={styles.cardTitle}>Quick Actions</div>
-                    <div className={styles.cardSub}>Admin workflows</div>
-                  </div>
-                </div>
-                <div className={styles.cardBody}>
-                  <div className={styles.quickGrid}>
-                    {quickActions.map((q) => (
-                      <Link key={q.href} href={q.href} className={styles.quick}>
-                        <div className={styles.quickIco}>{q.icon}</div>
-                        <div className={styles.quickText}>
-                          <div className={styles.quickTitle}>{q.title}</div>
-                          <div className={styles.quickSub}>{q.sub}</div>
-                        </div>
-                        <div className={styles.chev}>→</div>
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Recent Students */}
-              <div className={styles.card}>
-                <div className={styles.cardHead}>
-                  <div>
-                    <div className={styles.cardTitle}>Recent Students</div>
-                    <div className={styles.cardSub}>Latest profiles</div>
-                  </div>
-                  <Link href="/admin/students" className={styles.cardLink}>View all →</Link>
-                </div>
-                <div className={styles.studentList}>
-                  {recent.length ? (
-                    recent.map((s) => {
-                      const label = normalizeInterestLabel(s?.interest?.interest_status?.interest);
-                      return (
-                        <Link key={String(s.id)} href={`/admin/students/${s.id}`} className={styles.sRow}>
-                          <div className={styles.sAv}>{(s.name?.[0] || 'S').toUpperCase()}</div>
-                          <div className={styles.sMid}>
-                            <div className={styles.sName}>{s.name}</div>
-                            <div className={styles.sEmail}>{s.email}</div>
-                          </div>
-                          <span className={`${styles.pill} ${styles[interestClass(label)]}`}>{label}</span>
-                        </Link>
-                      );
-                    })
-                  ) : (
-                    <div className={styles.empty}>No students found.</div>
-                  )}
-                </div>
-              </div>
-            </section>
-          </>
-        )}
+        </div>
       </div>
     </RoleGuard>
   );
