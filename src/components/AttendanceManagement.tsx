@@ -4,6 +4,20 @@ import { useEffect, useState, useCallback } from 'react';
 import RoleGuard from '@/components/RoleGuard';
 import { fetchWithAuth } from '@/lib/api';
 
+/* ──────────────────────────────────────────────────────────────────────────
+ * AttendanceManagement — shared between /hr/attendance and /admin/attendance
+ *
+ * Previous version used bare Bootstrap (`nav nav-tabs`, `form-control`,
+ * `btn btn-primary`) which (a) bled through as raw blue underlined link
+ * text on the tab strip — the recurring Bootstrap-link-cascade bug, and
+ * (b) looked completely off-brand against the rest of the navy/gold UI.
+ *
+ * This revision keeps every piece of state, every handler, every modal
+ * intact; only the visual layer was rewritten with scoped styled-jsx and
+ * a :global(.attn-page a) reset to defeat the link-color cascade (same
+ * trick used on /admin and /self-assessment).
+ * ────────────────────────────────────────────────────────────────────────── */
+
 const BASE = 'https://api.easycoders.in/projects/backend/public/api';
 
 type AttendanceRecord = {
@@ -54,6 +68,11 @@ const todayYmd = () => {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 };
 
+/* Narrow `unknown` errors thrown from fetchWithAuth into a string. Avoids
+ * the `catch (e: any)` lint errors that previously littered this file. */
+const errMsg = (e: unknown, fallback = 'Something went wrong.'): string =>
+  e instanceof Error ? e.message : fallback;
+
 // Role display — production DB stores role as a numeric string ('1'..'4')
 // for some users and a literal string ('admin'/'hr'/'student'/'trainer')
 // for others. This maps both shapes to a human label.
@@ -68,6 +87,15 @@ const roleLabel = (role?: string | number | null): string => {
   const key = String(role).trim().toLowerCase();
   if (ROLE_NAMES[key]) return ROLE_NAMES[key];
   return key.charAt(0).toUpperCase() + key.slice(1);
+};
+/* Maps a role to a tinted pill class — keeps the table scan-able. */
+const roleBadgeClass = (role?: string | number | null): string => {
+  const k = String(role || '').trim().toLowerCase();
+  if (k === '1' || k === 'admin')   return 'role-admin';
+  if (k === '2' || k === 'hr')      return 'role-hr';
+  if (k === '3' || k === 'student') return 'role-student';
+  if (k === '4' || k === 'trainer') return 'role-trainer';
+  return 'role-other';
 };
 
 // Indian national holidays for 2026. Lunar / Islamic dates are best-effort
@@ -247,8 +275,8 @@ export default function AttendanceManagement() {
       setManualSearch('');
       setManualResults([]);
       setManualForm(f => ({ ...f, punch_out: '', notes: '' }));
-    } catch (e: any) {
-      setManualMsg(e.message || 'Failed to mark attendance.');
+    } catch (e: unknown) {
+      setManualMsg(errMsg(e, 'Failed to mark attendance.'));
     } finally { setManualSaving(false); }
   };
 
@@ -391,7 +419,7 @@ export default function AttendanceManagement() {
         });
       }
       setShowLocModal(false); loadLocations();
-    } catch (e: any) { setLocMsg(e.message || 'Failed.'); } finally { setLocSaving(false); }
+    } catch (e: unknown) { setLocMsg(errMsg(e, 'Failed.')); } finally { setLocSaving(false); }
   };
 
   const deleteLoc = async (id: number) => {
@@ -399,7 +427,7 @@ export default function AttendanceManagement() {
     try {
       await fetchWithAuth(`${BASE}/attendance/locations/${id}`, { method: 'DELETE' });
       loadLocations();
-    } catch (e: any) { alert(e.message || 'Failed.'); }
+    } catch (e: unknown) { alert(errMsg(e, 'Failed.')); }
   };
 
   // Toggle a location between active and inactive (PATCH-like via existing PUT endpoint).
@@ -413,8 +441,8 @@ export default function AttendanceManagement() {
         body: JSON.stringify({ is_active: !loc.is_active }),
       });
       loadLocations();
-    } catch (e: any) {
-      alert(e.message || `${verb} failed.`);
+    } catch (e: unknown) {
+      alert(errMsg(e, `${verb} failed.`));
     }
   };
 
@@ -452,7 +480,7 @@ export default function AttendanceManagement() {
         });
       }
       setShowHolModal(false); loadHolidays();
-    } catch (e: any) { setHolMsg(e.message || 'Failed.'); } finally { setHolSaving(false); }
+    } catch (e: unknown) { setHolMsg(errMsg(e, 'Failed.')); } finally { setHolSaving(false); }
   };
 
   const deleteHol = async (id: number) => {
@@ -460,7 +488,7 @@ export default function AttendanceManagement() {
     try {
       await fetchWithAuth(`${BASE}/holidays/${id}`, { method: 'DELETE' });
       loadHolidays();
-    } catch (e: any) { alert(e.message || 'Failed.'); }
+    } catch (e: unknown) { alert(errMsg(e, 'Failed.')); }
   };
 
   // Open the national-holidays modal, pre-filling defaults from the curated
@@ -500,8 +528,8 @@ export default function AttendanceManagement() {
           body: JSON.stringify({ date: h.date, name: h.name, description: h.description }),
         });
         added++;
-      } catch (e: any) {
-        failures.push(`${h.name} (${h.date}) — ${e?.message || 'failed'}`);
+      } catch (e: unknown) {
+        failures.push(`${h.name} (${h.date}) — ${errMsg(e, 'failed')}`);
       }
     }
     setBulkAdding(false);
@@ -522,161 +550,845 @@ export default function AttendanceManagement() {
     return `${Math.floor(diff / 60)}h ${diff % 60}m`;
   };
 
+  const TABS: Array<{ key: typeof tab; label: string; icon: React.ReactNode }> = [
+    { key: 'records',   label: 'Records',  icon: (<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>) },
+    { key: 'manual',    label: 'Mark Manual', icon: (<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4z" /></svg>) },
+    { key: 'locations', label: 'Locations', icon: (<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg>) },
+    { key: 'holidays',  label: 'Holidays', icon: (<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 11l-2 9 9-2 8-8a3 3 0 0 0-4-4l-8 8z" /></svg>) },
+  ];
+
+  /* Number of holidays already added (for the badge on the Holidays tab). */
+  const holidayCount = holidays.length;
+
   return (
     <RoleGuard allowedRoles={[1, 2]}>
-      <div className="admin-wrap">
-        <div className="container-fluid py-4 px-4">
-          <div className="d-flex justify-content-between align-items-center mb-4">
-            <div>
-              <h3 className="fw-bold mb-1">Attendance Management</h3>
-              <p className="text-muted mb-0">View records, mark manually, manage locations &amp; holidays</p>
-            </div>
-          </div>
+      <div className="attn-page">
+        <style jsx>{`
+          /* ─── Bulletproof anchor reset ─────────────────────────────────────
+             Bootstrap (loaded via layout.tsx) styles bare anchors with
+             text-decoration: underline + a blue color. That cascades into
+             every <Link>-wrapped child and made the tab strip look like a
+             list of blue underlined links in the screenshot. Reset it at
+             the page wrapper; same fix used on /admin & /self-assessment. */
+          :global(.attn-page a) {
+            color: inherit;
+            text-decoration: none;
+          }
+          :global(.attn-page) {
+            --navy:       #0B1B3A;
+            --navy-mid:   #152D5A;
+            --navy-deep:  #07122A;
+            --navy-soft:  #F4F6FB;
+            --gold:       #E8A020;
+            --gold-light: #F5C356;
+            --gold-soft:  #FEF6E7;
+            --gold-deep:  #B97A0F;
+            --slate:      #4A5568;
+            --slate-soft: #94A3B8;
+            --border:     #E5E9F2;
+            --border-soft:#F1F4F9;
+            --white:      #ffffff;
+          }
 
-          <ul className="nav nav-tabs mb-4">
-            <li className="nav-item"><button className={`nav-link ${tab === 'records' ? 'active' : ''}`} onClick={() => setTab('records')}>Attendance Records</button></li>
-            <li className="nav-item"><button className={`nav-link ${tab === 'manual' ? 'active' : ''}`} onClick={() => setTab('manual')}>Mark Manual</button></li>
-            <li className="nav-item"><button className={`nav-link ${tab === 'locations' ? 'active' : ''}`} onClick={() => setTab('locations')}>Locations</button></li>
-            <li className="nav-item"><button className={`nav-link ${tab === 'holidays' ? 'active' : ''}`} onClick={() => setTab('holidays')}>Holidays</button></li>
-          </ul>
+          .attn-page {
+            min-height: 100vh;
+            background: #F4F6FB;
+            font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+            color: #0B1B3A;
+            padding-top: 110px; /* clear the fixed Navbar */
+            padding-bottom: 60px;
+          }
+
+          /* ─── Hero ─── */
+          .attn-hero {
+            background: linear-gradient(180deg, #0B1B3A 0%, #152D5A 100%);
+            color: #ffffff;
+            padding: 38px 24px 50px;
+            position: relative;
+            overflow: hidden;
+          }
+          .attn-hero::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background:
+              radial-gradient(ellipse 700px 400px at 80% 30%, rgba(232,160,32,0.12) 0%, transparent 60%),
+              radial-gradient(ellipse 500px 300px at 10% 80%, rgba(26,86,219,0.18) 0%, transparent 70%);
+            pointer-events: none;
+          }
+          .attn-hero-inner {
+            position: relative;
+            z-index: 1;
+            max-width: 1180px;
+            margin: 0 auto;
+          }
+          .attn-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            background: rgba(232,160,32,0.14);
+            border: 1px solid rgba(232,160,32,0.34);
+            color: #F5C356;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            padding: 5px 14px;
+            border-radius: 100px;
+            margin-bottom: 12px;
+          }
+          .attn-eyebrow::before {
+            content: '';
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: #E8A020;
+          }
+          .attn-title {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: clamp(28px, 3.4vw, 36px);
+            font-weight: 700;
+            margin: 0;
+            letter-spacing: -0.015em;
+            line-height: 1.2;
+          }
+          .attn-sub {
+            font-size: 14.5px;
+            line-height: 1.6;
+            color: rgba(255,255,255,0.7);
+            margin: 8px 0 0;
+            max-width: 640px;
+            font-weight: 300;
+          }
+
+          .attn-inner {
+            max-width: 1180px;
+            margin: -24px auto 0;
+            padding: 0 24px;
+            position: relative;
+            z-index: 2;
+          }
+
+          /* ─── Tab strip ─── */
+          .attn-tabs {
+            display: inline-flex;
+            gap: 4px;
+            background: #ffffff;
+            border: 1px solid #E5E9F2;
+            border-radius: 14px;
+            padding: 5px;
+            box-shadow: 0 4px 14px rgba(11, 27, 58, 0.06);
+            margin-bottom: 18px;
+            flex-wrap: wrap;
+          }
+          .attn-tab {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            border: none;
+            background: transparent;
+            padding: 9px 16px;
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 600;
+            color: #4A5568;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background 0.18s ease, color 0.18s ease;
+          }
+          .attn-tab:hover {
+            background: #F8FAFD;
+            color: #0B1B3A;
+          }
+          .attn-tab.active {
+            background: linear-gradient(135deg, #0B1B3A 0%, #152D5A 100%);
+            color: #ffffff;
+            box-shadow: 0 2px 8px rgba(11, 27, 58, 0.18);
+          }
+          .attn-tab .pill-count {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 20px;
+            height: 18px;
+            padding: 0 6px;
+            border-radius: 100px;
+            background: #FEF6E7;
+            color: #B97A0F;
+            font-size: 10px;
+            font-weight: 700;
+          }
+          .attn-tab.active .pill-count {
+            background: rgba(232,160,32,0.22);
+            color: #F5C356;
+          }
+
+          /* ─── Panel ─── */
+          .attn-panel {
+            background: #ffffff;
+            border: 1px solid #E5E9F2;
+            border-radius: 18px;
+            padding: 22px;
+            box-shadow: 0 2px 12px rgba(11, 27, 58, 0.05);
+          }
+
+          /* ─── Filters ─── */
+          .attn-filters {
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            padding-bottom: 18px;
+            margin-bottom: 18px;
+            border-bottom: 1px solid #F1F4F9;
+          }
+          .fl-group { display: flex; flex-direction: column; gap: 6px; }
+          .fl-lbl {
+            font-size: 11px;
+            color: #94A3B8;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+          }
+          .fl-group input,
+          .fl-group select {
+            background: #ffffff;
+            border: 1px solid #E5E9F2;
+            border-radius: 10px;
+            padding: 9px 12px;
+            font-family: inherit;
+            font-size: 13px;
+            color: #0B1B3A;
+            outline: none;
+            transition: border-color 0.18s ease, box-shadow 0.18s ease;
+            min-width: 150px;
+          }
+          .fl-group input[type='search'] { min-width: 220px; }
+          .fl-group input:focus,
+          .fl-group select:focus {
+            border-color: #E8A020;
+            box-shadow: 0 0 0 3px rgba(232,160,32,0.16);
+          }
+          .fl-actions { display: flex; gap: 8px; align-items: flex-end; }
+
+          /* ─── Buttons ─── */
+          .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            padding: 9px 18px;
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease, transform 0.15s ease;
+            white-space: nowrap;
+          }
+          .btn:active { transform: translateY(1px); }
+          .btn-primary { background: #0B1B3A; color: #ffffff; }
+          .btn-primary:hover:not(:disabled) { background: #E8A020; color: #0B1B3A; }
+          .btn-primary:disabled { background: #94A3B8; color: #ffffff; cursor: not-allowed; }
+          .btn-gold { background: #E8A020; color: #0B1B3A; }
+          .btn-gold:hover:not(:disabled) { background: #B97A0F; color: #ffffff; }
+          .btn-ghost { background: #ffffff; color: #4A5568; border-color: #E5E9F2; }
+          .btn-ghost:hover { border-color: #E8A020; color: #0B1B3A; }
+          .btn-outline-primary { background: #ffffff; color: #0B1B3A; border-color: #E5E9F2; }
+          .btn-outline-primary:hover { background: #0B1B3A; color: #ffffff; border-color: #0B1B3A; }
+          .btn-outline-danger { background: #ffffff; color: #991B1B; border-color: #FCA5A5; }
+          .btn-outline-danger:hover { background: #FEF2F2; border-color: #EF4444; }
+          .btn-outline-warn { background: #ffffff; color: #92660D; border-color: #FCD34D; }
+          .btn-outline-warn:hover { background: #FEF6E7; border-color: #E8A020; }
+          .btn-outline-success { background: #ffffff; color: #166534; border-color: #86EFAC; }
+          .btn-outline-success:hover { background: #ECFDF5; border-color: #22C55E; }
+          .btn-sm { padding: 6px 12px; font-size: 12px; }
+
+          /* ─── Table ─── */
+          .table-wrap { overflow-x: auto; margin: 0 -22px -22px; padding: 0 22px; }
+          .attn-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+          .attn-table thead th {
+            text-align: left;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: #94A3B8;
+            padding: 12px 14px;
+            border-bottom: 1px solid #E5E9F2;
+            background: #FAFBFD;
+          }
+          .attn-table thead th:first-child { border-top-left-radius: 10px; }
+          .attn-table thead th:last-child  { border-top-right-radius: 10px; }
+          .attn-table tbody td {
+            padding: 14px;
+            border-bottom: 1px solid #F1F4F9;
+            color: #0B1B3A;
+            vertical-align: middle;
+          }
+          .attn-table tbody tr:hover td { background: #F8FAFD; }
+          .attn-table tbody tr:last-child td { border-bottom: none; }
+          .uname { font-weight: 600; }
+          .uname-sub { font-size: 12px; color: #94A3B8; }
+          .uemail { font-size: 12px; color: #4A5568; }
+
+          .punch-active { color: #B97A0F; font-weight: 600; font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase; }
+
+          /* ─── Badges (role + verification) ─── */
+          .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 100px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+            white-space: nowrap;
+          }
+          .role-admin    { background: #0B1B3A; color: #ffffff; }
+          .role-hr       { background: #EEF2FF; color: #3730A3; }
+          .role-student  { background: #ECFDF5; color: #166534; }
+          .role-trainer  { background: #FEF6E7; color: #92660D; }
+          .role-other    { background: #F4F6FB; color: #4A5568; }
+          .badge-info    { background: #DBEAFE; color: #1E40AF; }
+          .badge-success { background: #ECFDF5; color: #166534; }
+          .badge-warn    { background: #FEF6E7; color: #92660D; }
+          .badge-muted   { background: #F4F6FB; color: #94A3B8; }
+          .verif-row { display: inline-flex; gap: 4px; flex-wrap: wrap; }
+
+          /* ─── States ─── */
+          .attn-state {
+            text-align: center;
+            padding: 48px 20px;
+            color: #94A3B8;
+            font-size: 13px;
+          }
+          .attn-state .spinner {
+            display: inline-block;
+            width: 22px;
+            height: 22px;
+            border: 2.5px solid #E5E9F2;
+            border-top-color: #E8A020;
+            border-radius: 50%;
+            margin-bottom: 10px;
+            animation: attn-spin 0.85s linear infinite;
+          }
+          @keyframes attn-spin { to { transform: rotate(360deg); } }
+          @media (prefers-reduced-motion: reduce) {
+            .attn-state .spinner { animation: none; }
+          }
+
+          /* ─── Sub-header (between filter row and content) ─── */
+          .attn-sub-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+          }
+          .attn-sub-head h2 {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 18px;
+            font-weight: 700;
+            color: #0B1B3A;
+            margin: 0;
+            letter-spacing: -0.01em;
+          }
+          .attn-sub-head .sub-meta {
+            font-size: 12px;
+            color: #94A3B8;
+            margin-top: 2px;
+          }
+          .attn-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+          /* ─── Manual mark form ─── */
+          .form-wrap { max-width: 640px; margin: 0 auto; }
+          .fld { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+          .fld-lbl { font-size: 12px; color: #4A5568; font-weight: 600; }
+          .fld input,
+          .fld select,
+          .fld textarea {
+            background: #ffffff;
+            border: 1px solid #E5E9F2;
+            border-radius: 10px;
+            padding: 10px 12px;
+            font-family: inherit;
+            font-size: 13px;
+            color: #0B1B3A;
+            outline: none;
+            transition: border-color 0.18s ease, box-shadow 0.18s ease;
+            width: 100%;
+          }
+          .fld input:focus,
+          .fld select:focus,
+          .fld textarea:focus {
+            border-color: #E8A020;
+            box-shadow: 0 0 0 3px rgba(232,160,32,0.16);
+          }
+          .fld-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+          .fld-row .fld { margin-bottom: 0; }
+
+          /* ─── Search dropdown ─── */
+          .search-results {
+            background: #ffffff;
+            border: 1px solid #E5E9F2;
+            border-radius: 10px;
+            margin-top: 6px;
+            max-height: 220px;
+            overflow-y: auto;
+            box-shadow: 0 8px 22px rgba(11, 27, 58, 0.08);
+          }
+          .search-item {
+            display: block;
+            width: 100%;
+            text-align: left;
+            padding: 10px 12px;
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid #F1F4F9;
+            font-family: inherit;
+            cursor: pointer;
+            transition: background 0.15s ease;
+          }
+          .search-item:hover { background: #FEF6E7; }
+          .search-item:last-child { border-bottom: none; }
+          .search-name { font-weight: 600; color: #0B1B3A; font-size: 13px; }
+          .search-meta { font-size: 11px; color: #94A3B8; margin-top: 2px; }
+          .search-empty { padding: 12px; color: #94A3B8; font-size: 12px; text-align: center; }
+
+          /* ─── Selected user pill ─── */
+          .selected-user {
+            background: #FEF6E7;
+            border: 1px solid rgba(232,160,32,0.34);
+            border-radius: 12px;
+            padding: 12px 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+          }
+          .selected-user-meta { font-size: 11px; color: #92660D; margin-top: 2px; }
+
+          /* ─── Alerts ─── */
+          .alert {
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-size: 13px;
+            margin-bottom: 14px;
+            border: 1px solid;
+            line-height: 1.5;
+          }
+          .alert-info    { background: #EFF6FF; color: #1E3A8A; border-color: #BFDBFE; }
+          .alert-success { background: #ECFDF5; color: #166534; border-color: #86EFAC; }
+          .alert-danger  { background: #FEF2F2; color: #991B1B; border-color: #FCA5A5; }
+          .alert-warn    { background: #FEF6E7; color: #92660D; border-color: #FCD34D; white-space: pre-wrap; }
+
+          /* ─── Location cards ─── */
+          .loc-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+          }
+          .loc-card {
+            background: #ffffff;
+            border: 1px solid #E5E9F2;
+            border-radius: 16px;
+            padding: 18px;
+            transition: border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+            position: relative;
+            overflow: hidden;
+          }
+          .loc-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #E8A020, #F5C356);
+            opacity: 0;
+            transition: opacity 0.2s ease;
+          }
+          .loc-card:hover {
+            border-color: rgba(232,160,32,0.5);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(11, 27, 58, 0.06);
+          }
+          .loc-card:hover::before { opacity: 1; }
+          @media (prefers-reduced-motion: reduce) {
+            .loc-card:hover { transform: none; }
+          }
+          .loc-head {
+            display: flex; justify-content: space-between; align-items: flex-start;
+            gap: 10px; margin-bottom: 8px;
+          }
+          .loc-name {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 16px;
+            font-weight: 700;
+            color: #0B1B3A;
+            margin: 0;
+            letter-spacing: -0.01em;
+          }
+          .loc-addr { font-size: 12px; color: #4A5568; margin: 0 0 10px; line-height: 1.5; }
+          .loc-meta { font-size: 11.5px; color: #94A3B8; margin-bottom: 4px; }
+          .loc-meta strong { color: #4A5568; font-weight: 600; }
+          .loc-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 14px; padding-top: 12px; border-top: 1px solid #F1F4F9; }
+
+          /* ─── Modal ─── */
+          :global(.attn-modal-backdrop) {
+            position: fixed;
+            inset: 0;
+            background: rgba(7, 18, 42, 0.55);
+            backdrop-filter: blur(2px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1050;
+            padding: 20px;
+            animation: attn-modal-in 0.18s ease;
+          }
+          @keyframes attn-modal-in {
+            from { opacity: 0; }
+            to   { opacity: 1; }
+          }
+          :global(.attn-modal-card) {
+            background: #ffffff;
+            border-radius: 20px;
+            width: 100%;
+            max-width: 640px;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 24px 60px rgba(7, 18, 42, 0.45);
+            animation: attn-modal-rise 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+          }
+          :global(.attn-modal-card.is-lg) { max-width: 820px; }
+          @keyframes attn-modal-rise {
+            from { opacity: 0; transform: translateY(12px) scale(0.98); }
+            to   { opacity: 1; transform: translateY(0)    scale(1); }
+          }
+          @media (prefers-reduced-motion: reduce) {
+            :global(.attn-modal-backdrop),
+            :global(.attn-modal-card) { animation: none; }
+          }
+          :global(.attn-modal-head) {
+            padding: 20px 24px 16px;
+            border-bottom: 1px solid #F1F4F9;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+          }
+          :global(.attn-modal-title) {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 20px;
+            font-weight: 700;
+            color: #0B1B3A;
+            margin: 0;
+            letter-spacing: -0.01em;
+          }
+          :global(.attn-modal-close) {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            color: #94A3B8;
+            padding: 6px;
+            border-radius: 6px;
+            line-height: 0;
+            transition: background 0.15s, color 0.15s;
+          }
+          :global(.attn-modal-close):hover { background: #F4F6FB; color: #0B1B3A; }
+          :global(.attn-modal-body) {
+            padding: 22px 24px;
+            overflow-y: auto;
+            flex: 1;
+          }
+          :global(.attn-modal-foot) {
+            padding: 16px 24px;
+            border-top: 1px solid #F1F4F9;
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            background: #FAFBFD;
+            flex-wrap: wrap;
+          }
+
+          /* ─── Checkbox ─── */
+          .ck-row {
+            display: flex; align-items: center; gap: 8px;
+            font-size: 13px; color: #4A5568;
+          }
+          .ck-row input[type='checkbox'] {
+            width: 16px; height: 16px;
+            accent-color: #E8A020;
+            cursor: pointer;
+          }
+
+          /* ─── National-holidays table inside modal ─── */
+          .nat-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+          .nat-table thead th {
+            text-align: left;
+            padding: 8px 8px;
+            font-size: 10.5px;
+            font-weight: 700;
+            color: #94A3B8;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            border-bottom: 1px solid #E5E9F2;
+          }
+          .nat-table tbody td {
+            padding: 8px;
+            border-bottom: 1px solid #F1F4F9;
+            color: #0B1B3A;
+          }
+          .nat-table tbody tr.nat-existed td { color: #94A3B8; }
+          .nat-table tbody tr:last-child td { border-bottom: none; }
+          .nat-table input[type='date'] {
+            background: #ffffff;
+            border: 1px solid #E5E9F2;
+            border-radius: 8px;
+            padding: 5px 8px;
+            font-size: 12px;
+            font-family: inherit;
+            color: #0B1B3A;
+            outline: none;
+          }
+          .nat-table input[type='date']:focus {
+            border-color: #E8A020;
+            box-shadow: 0 0 0 2px rgba(232,160,32,0.16);
+          }
+
+          .small-note { font-size: 12px; color: #94A3B8; margin: 14px 0 0; }
+
+          /* ─── Mobile tweaks ─── */
+          @media (max-width: 720px) {
+            .attn-tab { padding: 8px 12px; font-size: 12px; }
+            .fl-group input[type='search'] { min-width: 0; }
+            .fld-row { grid-template-columns: 1fr; }
+            .attn-inner { padding: 0 16px; }
+            .attn-hero { padding: 30px 20px 44px; }
+          }
+        `}</style>
+
+        {/* ───────── Hero ───────── */}
+        <header className="attn-hero">
+          <div className="attn-hero-inner">
+            <span className="attn-eyebrow">Operations · Attendance</span>
+            <h1 className="attn-title">Attendance Management</h1>
+            <p className="attn-sub">
+              View daily attendance records, mark attendance manually for a student, configure
+              office locations with GPS &amp; IP fencing, and manage the company-wide holiday calendar.
+            </p>
+          </div>
+        </header>
+
+        <main className="attn-inner">
+          {/* ───────── Tabs ───────── */}
+          <div className="attn-tabs" role="tablist" aria-label="Attendance sections">
+            {TABS.map(t => (
+              <button
+                key={t.key}
+                role="tab"
+                aria-selected={tab === t.key}
+                className={`attn-tab ${tab === t.key ? 'active' : ''}`}
+                onClick={() => setTab(t.key)}
+              >
+                {t.icon}
+                {t.label}
+                {t.key === 'holidays' && holidayCount > 0 && (
+                  <span className="pill-count">{holidayCount}</span>
+                )}
+              </button>
+            ))}
+          </div>
 
           {/* ─── Records Tab ─── */}
           {tab === 'records' && (
-            <>
-              <div className="d-flex gap-3 mb-4 flex-wrap align-items-end">
-                <div>
-                  <label className="form-label small text-muted mb-1">Date</label>
-                  <input type="date" className="form-control form-control-sm" value={filterDate}
+            <div className="attn-panel">
+              <div className="attn-filters">
+                <div className="fl-group">
+                  <label className="fl-lbl">Date</label>
+                  <input type="date" value={filterDate}
                     onChange={e => setFilterDate(e.target.value)} />
                 </div>
-                <div>
-                  <label className="form-label small text-muted mb-1">From</label>
-                  <input type="date" className="form-control form-control-sm" value={filterFrom}
+                <div className="fl-group">
+                  <label className="fl-lbl">From</label>
+                  <input type="date" value={filterFrom}
                     onChange={e => { setFilterFrom(e.target.value); if (e.target.value) setFilterDate(''); }} />
                 </div>
-                <div>
-                  <label className="form-label small text-muted mb-1">To</label>
-                  <input type="date" className="form-control form-control-sm" value={filterTo}
+                <div className="fl-group">
+                  <label className="fl-lbl">To</label>
+                  <input type="date" value={filterTo}
                     onChange={e => { setFilterTo(e.target.value); if (e.target.value) setFilterDate(''); }} />
                 </div>
-                <div>
-                  <label className="form-label small text-muted mb-1">Role</label>
-                  <select className="form-select form-select-sm" value={filterRole}
-                    onChange={e => setFilterRole(e.target.value)}>
-                    <option value="">All Roles</option>
+                <div className="fl-group">
+                  <label className="fl-lbl">Role</label>
+                  <select value={filterRole} onChange={e => setFilterRole(e.target.value)}>
+                    <option value="">All roles</option>
                     <option value="student">Student</option>
                     <option value="trainer">Trainer</option>
                     <option value="hr">HR</option>
                     <option value="admin">Admin</option>
                   </select>
                 </div>
-                <div style={{ minWidth: 220 }}>
-                  <label className="form-label small text-muted mb-1">Search (name, email, phone, ID)</label>
-                  <input type="text" className="form-control form-control-sm" value={filterQ}
+                <div className="fl-group" style={{ flex: '1 1 220px' }}>
+                  <label className="fl-lbl">Search</label>
+                  <input type="search" value={filterQ}
                     onChange={e => setFilterQ(e.target.value)}
-                    placeholder="e.g. John, john@…, 98xxxx, 42" />
+                    placeholder="Name, email, phone, ID…" />
                 </div>
+                <div className="fl-actions">
+                  <button className="btn btn-primary" onClick={loadRecords}>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    Apply
+                  </button>
+                  <button className="btn btn-ghost" onClick={resetRecordFilters}>Reset (today)</button>
+                </div>
+              </div>
+
+              <div className="attn-sub-head">
                 <div>
-                  <button className="btn btn-sm btn-primary me-2" onClick={loadRecords}>Apply</button>
-                  <button className="btn btn-sm btn-outline-secondary" onClick={() => { resetRecordFilters(); }}>Reset (Today)</button>
+                  <h2>Attendance records</h2>
+                  <div className="sub-meta">
+                    {loading
+                      ? 'Loading…'
+                      : `${records.length} record${records.length === 1 ? '' : 's'} ${filterDate ? `on ${filterDate}` : 'in range'}`}
+                  </div>
                 </div>
               </div>
 
               {loading ? (
-                <div className="text-center py-5 text-muted">Loading...</div>
+                <div className="attn-state">
+                  <div className="spinner" aria-hidden="true" />
+                  <div>Loading attendance records…</div>
+                </div>
+              ) : records.length === 0 ? (
+                <div className="attn-state">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.55, marginBottom: 8 }}>
+                    <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+                  </svg>
+                  <div>No records match these filters.</div>
+                </div>
               ) : (
-                <div className="card">
-                  <div className="table-responsive">
-                    <table className="table table-hover mb-0">
-                      <thead className="table-light">
-                        <tr>
-                          <th>User</th>
-                          <th>Role</th>
-                          <th>Date</th>
-                          <th>Punch In</th>
-                          <th>Punch Out</th>
-                          <th>Duration</th>
-                          <th>Location</th>
-                          <th>Verification</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {records.length === 0 ? (
-                          <tr><td colSpan={8} className="text-center text-muted py-4">No records found for these filters.</td></tr>
-                        ) : records.map(r => (
-                          <tr key={r.id}>
-                            <td>
-                              <div className="fw-semibold">{r.user?.name || '—'} <small className="text-muted">#{r.user?.id}</small></div>
-                              <small className="text-muted">{r.user?.email}</small>
-                            </td>
-                            <td><span className="badge bg-secondary">{roleLabel(r.user?.role)}</span></td>
-                            <td className="small">{(r.date || '').slice(0, 10)}</td>
-                            <td className="small">{r.punch_in ? new Date(r.punch_in).toLocaleTimeString() : '—'}</td>
-                            <td className="small">{r.punch_out ? new Date(r.punch_out).toLocaleTimeString() : <span className="text-warning">Active</span>}</td>
-                            <td className="small">{duration(r.punch_in, r.punch_out)}</td>
-                            <td className="small">{r.location?.name || '—'}</td>
-                            <td className="small">
-                              {r.wifi_verified && <span className="badge bg-info me-1">WiFi</span>}
-                              {r.gps_verified && <span className="badge bg-success me-1">GPS</span>}
+                <div className="table-wrap">
+                  <table className="attn-table">
+                    <thead>
+                      <tr>
+                        <th>User</th>
+                        <th>Role</th>
+                        <th>Date</th>
+                        <th>Punch In</th>
+                        <th>Punch Out</th>
+                        <th>Duration</th>
+                        <th>Location</th>
+                        <th>Verification</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {records.map(r => (
+                        <tr key={r.id}>
+                          <td>
+                            <div className="uname">
+                              {r.user?.name || '—'} <span className="uname-sub">#{r.user?.id}</span>
+                            </div>
+                            <div className="uemail">{r.user?.email}</div>
+                          </td>
+                          <td>
+                            <span className={`badge ${roleBadgeClass(r.user?.role)}`}>{roleLabel(r.user?.role)}</span>
+                          </td>
+                          <td>{(r.date || '').slice(0, 10)}</td>
+                          <td>{r.punch_in ? new Date(r.punch_in).toLocaleTimeString() : '—'}</td>
+                          <td>
+                            {r.punch_out
+                              ? new Date(r.punch_out).toLocaleTimeString()
+                              : <span className="punch-active">Active</span>}
+                          </td>
+                          <td>{duration(r.punch_in, r.punch_out)}</td>
+                          <td>{r.location?.name || '—'}</td>
+                          <td>
+                            <span className="verif-row">
+                              {r.wifi_verified && <span className="badge badge-info">WiFi</span>}
+                              {r.gps_verified  && <span className="badge badge-success">GPS</span>}
                               {r.marked_by && (
-                                <span className="badge bg-warning text-dark" title={`Admin user #${r.marked_by}`}>
-                                  Manual by {r.markedBy?.name || `Admin #${r.marked_by}`}
+                                <span className="badge badge-warn" title={`Admin user #${r.marked_by}`}>
+                                  Manual · {r.markedBy?.name || `#${r.marked_by}`}
                                 </span>
                               )}
                               {!r.wifi_verified && !r.gps_verified && !r.marked_by && (
-                                <span className="badge bg-secondary">Unverified</span>
+                                <span className="badge badge-muted">Unverified</span>
                               )}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               )}
-            </>
+            </div>
           )}
 
           {/* ─── Manual Mark Tab ─── */}
           {tab === 'manual' && (
-            <div className="card" style={{ maxWidth: 640 }}>
-              <div className="card-header fw-semibold">Mark Attendance Manually</div>
-              <div className="card-body">
-                {manualMsg && <div className={`alert ${manualMsg.includes('success') ? 'alert-success' : 'alert-danger'}`}>{manualMsg}</div>}
+            <div className="attn-panel">
+              <div className="attn-sub-head">
+                <div>
+                  <h2>Mark attendance manually</h2>
+                  <div className="sub-meta">For days a student forgot to punch / was on a sanctioned outside trip.</div>
+                </div>
+              </div>
+
+              <div className="form-wrap">
+                {manualMsg && (
+                  <div className={`alert ${manualMsg.toLowerCase().includes('success') ? 'alert-success' : 'alert-danger'}`}>
+                    {manualMsg}
+                  </div>
+                )}
 
                 <form onSubmit={markManual}>
                   {/* Student picker */}
-                  <div className="mb-3 position-relative">
-                    <label className="form-label">Student *</label>
+                  <div className="fld" style={{ position: 'relative' }}>
+                    <label className="fld-lbl">Student *</label>
                     {selectedUser ? (
-                      <div className="d-flex justify-content-between align-items-center border rounded p-2 bg-light">
+                      <div className="selected-user">
                         <div>
-                          <div className="fw-semibold">{selectedUser.name} <small className="text-muted">#{selectedUser.id}</small></div>
-                          <small className="text-muted">{selectedUser.email}{selectedUser.phone ? ` · ${selectedUser.phone}` : ''}{selectedUser.role ? ` · ${roleLabel(selectedUser.role)}` : ''}</small>
+                          <div className="uname">
+                            {selectedUser.name} <span className="uname-sub">#{selectedUser.id}</span>
+                          </div>
+                          <div className="selected-user-meta">
+                            {selectedUser.email}
+                            {selectedUser.phone ? ` · ${selectedUser.phone}` : ''}
+                            {selectedUser.role ? ` · ${roleLabel(selectedUser.role)}` : ''}
+                          </div>
                         </div>
-                        <button type="button" className="btn btn-sm btn-outline-secondary"
+                        <button type="button" className="btn btn-sm btn-ghost"
                           onClick={() => { setSelectedUser(null); setManualSearch(''); setManualResults([]); }}>
                           Change
                         </button>
                       </div>
                     ) : (
                       <>
-                        <input type="text" className="form-control"
-                          placeholder="Search by name, email, or phone (min 2 chars)"
+                        <input type="text"
+                          placeholder="Search by name, email or phone (min 2 chars)"
                           value={manualSearch}
                           onChange={e => setManualSearch(e.target.value)} />
                         {manualSearch.length >= 2 && (
-                          <div className="border rounded mt-1" style={{ maxHeight: 220, overflowY: 'auto' }}>
+                          <div className="search-results">
                             {manualSearching ? (
-                              <div className="p-2 text-muted small">Searching…</div>
+                              <div className="search-empty">Searching…</div>
                             ) : manualResults.length === 0 ? (
-                              <div className="p-2 text-muted small">No users found.</div>
+                              <div className="search-empty">No students found.</div>
                             ) : manualResults.map(u => (
-                              <button key={u.id} type="button"
-                                className="d-block w-100 text-start btn btn-sm border-bottom rounded-0"
+                              <button key={u.id} type="button" className="search-item"
                                 onClick={() => { setSelectedUser(u); setManualSearch(''); setManualResults([]); }}>
-                                <div className="fw-semibold">{u.name} <small className="text-muted">#{u.id}</small></div>
-                                <small className="text-muted">{u.email}{u.phone ? ` · ${u.phone}` : ''}{u.role ? ` · ${roleLabel(u.role)}` : ''}</small>
+                                <div className="search-name">{u.name} <span className="uname-sub">#{u.id}</span></div>
+                                <div className="search-meta">
+                                  {u.email}
+                                  {u.phone ? ` · ${u.phone}` : ''}
+                                  {u.role ? ` · ${roleLabel(u.role)}` : ''}
+                                </div>
                               </button>
                             ))}
                           </div>
@@ -685,34 +1397,41 @@ export default function AttendanceManagement() {
                     )}
                   </div>
 
-                  <div className="mb-3">
-                    <label className="form-label">Date *</label>
-                    <input type="date" className="form-control" required value={manualForm.date}
+                  <div className="fld">
+                    <label className="fld-lbl">Date *</label>
+                    <input type="date" required value={manualForm.date}
                       max={todayYmd()}
                       onChange={e => setManualForm(f => ({ ...f, date: e.target.value }))} />
                   </div>
-                  <div className="row g-3 mb-3">
-                    <div className="col-6">
-                      <label className="form-label">Punch In *</label>
-                      <input type="time" className="form-control" required value={manualForm.punch_in}
+
+                  <div className="fld-row">
+                    <div className="fld">
+                      <label className="fld-lbl">Punch In *</label>
+                      <input type="time" required value={manualForm.punch_in}
                         onChange={e => setManualForm(f => ({ ...f, punch_in: e.target.value }))} />
                     </div>
-                    <div className="col-6">
-                      <label className="form-label">Punch Out</label>
-                      <input type="time" className="form-control" value={manualForm.punch_out}
+                    <div className="fld">
+                      <label className="fld-lbl">Punch Out</label>
+                      <input type="time" value={manualForm.punch_out}
                         onChange={e => setManualForm(f => ({ ...f, punch_out: e.target.value }))} />
                     </div>
                   </div>
-                  <div className="mb-3">
-                    <label className="form-label">Notes</label>
-                    <textarea className="form-control" rows={2} value={manualForm.notes}
+
+                  <div className="fld">
+                    <label className="fld-lbl">Notes</label>
+                    <textarea rows={2} value={manualForm.notes}
                       onChange={e => setManualForm(f => ({ ...f, notes: e.target.value }))}
                       placeholder="Reason / context (optional)" />
                   </div>
-                  <button type="submit" className="btn btn-primary" disabled={manualSaving || !selectedUser}>
-                    {manualSaving ? 'Saving...' : 'Mark Present'}
-                  </button>
-                  <small className="text-muted ms-3">Will be recorded as marked by you.</small>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+                    <button type="submit" className="btn btn-primary" disabled={manualSaving || !selectedUser}>
+                      {manualSaving ? 'Saving…' : 'Mark present'}
+                    </button>
+                    <small style={{ fontSize: 12, color: '#94A3B8' }}>
+                      Will be recorded as marked by you.
+                    </small>
+                  </div>
                 </form>
               </div>
             </div>
@@ -720,310 +1439,370 @@ export default function AttendanceManagement() {
 
           {/* ─── Locations Tab ─── */}
           {tab === 'locations' && (
-            <>
-              <div className="d-flex justify-content-end mb-3">
-                <button className="btn btn-primary" onClick={openCreateLoc}>+ Add Location</button>
+            <div className="attn-panel">
+              <div className="attn-sub-head">
+                <div>
+                  <h2>Office locations</h2>
+                  <div className="sub-meta">
+                    {locations.length === 0
+                      ? 'No locations configured yet — students cannot punch from a fenced site.'
+                      : `${locations.length} configured · GPS + IP fencing rules`}
+                  </div>
+                </div>
+                <div className="attn-actions">
+                  <button className="btn btn-primary" onClick={openCreateLoc}>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+                    </svg>
+                    Add location
+                  </button>
+                </div>
               </div>
-              <div className="row g-3">
-                {locations.length === 0 ? (
-                  <div className="text-muted text-center py-4">No locations configured.</div>
-                ) : locations.map(loc => (
-                  <div key={loc.id} className="col-md-6 col-xl-4">
-                    <div className="card h-100">
-                      <div className="card-body">
-                        <div className="d-flex justify-content-between align-items-start mb-2">
-                          <h6 className="card-title mb-0">{loc.name}</h6>
-                          <span className={`badge ${loc.is_active ? 'bg-success' : 'bg-secondary'}`}>
-                            {loc.is_active ? 'Active' : 'Inactive'}
-                          </span>
+
+              {locations.length === 0 ? (
+                <div className="attn-state">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.55, marginBottom: 8 }}>
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" />
+                  </svg>
+                  <div>No locations configured.</div>
+                </div>
+              ) : (
+                <div className="loc-grid">
+                  {locations.map(loc => (
+                    <div key={loc.id} className="loc-card">
+                      <div className="loc-head">
+                        <h3 className="loc-name">{loc.name}</h3>
+                        <span className={`badge ${loc.is_active ? 'badge-success' : 'badge-muted'}`}>
+                          {loc.is_active ? 'Active' : 'Inactive'}
+                        </span>
+                      </div>
+                      {loc.address && <p className="loc-addr">{loc.address}</p>}
+                      {(loc.latitude && loc.longitude) && (
+                        <div className="loc-meta">
+                          <strong>GPS:</strong> {loc.latitude}, {loc.longitude} · radius {loc.radius_meters}m
                         </div>
-                        {loc.address && <p className="text-muted small mb-2">{loc.address}</p>}
-                        {(loc.latitude && loc.longitude) && (
-                          <div className="small text-muted mb-1">
-                            GPS: {loc.latitude}, {loc.longitude} (r={loc.radius_meters}m)
-                          </div>
-                        )}
-                        {(loc.allowed_ips || []).length > 0 && (
-                          <div className="small text-muted mb-2">
-                            IPs: {loc.allowed_ips!.join(', ')}
-                          </div>
-                        )}
-                        <div className="d-flex gap-2 mt-3 flex-wrap">
-                          <button className="btn btn-sm btn-outline-primary" onClick={() => openEditLoc(loc)}>Edit</button>
-                          <button className={`btn btn-sm ${loc.is_active ? 'btn-outline-warning' : 'btn-outline-success'}`}
-                            onClick={() => toggleLocActive(loc)}>
-                            {loc.is_active ? 'Deactivate' : 'Activate'}
-                          </button>
-                          <button className="btn btn-sm btn-outline-danger" onClick={() => deleteLoc(loc.id)}>Delete</button>
+                      )}
+                      {(loc.allowed_ips || []).length > 0 && (
+                        <div className="loc-meta">
+                          <strong>IPs:</strong> {loc.allowed_ips!.join(', ')}
                         </div>
+                      )}
+                      <div className="loc-actions">
+                        <button className="btn btn-sm btn-outline-primary" onClick={() => openEditLoc(loc)}>Edit</button>
+                        <button className={`btn btn-sm ${loc.is_active ? 'btn-outline-warn' : 'btn-outline-success'}`}
+                          onClick={() => toggleLocActive(loc)}>
+                          {loc.is_active ? 'Deactivate' : 'Activate'}
+                        </button>
+                        <button className="btn btn-sm btn-outline-danger" onClick={() => deleteLoc(loc.id)}>Delete</button>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            </>
+                  ))}
+                </div>
+              )}
+            </div>
           )}
 
           {/* ─── Holidays Tab ─── */}
           {tab === 'holidays' && (
-            <>
-              <div className="d-flex justify-content-between align-items-center mb-3">
+            <div className="attn-panel">
+              <div className="attn-sub-head">
                 <div>
-                  <strong>{new Date().getFullYear()}</strong>
-                  <small className="text-muted ms-2">{holidays.length} holiday{holidays.length === 1 ? '' : 's'} configured</small>
+                  <h2>Holiday calendar · {new Date().getFullYear()}</h2>
+                  <div className="sub-meta">
+                    {holidays.length} holiday{holidays.length === 1 ? '' : 's'} configured · excluded from absentee counts
+                  </div>
                 </div>
-                <div className="d-flex gap-2 flex-wrap">
-                  <button className="btn btn-outline-primary" onClick={openNationalModal}>📅 From National Holidays</button>
-                  <button className="btn btn-primary" onClick={openCreateHol}>+ Add Holiday</button>
+                <div className="attn-actions">
+                  <button className="btn btn-ghost" onClick={openNationalModal}>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
+                    </svg>
+                    From national list
+                  </button>
+                  <button className="btn btn-primary" onClick={openCreateHol}>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+                    </svg>
+                    Add holiday
+                  </button>
                 </div>
               </div>
 
               {holidaysLoading ? (
-                <div className="text-center py-4 text-muted">Loading...</div>
+                <div className="attn-state">
+                  <div className="spinner" aria-hidden="true" />
+                  <div>Loading holiday calendar…</div>
+                </div>
+              ) : holidays.length === 0 ? (
+                <div className="attn-state">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.55, marginBottom: 8 }}>
+                    <rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
+                  </svg>
+                  <div>No holidays configured yet.</div>
+                </div>
               ) : (
-                <div className="card">
-                  <div className="table-responsive">
-                    <table className="table table-hover mb-0">
-                      <thead className="table-light">
-                        <tr><th>Date</th><th>Day</th><th>Name</th><th>Description</th><th>Added by</th><th></th></tr>
-                      </thead>
-                      <tbody>
-                        {holidays.length === 0 ? (
-                          <tr><td colSpan={6} className="text-center text-muted py-4">No holidays configured yet.</td></tr>
-                        ) : holidays.map(h => (
-                          <tr key={h.id}>
-                            <td className="fw-semibold">{(h.date || '').slice(0, 10)}</td>
-                            <td className="small text-muted">{new Date(h.date).toLocaleDateString(undefined, { weekday: 'long' })}</td>
-                            <td>{h.name}</td>
-                            <td className="small text-muted">{h.description || '—'}</td>
-                            <td className="small text-muted">{h.creator?.name || '—'}</td>
-                            <td className="text-end">
-                              <button className="btn btn-sm btn-outline-primary me-2" onClick={() => openEditHol(h)}>Edit</button>
-                              <button className="btn btn-sm btn-outline-danger" onClick={() => deleteHol(h.id)}>Delete</button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                <div className="table-wrap">
+                  <table className="attn-table">
+                    <thead>
+                      <tr>
+                        <th>Date</th>
+                        <th>Day</th>
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th>Added by</th>
+                        <th style={{ textAlign: 'right' }}>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {holidays.map(h => (
+                        <tr key={h.id}>
+                          <td style={{ fontWeight: 600 }}>{(h.date || '').slice(0, 10)}</td>
+                          <td style={{ fontSize: 12, color: '#94A3B8' }}>
+                            {new Date(h.date).toLocaleDateString(undefined, { weekday: 'long' })}
+                          </td>
+                          <td>{h.name}</td>
+                          <td style={{ fontSize: 12, color: '#4A5568' }}>{h.description || '—'}</td>
+                          <td style={{ fontSize: 12, color: '#94A3B8' }}>{h.creator?.name || '—'}</td>
+                          <td style={{ textAlign: 'right' }}>
+                            <button className="btn btn-sm btn-outline-primary" style={{ marginRight: 6 }} onClick={() => openEditHol(h)}>Edit</button>
+                            <button className="btn btn-sm btn-outline-danger" onClick={() => deleteHol(h.id)}>Delete</button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               )}
-              <p className="text-muted small mt-3">
+              <p className="small-note">
                 Holidays and Sundays are excluded from absentee counts on the student attendance dashboard.
               </p>
-            </>
+            </div>
           )}
-        </div>
+        </main>
       </div>
 
-      {/* ── Location Modal ── */}
+      {/* ─────────────────── Location Modal ─────────────────── */}
       {showLocModal && (
-        <div className="modal fade show d-block" style={{ background: 'rgba(0,0,0,.5)' }}>
-          <div className="modal-dialog modal-dialog-centered modal-lg">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">{editLoc ? 'Edit Location' : 'Add Location'}</h5>
-                <button className="btn-close" onClick={() => setShowLocModal(false)} />
-              </div>
-              <form onSubmit={saveLoc}>
-                <div className="modal-body">
-                  {locMsg && (
-                    <div className={`alert ${
-                      locMsg.toLowerCase().includes('fail') ||
-                      locMsg.toLowerCase().includes('could not') ||
-                      locMsg.toLowerCase().includes('denied') ||
-                      locMsg.toLowerCase().includes('unavailable') ||
-                      locMsg.toLowerCase().includes('timed out') ||
-                      locMsg.toLowerCase().includes('not supported') ||
-                      locMsg.toLowerCase().includes('requires https')
-                        ? 'alert-danger' : 'alert-info'} py-2 small`}>
-                      {locMsg}
-                    </div>
-                  )}
-                  <div className="mb-3">
-                    <label className="form-label">Name *</label>
-                    <input className="form-control" required value={locForm.name}
-                      onChange={e => setLocForm(f => ({ ...f, name: e.target.value }))} />
-                  </div>
-                  <div className="mb-3">
-                    <label className="form-label">Address</label>
-                    <input className="form-control" value={locForm.address}
-                      onChange={e => setLocForm(f => ({ ...f, address: e.target.value }))} />
-                  </div>
-                  <div className="row g-3 mb-1">
-                    <div className="col-6">
-                      <label className="form-label">Latitude</label>
-                      <input type="number" step="any" className="form-control" value={locForm.latitude}
-                        onChange={e => setLocForm(f => ({ ...f, latitude: e.target.value }))} />
-                    </div>
-                    <div className="col-6">
-                      <label className="form-label">Longitude</label>
-                      <input type="number" step="any" className="form-control" value={locForm.longitude}
-                        onChange={e => setLocForm(f => ({ ...f, longitude: e.target.value }))} />
-                    </div>
-                  </div>
-                  <button type="button" className="btn btn-sm btn-outline-success mb-3"
-                    onClick={autoFetchGps} disabled={autoGpsLoading}>
-                    {autoGpsLoading ? 'Fetching…' : '📍 Use Current Location'}
-                  </button>
-
-                  <div className="mb-3">
-                    <label className="form-label">GPS Radius (meters)</label>
-                    <input type="number" min={10} max={5000} className="form-control" value={locForm.radius_meters}
-                      onChange={e => setLocForm(f => ({ ...f, radius_meters: e.target.value }))} />
-                  </div>
-
-                  <div className="mb-1">
-                    <label className="form-label">Allowed IPs <small className="text-muted">(comma-separated)</small></label>
-                    <input className="form-control" placeholder="e.g. 192.168.1.1, 10.0.0.1" value={locForm.allowed_ips}
-                      onChange={e => setLocForm(f => ({ ...f, allowed_ips: e.target.value }))} />
-                  </div>
-                  <button type="button" className="btn btn-sm btn-outline-info mb-3"
-                    onClick={autoFetchIp} disabled={autoIpLoading}>
-                    {autoIpLoading ? 'Fetching…' : '📡 Use Current IP'}
-                  </button>
-
-                  <div className="form-check">
-                    <input type="checkbox" className="form-check-input" id="loc-active"
-                      checked={locForm.is_active}
-                      onChange={e => setLocForm(f => ({ ...f, is_active: e.target.checked }))} />
-                    <label className="form-check-label" htmlFor="loc-active">Active</label>
-                  </div>
-                </div>
-                <div className="modal-footer">
-                  <button type="button" className="btn btn-secondary" onClick={() => setShowLocModal(false)}>Cancel</button>
-                  <button type="submit" className="btn btn-primary" disabled={locSaving}>
-                    {locSaving ? 'Saving...' : 'Save'}
-                  </button>
-                </div>
-              </form>
+        <div className="attn-modal-backdrop" onClick={e => { if (e.target === e.currentTarget) setShowLocModal(false); }}>
+          <div className="attn-modal-card is-lg">
+            <div className="attn-modal-head">
+              <h2 className="attn-modal-title">{editLoc ? 'Edit location' : 'Add location'}</h2>
+              <button className="attn-modal-close" onClick={() => setShowLocModal(false)} aria-label="Close">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
             </div>
+            <form onSubmit={saveLoc} style={{ display: 'contents' }}>
+              <div className="attn-modal-body">
+                {locMsg && (
+                  <div className={`alert ${
+                    locMsg.toLowerCase().includes('fail') ||
+                    locMsg.toLowerCase().includes('could not') ||
+                    locMsg.toLowerCase().includes('denied') ||
+                    locMsg.toLowerCase().includes('unavailable') ||
+                    locMsg.toLowerCase().includes('timed out') ||
+                    locMsg.toLowerCase().includes('not supported') ||
+                    locMsg.toLowerCase().includes('requires https')
+                      ? 'alert-danger' : 'alert-info'}`}>
+                    {locMsg}
+                  </div>
+                )}
+
+                <div className="fld">
+                  <label className="fld-lbl">Name *</label>
+                  <input required value={locForm.name}
+                    onChange={e => setLocForm(f => ({ ...f, name: e.target.value }))} />
+                </div>
+                <div className="fld">
+                  <label className="fld-lbl">Address</label>
+                  <input value={locForm.address}
+                    onChange={e => setLocForm(f => ({ ...f, address: e.target.value }))} />
+                </div>
+
+                <div className="fld-row">
+                  <div className="fld">
+                    <label className="fld-lbl">Latitude</label>
+                    <input type="number" step="any" value={locForm.latitude}
+                      onChange={e => setLocForm(f => ({ ...f, latitude: e.target.value }))} />
+                  </div>
+                  <div className="fld">
+                    <label className="fld-lbl">Longitude</label>
+                    <input type="number" step="any" value={locForm.longitude}
+                      onChange={e => setLocForm(f => ({ ...f, longitude: e.target.value }))} />
+                  </div>
+                </div>
+                <button type="button" className="btn btn-sm btn-outline-success" style={{ marginBottom: 14 }}
+                  onClick={autoFetchGps} disabled={autoGpsLoading}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" />
+                  </svg>
+                  {autoGpsLoading ? 'Fetching…' : 'Use current location'}
+                </button>
+
+                <div className="fld">
+                  <label className="fld-lbl">GPS radius (meters)</label>
+                  <input type="number" min={10} max={5000} value={locForm.radius_meters}
+                    onChange={e => setLocForm(f => ({ ...f, radius_meters: e.target.value }))} />
+                </div>
+
+                <div className="fld">
+                  <label className="fld-lbl">Allowed IPs <span style={{ color: '#94A3B8', fontWeight: 400 }}>(comma-separated)</span></label>
+                  <input placeholder="e.g. 192.168.1.1, 10.0.0.1" value={locForm.allowed_ips}
+                    onChange={e => setLocForm(f => ({ ...f, allowed_ips: e.target.value }))} />
+                </div>
+                <button type="button" className="btn btn-sm btn-outline-primary" style={{ marginBottom: 14 }}
+                  onClick={autoFetchIp} disabled={autoIpLoading}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M5 12.55a11 11 0 0 1 14.08 0" /><path d="M1.42 9a16 16 0 0 1 21.16 0" /><path d="M8.53 16.11a6 6 0 0 1 6.95 0" /><line x1="12" y1="20" x2="12.01" y2="20" />
+                  </svg>
+                  {autoIpLoading ? 'Fetching…' : 'Use current IP'}
+                </button>
+
+                <label className="ck-row">
+                  <input type="checkbox"
+                    checked={locForm.is_active}
+                    onChange={e => setLocForm(f => ({ ...f, is_active: e.target.checked }))} />
+                  Active (students can punch from here)
+                </label>
+              </div>
+              <div className="attn-modal-foot">
+                <button type="button" className="btn btn-ghost" onClick={() => setShowLocModal(false)}>Cancel</button>
+                <button type="submit" className="btn btn-primary" disabled={locSaving}>
+                  {locSaving ? 'Saving…' : 'Save location'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
 
-      {/* ── National Holidays Modal ── */}
+      {/* ─────────────────── National Holidays Modal ─────────────────── */}
       {showNationalModal && (
-        <div className="modal fade show d-block" style={{ background: 'rgba(0,0,0,.5)' }}>
-          <div className="modal-dialog modal-dialog-centered modal-lg">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">National Holidays — 2026</h5>
-                <button className="btn-close" onClick={() => setShowNationalModal(false)} />
-              </div>
-              <div className="modal-body" style={{ maxHeight: 480, overflowY: 'auto' }}>
-                <p className="small text-muted mb-2">
-                  Select the holidays to add to {new Date().getFullYear()}. Lunar / Islamic dates are best-effort approximations — edit the date column before adding if your calendar differs. Holidays already configured are pre-disabled.
-                </p>
+        <div className="attn-modal-backdrop" onClick={e => { if (e.target === e.currentTarget) setShowNationalModal(false); }}>
+          <div className="attn-modal-card is-lg">
+            <div className="attn-modal-head">
+              <h2 className="attn-modal-title">National holidays · 2026</h2>
+              <button className="attn-modal-close" onClick={() => setShowNationalModal(false)} aria-label="Close">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
+            <div className="attn-modal-body" style={{ maxHeight: 480 }}>
+              <p className="small-note" style={{ marginTop: 0, marginBottom: 12 }}>
+                Select holidays to add to {new Date().getFullYear()}. Lunar / Islamic dates are best-effort approximations — edit each date inline if your calendar differs. Already-added entries are pre-disabled.
+              </p>
 
-                {bulkMsg && (
-                  <div className="alert alert-warning py-2 small" style={{ whiteSpace: 'pre-wrap' }}>{bulkMsg}</div>
-                )}
+              {bulkMsg && <div className="alert alert-warn">{bulkMsg}</div>}
 
-                <table className="table table-sm align-middle">
-                  <thead className="table-light">
-                    <tr>
-                      <th style={{ width: 40 }}></th>
-                      <th style={{ width: 140 }}>Date</th>
-                      <th>Name</th>
-                      <th>Description</th>
+              <table className="nat-table">
+                <thead>
+                  <tr>
+                    <th style={{ width: 36 }}></th>
+                    <th style={{ width: 150 }}>Date</th>
+                    <th>Name</th>
+                    <th>Description</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {nationalChoices.map((c, i) => (
+                    <tr key={i} className={c.alreadyExists ? 'nat-existed' : ''}>
+                      <td>
+                        <input type="checkbox"
+                          checked={c.checked}
+                          disabled={c.alreadyExists}
+                          style={{ accentColor: '#E8A020', width: 15, height: 15, cursor: c.alreadyExists ? 'not-allowed' : 'pointer' }}
+                          onChange={e => {
+                            const next = [...nationalChoices];
+                            next[i] = { ...next[i], checked: e.target.checked };
+                            setNationalChoices(next);
+                          }} />
+                      </td>
+                      <td>
+                        <input type="date"
+                          value={c.date}
+                          disabled={c.alreadyExists}
+                          onChange={e => {
+                            const next = [...nationalChoices];
+                            next[i] = { ...next[i], date: e.target.value };
+                            setNationalChoices(next);
+                          }} />
+                      </td>
+                      <td>
+                        {c.name}
+                        {c.alreadyExists && <span className="badge badge-success" style={{ marginLeft: 8 }}>Added</span>}
+                      </td>
+                      <td style={{ color: '#4A5568' }}>{c.description}</td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {nationalChoices.map((c, i) => (
-                      <tr key={i} className={c.alreadyExists ? 'text-muted' : ''}>
-                        <td>
-                          <input type="checkbox"
-                            checked={c.checked}
-                            disabled={c.alreadyExists}
-                            onChange={e => {
-                              const next = [...nationalChoices];
-                              next[i] = { ...next[i], checked: e.target.checked };
-                              setNationalChoices(next);
-                            }} />
-                        </td>
-                        <td>
-                          <input type="date" className="form-control form-control-sm"
-                            value={c.date}
-                            disabled={c.alreadyExists}
-                            onChange={e => {
-                              const next = [...nationalChoices];
-                              next[i] = { ...next[i], date: e.target.value };
-                              setNationalChoices(next);
-                            }} />
-                        </td>
-                        <td>
-                          {c.name}
-                          {c.alreadyExists && <span className="badge bg-success ms-2">added</span>}
-                        </td>
-                        <td className="small text-muted">{c.description}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                <div className="d-flex gap-2">
-                  <button type="button" className="btn btn-sm btn-outline-secondary"
-                    onClick={() => setNationalChoices(nc => nc.map(c => c.alreadyExists ? c : ({ ...c, checked: true })))}>
-                    Select All
-                  </button>
-                  <button type="button" className="btn btn-sm btn-outline-secondary"
-                    onClick={() => setNationalChoices(nc => nc.map(c => ({ ...c, checked: false })))}>
-                    Deselect All
-                  </button>
-                </div>
-              </div>
-              <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" onClick={() => setShowNationalModal(false)}>Close</button>
-                <button type="button" className="btn btn-primary"
-                  onClick={bulkAddSelected}
-                  disabled={bulkAdding || nationalChoices.filter(c => c.checked && !c.alreadyExists).length === 0}>
-                  {bulkAdding
-                    ? 'Adding…'
-                    : `Add ${nationalChoices.filter(c => c.checked && !c.alreadyExists).length} Holiday${nationalChoices.filter(c => c.checked && !c.alreadyExists).length === 1 ? '' : 's'}`}
+                  ))}
+                </tbody>
+              </table>
+
+              <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
+                <button type="button" className="btn btn-sm btn-ghost"
+                  onClick={() => setNationalChoices(nc => nc.map(c => c.alreadyExists ? c : ({ ...c, checked: true })))}>
+                  Select all
+                </button>
+                <button type="button" className="btn btn-sm btn-ghost"
+                  onClick={() => setNationalChoices(nc => nc.map(c => ({ ...c, checked: false })))}>
+                  Deselect all
                 </button>
               </div>
             </div>
+            <div className="attn-modal-foot">
+              <button type="button" className="btn btn-ghost" onClick={() => setShowNationalModal(false)}>Close</button>
+              <button type="button" className="btn btn-primary"
+                onClick={bulkAddSelected}
+                disabled={bulkAdding || nationalChoices.filter(c => c.checked && !c.alreadyExists).length === 0}>
+                {bulkAdding
+                  ? 'Adding…'
+                  : `Add ${nationalChoices.filter(c => c.checked && !c.alreadyExists).length} holiday${nationalChoices.filter(c => c.checked && !c.alreadyExists).length === 1 ? '' : 's'}`}
+              </button>
+            </div>
           </div>
         </div>
       )}
 
-      {/* ── Holiday Modal ── */}
+      {/* ─────────────────── Holiday Modal ─────────────────── */}
       {showHolModal && (
-        <div className="modal fade show d-block" style={{ background: 'rgba(0,0,0,.5)' }}>
-          <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">{editHol ? 'Edit Holiday' : 'Add Holiday'}</h5>
-                <button className="btn-close" onClick={() => setShowHolModal(false)} />
-              </div>
-              <form onSubmit={saveHol}>
-                <div className="modal-body">
-                  {holMsg && <div className="alert alert-danger py-2 small">{holMsg}</div>}
-                  <div className="mb-3">
-                    <label className="form-label">Date *</label>
-                    <input type="date" className="form-control" required value={holForm.date}
-                      onChange={e => setHolForm(f => ({ ...f, date: e.target.value }))} />
-                  </div>
-                  <div className="mb-3">
-                    <label className="form-label">Name *</label>
-                    <input className="form-control" required value={holForm.name}
-                      onChange={e => setHolForm(f => ({ ...f, name: e.target.value }))}
-                      placeholder="e.g. Republic Day" />
-                  </div>
-                  <div className="mb-3">
-                    <label className="form-label">Description</label>
-                    <textarea className="form-control" rows={2} value={holForm.description}
-                      onChange={e => setHolForm(f => ({ ...f, description: e.target.value }))} />
-                  </div>
-                </div>
-                <div className="modal-footer">
-                  <button type="button" className="btn btn-secondary" onClick={() => setShowHolModal(false)}>Cancel</button>
-                  <button type="submit" className="btn btn-primary" disabled={holSaving}>
-                    {holSaving ? 'Saving...' : 'Save'}
-                  </button>
-                </div>
-              </form>
+        <div className="attn-modal-backdrop" onClick={e => { if (e.target === e.currentTarget) setShowHolModal(false); }}>
+          <div className="attn-modal-card">
+            <div className="attn-modal-head">
+              <h2 className="attn-modal-title">{editHol ? 'Edit holiday' : 'Add holiday'}</h2>
+              <button className="attn-modal-close" onClick={() => setShowHolModal(false)} aria-label="Close">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
             </div>
+            <form onSubmit={saveHol} style={{ display: 'contents' }}>
+              <div className="attn-modal-body">
+                {holMsg && <div className="alert alert-danger">{holMsg}</div>}
+                <div className="fld">
+                  <label className="fld-lbl">Date *</label>
+                  <input type="date" required value={holForm.date}
+                    onChange={e => setHolForm(f => ({ ...f, date: e.target.value }))} />
+                </div>
+                <div className="fld">
+                  <label className="fld-lbl">Name *</label>
+                  <input required value={holForm.name}
+                    onChange={e => setHolForm(f => ({ ...f, name: e.target.value }))}
+                    placeholder="e.g. Republic Day" />
+                </div>
+                <div className="fld">
+                  <label className="fld-lbl">Description</label>
+                  <textarea rows={2} value={holForm.description}
+                    onChange={e => setHolForm(f => ({ ...f, description: e.target.value }))} />
+                </div>
+              </div>
+              <div className="attn-modal-foot">
+                <button type="button" className="btn btn-ghost" onClick={() => setShowHolModal(false)}>Cancel</button>
+                <button type="submit" className="btn btn-primary" disabled={holSaving}>
+                  {holSaving ? 'Saving…' : 'Save holiday'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
