@@ -103,15 +103,15 @@ export default function Navbar() {
     { name: "Logout", onClick: handleLogout },
   ];
 
+  // Admin nav slimmed to the new section-hub flow. The admin lands on
+  // /admin (2-card hub), then drills into either /admin/easy-assess or
+  // /admin/easy-coders for the full list of tools. Direct deep-links
+  // (e.g. /admin/batches, /admin/permissions) still work for bookmarks
+  // — they're listed inside the section dashboards.
   const adminLinks: NavLink[] = [
     { name: "Home", href: "/admin" },
-    { name: "Batches", href: "/admin/batches" },
-    { name: "Admissions", href: "/hr/admissions" },
-    { name: "Assessments", href: "/admin/assessments" },
-    { name: "Permissions", href: "/admin/permissions" },
-    { name: "Attendance", href: "/admin/attendance" },
-    { name: "Tickets", href: "/admin/tickets" },
-    { name: "Students", href: "/admin/studentManagement" },
+    { name: "Easy Assess", href: "/admin/easy-assess" },
+    { name: "Easy Coders", href: "/admin/easy-coders" },
     { name: "Logout", onClick: handleLogout },
   ];
 
