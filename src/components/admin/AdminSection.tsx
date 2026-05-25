@@ -330,6 +330,119 @@ export function AdminCardGrid({ children }: { children: React.ReactNode }) {
 }
 
 /* ──────────────────────────────────────────────────────────────────────── */
+/* Brand-aligned panel + table chrome for admin list views. Each list
+ * page (e.g. /admin/easy-assess/leaderboard) just supplies its columns
+ * and rows; the panel handles the white surface, title, optional
+ * toolbar, loading/empty states and table styling. */
+type AdminPanelProps = {
+  title?:    string;
+  subtitle?: string;
+  toolbar?:  React.ReactNode;
+  children:  React.ReactNode;
+};
+export function AdminPanel({ title, subtitle, toolbar, children }: AdminPanelProps) {
+  return (
+    <div className="adm-panel">
+      <style jsx>{`
+        .adm-panel {
+          background: #ffffff;
+          border: 1px solid #E5E9F2;
+          border-radius: 18px;
+          padding: 22px 22px 20px;
+          box-shadow: 0 2px 12px rgba(11, 27, 58, 0.05);
+        }
+        .adm-panel-head {
+          display: flex;
+          align-items: flex-end;
+          justify-content: space-between;
+          gap: 14px;
+          flex-wrap: wrap;
+          margin-bottom: 16px;
+        }
+        .adm-panel-title {
+          font-family: 'Playfair Display', Georgia, serif;
+          font-size: 18px;
+          font-weight: 700;
+          color: #0B1B3A;
+          margin: 0;
+          letter-spacing: -0.01em;
+        }
+        .adm-panel-sub {
+          font-size: 12px;
+          color: #94A3B8;
+          margin: 4px 0 0;
+        }
+        .adm-panel-toolbar {
+          display: flex;
+          gap: 8px;
+          flex-wrap: wrap;
+          align-items: center;
+        }
+      `}</style>
+      {(title || toolbar) && (
+        <div className="adm-panel-head">
+          <div>
+            {title && <h2 className="adm-panel-title">{title}</h2>}
+            {subtitle && <p className="adm-panel-sub">{subtitle}</p>}
+          </div>
+          {toolbar && <div className="adm-panel-toolbar">{toolbar}</div>}
+        </div>
+      )}
+      {children}
+    </div>
+  );
+}
+
+/* ──────────────────────────────────────────────────────────────────────── */
+/* Pre-styled empty / loading / error states for list views. */
+type AdminStateProps = {
+  kind:     'loading' | 'empty' | 'error';
+  message?: string;
+  action?:  React.ReactNode;
+};
+export function AdminState({ kind, message, action }: AdminStateProps) {
+  const icons = {
+    loading: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12a9 9 0 1 1-6.219-8.56" /></svg>,
+    empty:   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>,
+    error:   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>,
+  };
+  const defaults = {
+    loading: 'Loading…',
+    empty:   'No records to show.',
+    error:   'Something went wrong.',
+  };
+  return (
+    <div className="adm-state">
+      <style jsx>{`
+        .adm-state {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 10px;
+          padding: 32px 18px;
+          color: #94A3B8;
+          font-size: 13px;
+        }
+        .adm-state svg {
+          opacity: 0.7;
+          ${kind === 'loading' ? 'animation: adm-spin 1.1s linear infinite;' : ''}
+        }
+        @keyframes adm-spin {
+          from { transform: rotate(0); }
+          to   { transform: rotate(360deg); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .adm-state svg { animation: none; }
+        }
+      `}</style>
+      {icons[kind]}
+      <div>{message || defaults[kind]}</div>
+      {action}
+    </div>
+  );
+}
+
+/* ──────────────────────────────────────────────────────────────────────── */
 /* Placeholder body for "Coming soon" stub pages. Wrap inside <AdminSection>
  * with the appropriate breadcrumb / title; this provides the inner panel. */
 type AdminComingSoonProps = {
