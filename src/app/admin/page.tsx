@@ -187,17 +187,20 @@ export default function AdminHub() {
             .hub { padding-top: 110px; }
           }
 
+          /* Deliberate vertical rhythm via explicit margins, not a uniform
+             flex gap. Within a unit (icon-row → title, title → desc)
+             spacing stays tight (12px); between units (desc → footer)
+             spacing opens up (22px). Reads as a clearer hierarchy. */
           .card {
             background: linear-gradient(180deg, #ffffff 0%, #fafbfd 100%);
             color: #0B1B3A;
             border-radius: 24px;
-            padding: 36px 32px 28px;
+            padding: 32px 32px 26px;
             position: relative;
             overflow: hidden;
             display: flex;
             flex-direction: column;
-            gap: 18px;
-            min-height: 340px;
+            min-height: 320px;
             border: 1px solid rgba(255,255,255,0.06);
             box-shadow: 0 8px 24px rgba(0,0,0,0.18);
             cursor: pointer;
@@ -285,19 +288,26 @@ export default function AdminHub() {
           }
           .card:hover .card-icon::after { opacity: 1; }
 
+          /* Top-align the icon and the tag pill. With center-align the
+             ~24px pill floats at the vertical middle of the 58px icon —
+             visually nervous because the eye doesn't know whether the
+             icon or the pill is the anchor. Top-align makes the icon
+             the clear visual anchor and the tag a corner label. */
           .card-head {
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             justify-content: space-between;
-            gap: 10px;
+            gap: 12px;
+            margin-bottom: 22px;
           }
           .card-title {
             font-family: 'Playfair Display', Georgia, serif;
             font-size: 24px;
             font-weight: 700;
             color: #0B1B3A;
-            margin: 0;
+            margin: 0 0 12px;
             letter-spacing: -0.01em;
+            line-height: 1.2;
           }
           .card-tag {
             font-size: 11px;
@@ -306,14 +316,18 @@ export default function AdminHub() {
             text-transform: uppercase;
             color: #B97A0F;
             background: #FEF6E7;
-            padding: 4px 11px;
+            padding: 5px 12px;
             border-radius: 100px;
             border: 1px solid rgba(232,160,32,0.34);
+            /* Tiny nudge so the tag doesn't crowd the absolute top edge
+               of the icon row. Reads as a deliberate label. */
+            margin-top: 6px;
+            white-space: nowrap;
           }
           .card-desc {
             font-size: 14.5px;
             color: #4A5568;
-            line-height: 1.7;
+            line-height: 1.65;
             margin: 0;
             flex: 1;
             font-weight: 300;
@@ -323,18 +337,24 @@ export default function AdminHub() {
             align-items: center;
             justify-content: space-between;
             border-top: 1px solid #E5E9F2;
-            padding-top: 16px;
+            padding-top: 18px;
+            margin-top: 22px;
+            gap: 12px;
           }
           .card-count {
             font-size: 12px;
             color: #94A3B8;
+            display: inline-flex;
+            align-items: baseline;
+            gap: 5px;
+            letter-spacing: 0.02em;
           }
           .card-count strong {
             color: #0B1B3A;
             font-weight: 700;
-            font-size: 16px;
+            font-size: 17px;
             font-family: 'Playfair Display', Georgia, serif;
-            margin-right: 4px;
+            line-height: 1;
           }
           .card-cta {
             display: inline-flex;
@@ -391,7 +411,7 @@ export default function AdminHub() {
               </div>
               <h2 className="card-title">Easy Assess Management</h2>
               <p className="card-desc">
-                Manage the public coding-assessment platform — assessment
+                Run the public coding-assessment platform: assessment
                 definitions, coding question bank, typing content, certificate
                 logs, leaderboard and registered assessment users.
               </p>
@@ -420,7 +440,7 @@ export default function AdminHub() {
               </div>
               <h2 className="card-title">Easy Coders Management</h2>
               <p className="card-desc">
-                Manage the training company — students, batches, admissions,
+                Run the training company: students, batches, admissions,
                 attendance, fees, trainers, tasks, tickets, courses,
                 categories, enrollment requests, contact inquiries and RBAC
                 permissions.
