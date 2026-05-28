@@ -18,6 +18,7 @@ type Assessment = {
   max_attempts?: number;
   retake_wait_hours?: number;
   expiry_date?: string;
+  instructions?: string;
   questions_count?: number;
 };
 type Question = {
@@ -108,7 +109,7 @@ export default function AssessmentsPage() {
       max_attempts: String(a.max_attempts || 3),
       retake_wait_hours: String(a.retake_wait_hours || 72),
       expiry_date: a.expiry_date?.slice(0, 10) || '',
-      instructions: '',
+      instructions: a.instructions || '',
     });
     setAssessMsg(''); setShowAssessModal(true);
   };
