@@ -42,9 +42,9 @@ export default function EasyCodersAdminHome() {
           />
 
           <AdminCard
-            href="/admin/studentManagement"
+            href="/admin/students"
             title="Students"
-            description="Add students manually, browse the existing roster and open individual student profiles with fees and marks."
+            description="Browse the student roster and open individual profiles with fees, attendance and login credentials."
             icon={
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
@@ -56,9 +56,9 @@ export default function EasyCodersAdminHome() {
           />
 
           <AdminCard
-            href="/hr/admissions"
-            title="Admissions"
-            description="Create new admissions, generate fee installment schedules and apply discount coupons or referral credits."
+            href="/admin/admissions"
+            title="Admit a Student"
+            description="Register a student with full details, pick their program and course, set the fee plan, and issue dashboard login credentials in one step."
             icon={
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M22 10v6M2 10l10-5 10 5-10 5z" />

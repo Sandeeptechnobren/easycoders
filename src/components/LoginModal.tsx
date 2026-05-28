@@ -43,11 +43,15 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
       onClose();
       if (role === 1) router.push('/admin');
       else if (role === 2) router.push('/hr');
-      else if (role === 3) router.push('/student-dashboard');
+      // Students admitted through the admin console get a temporary password.
+      // The backend flags those accounts with requires_password_change; send
+      // them to change their password before they reach the dashboard.
+      else if (role === 3) router.push(user.requires_password_change ? '/students/change-password' : '/student-dashboard');
       else if (role === 4) router.push('/trainer');
       else router.push('/');
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Invalid email or password. Please try again.');
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      setError(msg || 'Invalid email or password. Please try again.');
     } finally {
       setLoading(false);
     }
