@@ -26,6 +26,7 @@ type Question = {
   question_type: string;
   marks: number;
   difficulty: string;
+  explanation?: string;
   options?: Option[];
 };
 type Option = { id: number; option_text: string; is_correct: boolean };
@@ -67,6 +68,7 @@ export default function AssessmentsPage() {
   });
   const [qSaving, setQSaving] = useState(false);
   const [qMsg, setQMsg] = useState('');
+  const [editingQuestionId, setEditingQuestionId] = useState<number | null>(null);
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [csvMsg, setCsvMsg] = useState('');
   const [csvUploading, setCsvUploading] = useState(false);
@@ -145,39 +147,92 @@ export default function AssessmentsPage() {
     } catch (e: any) { alert(e.message || 'Failed.'); }
   };
 
-  const openQuestions = async (a: Assessment) => {
-    setManagingAssess(a);
-    setQTab('list'); setQMsg(''); setQuestions([]);
-    setShowQModal(true);
+  const EMPTY_Q = {
+    question_text: '', question_type: 'mcq', marks: '1', difficulty: 'easy', explanation: '',
+    options: [
+      { option_text: '', is_correct: false },
+      { option_text: '', is_correct: false },
+      { option_text: '', is_correct: false },
+      { option_text: '', is_correct: false },
+    ],
+  };
+  const resetQForm = () => { setQForm(EMPTY_Q); setEditingQuestionId(null); };
+
+  // Admin question list — uses the dedicated admin endpoint (the old code hit
+  // the STUDENT endpoint /assessment/{id}, which hides answers and returns
+  // nothing for a draft assessment, so the list always looked empty).
+  const loadQuestions = async (assessmentId: number) => {
     try {
-      const res = await fetchWithAuth(`${BASE}/assessment/${a.id}`);
-      setQuestions((res.data?.questions) || []);
-    } catch {}
+      const res = await fetchWithAuth(`${BASE}/assessment/admin/${assessmentId}/questions`);
+      setQuestions(Array.isArray(res?.data) ? res.data : []);
+    } catch { setQuestions([]); }
   };
 
-  const addQuestion = async (e: React.FormEvent) => {
+  const openQuestions = async (a: Assessment) => {
+    setManagingAssess(a);
+    setQTab('list'); setQMsg(''); setQuestions([]); resetQForm();
+    setShowQModal(true);
+    await loadQuestions(a.id);
+  };
+
+  const saveQuestion = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!managingAssess) return;
     setQSaving(true); setQMsg('');
+    const payload = {
+      question_text: qForm.question_text,
+      question_type: qForm.question_type,
+      marks: Number(qForm.marks),
+      difficulty: qForm.difficulty,
+      explanation: qForm.explanation,
+      options: qForm.question_type !== 'coding' ? qForm.options.filter(o => o.option_text.trim()) : undefined,
+    };
     try {
-      await fetchWithAuth(`${BASE}/assessment/${managingAssess.id}/questions`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          question_text: qForm.question_text,
-          question_type: qForm.question_type,
-          marks: Number(qForm.marks),
-          difficulty: qForm.difficulty,
-          explanation: qForm.explanation,
-          options: qForm.question_type !== 'coding' ? qForm.options.filter(o => o.option_text.trim()) : undefined,
-        }),
-      });
-      setQMsg('Question added.');
-      setQForm({ question_text: '', question_type: 'mcq', marks: '1', difficulty: 'easy', explanation: '', options: [{ option_text: '', is_correct: false }, { option_text: '', is_correct: false }, { option_text: '', is_correct: false }, { option_text: '', is_correct: false }] });
-      // Reload questions
-      const res = await fetchWithAuth(`${BASE}/assessment/${managingAssess.id}`);
-      setQuestions(res.data?.questions || []);
+      if (editingQuestionId) {
+        await fetchWithAuth(`${BASE}/assessment/admin/questions/${editingQuestionId}`, {
+          method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
+        });
+        setQMsg('Question updated.');
+      } else {
+        await fetchWithAuth(`${BASE}/assessment/${managingAssess.id}/questions`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
+        });
+        setQMsg('Question added.');
+      }
+      resetQForm();
+      await loadQuestions(managingAssess.id);
       setQTab('list');
-    } catch (e: any) { setQMsg(e.message || 'Failed.'); } finally { setQSaving(false); }
+    } catch (e: unknown) {
+      setQMsg(e instanceof Error ? e.message : 'Failed.');
+    } finally { setQSaving(false); }
+  };
+
+  const openEditQuestion = (q: Question) => {
+    setEditingQuestionId(q.id);
+    const opts = (q.options && q.options.length)
+      ? q.options.map(o => ({ option_text: o.option_text, is_correct: !!o.is_correct }))
+      : [{ option_text: '', is_correct: false }, { option_text: '', is_correct: false }];
+    while (opts.length < 2) opts.push({ option_text: '', is_correct: false });
+    setQForm({
+      question_text: q.question_text,
+      question_type: q.question_type,
+      marks: String(q.marks ?? 1),
+      difficulty: q.difficulty ?? 'easy',
+      explanation: q.explanation ?? '',
+      options: opts,
+    });
+    setQMsg(''); setQTab('add');
+  };
+
+  const deleteQuestion = async (id: number) => {
+    if (!managingAssess) return;
+    if (!confirm('Delete this question? This cannot be undone.')) return;
+    try {
+      await fetchWithAuth(`${BASE}/assessment/admin/questions/${id}`, { method: 'DELETE' });
+      await loadQuestions(managingAssess.id);
+    } catch (e: unknown) {
+      alert(e instanceof Error ? e.message : 'Delete failed.');
+    }
   };
 
   const uploadCsv = async () => {
@@ -197,8 +252,7 @@ export default function AssessmentsPage() {
       setCsvMsg(json.message || 'Uploaded.');
       setCsvFile(null);
       if (csvRef.current) csvRef.current.value = '';
-      const qRes = await fetchWithAuth(`${BASE}/assessment/${managingAssess.id}`);
-      setQuestions(qRes.data?.questions || []);
+      await loadQuestions(managingAssess.id);
       setQTab('list');
     } catch (e: any) { setCsvMsg(e.message || 'Upload failed.'); } finally { setCsvUploading(false); }
   };
@@ -420,9 +474,9 @@ export default function AssessmentsPage() {
                       <p className="text-muted text-center py-4">No questions yet. Add manually or upload CSV.</p>
                     ) : questions.map((q, i) => (
                       <div key={q.id} className="border rounded p-3 mb-3">
-                        <div className="d-flex justify-content-between mb-2">
+                        <div className="d-flex justify-content-between mb-2 gap-3">
                           <div className="fw-semibold">Q{i + 1}. {q.question_text}</div>
-                          <div className="d-flex gap-2">
+                          <div className="d-flex gap-2 flex-shrink-0 align-items-start">
                             <span className="badge bg-secondary">{q.question_type}</span>
                             <span className="badge bg-light text-dark border">{q.marks} mark{q.marks > 1 ? 's' : ''}</span>
                             <span className="badge bg-light text-dark border">{q.difficulty}</span>
@@ -437,6 +491,11 @@ export default function AssessmentsPage() {
                             ))}
                           </div>
                         )}
+                        {q.explanation && <div className="small text-muted mt-2 fst-italic">Explanation: {q.explanation}</div>}
+                        <div className="d-flex gap-2 mt-2 pt-2 border-top">
+                          <button type="button" className="btn btn-sm btn-outline-primary" onClick={() => openEditQuestion(q)}>Edit</button>
+                          <button type="button" className="btn btn-sm btn-outline-danger" onClick={() => deleteQuestion(q.id)}>Delete</button>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -444,8 +503,14 @@ export default function AssessmentsPage() {
 
                 {/* Add manually */}
                 {qTab === 'add' && (
-                  <form onSubmit={addQuestion}>
-                    {qMsg && <div className={`alert ${qMsg.includes('added') ? 'alert-success' : 'alert-danger'}`}>{qMsg}</div>}
+                  <form onSubmit={saveQuestion}>
+                    {editingQuestionId && (
+                      <div className="d-flex justify-content-between align-items-center mb-3 p-2 rounded bg-light border">
+                        <span className="fw-semibold small">Editing question #{editingQuestionId}</span>
+                        <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => { resetQForm(); setQTab('list'); }}>Cancel edit</button>
+                      </div>
+                    )}
+                    {qMsg && <div className={`alert ${(qMsg.includes('added') || qMsg.includes('updated')) ? 'alert-success' : 'alert-danger'}`}>{qMsg}</div>}
                     <div className="row g-3 mb-3">
                       <div className="col-12">
                         <label className="form-label">Question *</label>
@@ -502,7 +567,9 @@ export default function AssessmentsPage() {
                         onChange={e => setQForm(f => ({ ...f, explanation: e.target.value }))} />
                     </div>
                     <button type="submit" className="btn btn-primary" disabled={qSaving}>
-                      {qSaving ? 'Adding...' : 'Add Question'}
+                      {qSaving
+                        ? (editingQuestionId ? 'Updating…' : 'Adding…')
+                        : (editingQuestionId ? 'Update Question' : 'Add Question')}
                     </button>
                   </form>
                 )}
