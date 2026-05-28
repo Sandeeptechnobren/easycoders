@@ -39,6 +39,7 @@ export default function AssessmentsPage() {
   const [assessments, setAssessments] = useState<Assessment[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState('');
+  const [togglingId, setTogglingId] = useState<number | null>(null);
 
   // Create/Edit assessment
   const [showAssessModal, setShowAssessModal] = useState(false);
@@ -101,7 +102,7 @@ export default function AssessmentsPage() {
     setEditAssess(a);
     setAssessForm({
       title: a.title, description: a.description || '', status: a.status,
-      is_paid: a.is_paid, amount: String(a.amount || ''),
+      is_paid: !!a.is_paid, amount: String(a.amount || ''),
       passing_score: String(a.passing_score || 40),
       duration_minutes: String(a.duration_minutes || 60),
       max_attempts: String(a.max_attempts || 3),
@@ -145,6 +146,23 @@ export default function AssessmentsPage() {
       await fetchWithAuth(`${BASE}/assessment/admin/${id}`, { method: 'DELETE' });
       load();
     } catch (e: any) { alert(e.message || 'Failed.'); }
+  };
+
+  // Activate (publish) / deactivate (back to draft) straight from the card,
+  // via the existing adminUpdate endpoint. Optimistic flip with revert on error.
+  const toggleStatus = async (a: Assessment) => {
+    const next = a.status === 'published' ? 'draft' : 'published';
+    setTogglingId(a.id);
+    setAssessments(prev => prev.map(x => (x.id === a.id ? { ...x, status: next } : x)));
+    try {
+      await fetchWithAuth(`${BASE}/assessment/admin/${a.id}`, {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: next }),
+      });
+    } catch (e: unknown) {
+      setAssessments(prev => prev.map(x => (x.id === a.id ? { ...x, status: a.status } : x)));
+      alert(e instanceof Error ? e.message : 'Failed to update status.');
+    } finally { setTogglingId(null); }
   };
 
   const EMPTY_Q = {
@@ -338,9 +356,23 @@ export default function AssessmentsPage() {
                         {a.duration_minutes && <span className="badge bg-light text-dark border">{a.duration_minutes} min</span>}
                       </div>
                       <div className="small text-muted mb-3">
-                        {a.max_attempts && <span className="me-2">Max attempts: {a.max_attempts}</span>}
-                        {a.retake_wait_hours && <span>Wait: {a.retake_wait_hours}h</span>}
-                        {a.expiry_date && <div>Expires: {a.expiry_date.slice(0, 10)}</div>}
+                        {a.max_attempts ? <span className="me-2">Max attempts: {a.max_attempts}</span> : null}
+                        {a.retake_wait_hours ? <span>Wait: {a.retake_wait_hours}h</span> : null}
+                        {a.expiry_date ? <div>Expires: {a.expiry_date.slice(0, 10)}</div> : null}
+                      </div>
+                      <div className="form-check form-switch mb-3">
+                        <input className="form-check-input" type="checkbox" role="switch"
+                          id={`pub-${a.id}`} style={{ cursor: 'pointer' }}
+                          checked={a.status === 'published'}
+                          disabled={togglingId === a.id}
+                          onChange={() => toggleStatus(a)} />
+                        <label className="form-check-label small" htmlFor={`pub-${a.id}`} style={{ cursor: 'pointer' }}>
+                          {togglingId === a.id
+                            ? 'Updating…'
+                            : a.status === 'published'
+                              ? 'Active — visible to students'
+                              : 'Inactive — hidden from students'}
+                        </label>
                       </div>
                       <div className="d-flex gap-2 flex-wrap">
                         <button className="btn btn-sm btn-outline-primary" onClick={() => openEdit(a)}>Edit</button>
@@ -421,13 +453,13 @@ export default function AssessmentsPage() {
                         <label className="form-check-label" htmlFor="is-paid">Paid Assessment</label>
                       </div>
                     </div>
-                    {assessForm.is_paid && (
+                    {assessForm.is_paid ? (
                       <div className="col-md-4">
                         <label className="form-label">Amount (₹)</label>
                         <input type="number" min={0} className="form-control" value={assessForm.amount}
                           onChange={e => setAssessForm(f => ({ ...f, amount: e.target.value }))} />
                       </div>
-                    )}
+                    ) : null}
                     <div className="col-12">
                       <label className="form-label">Instructions</label>
                       <textarea className="form-control" rows={3} value={assessForm.instructions}
