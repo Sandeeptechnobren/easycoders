@@ -12,9 +12,28 @@ type Assessment = {
   duration?: number;
   level?: string;
   status: 'published' | 'completed';
+  // Per-user attempt + retake state (from listAssessments)
+  attempted?: boolean;
+  passed?: boolean;
+  raw_score?: number | null;
+  total_marks?: number;
+  score_percent?: number | null;
+  passing_score?: number;
+  can_retake?: boolean;
+  retake_available_at?: string | null;
 };
 
 const API_BASE = 'https://api.easycoders.in/projects/backend/public/api';
+
+/* Format a remaining-time gap (ms) as a compact countdown. */
+function fmtRemaining(ms: number): string {
+  const s = Math.max(0, Math.floor(ms / 1000));
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return h > 0 ? `${h}:${pad(m)}:${pad(sec)}` : `${pad(m)}:${pad(sec)}`;
+}
 
 export default function AssessmentCards() {
   const router = useRouter();
@@ -26,6 +45,13 @@ export default function AssessmentCards() {
    * 404 no-attempt, network, etc.) we surface the backend message
    * inline under the card instead of behind a one-shot alert(). */
   const [downloadErrors, setDownloadErrors] = useState<Record<number, string>>({});
+  // Ticks every second so retake countdowns update live and the button flips
+  // to an enabled "Retake" the moment the wait window elapses.
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, []);
 
   useEffect(() => {
     const assessment_token = localStorage.getItem('assessment_token');
@@ -171,6 +197,11 @@ export default function AssessmentCards() {
         {assessments.slice(0, visibleCount).map(item => {
           const isCompleted = item.status === 'completed';
           const downloadError = downloadErrors[item.id];
+          const passed = !!item.passed;
+          const retakeAt = item.retake_available_at ? new Date(item.retake_available_at).getTime() : null;
+          // Eligible if the server said so, or the wait window has since elapsed (live).
+          const canRetakeNow = !!item.can_retake || (retakeAt != null && now >= retakeAt);
+          const countdown = retakeAt != null ? fmtRemaining(retakeAt - now) : '';
 
           return (
            <div key={item.id} className={`assessmentCard ${isCompleted ? 'completed' : ''}`}>
@@ -192,82 +223,71 @@ export default function AssessmentCards() {
   </div>
 
   <div style={{ display: 'flex', gap: '10px', marginTop: '16px', width: '100%' }}>
-    <button
-      className="startBtn"
-      disabled={isCompleted}
-      onClick={() => router.push(`/self-assessment/app/assessment/${item.id}`)}
-      style={{
-        flex: 1,
-        height: '38px',
-        background: isCompleted
-          ? '#9ca3af'
-          : 'linear-gradient(135deg,#4f46e5,#7c3aed)',
-        color: '#fff',
-        cursor: isCompleted ? 'not-allowed' : 'pointer',
-      }}
-    >
-      {isCompleted ? 'Attempted' : 'Start'}
-    </button>
-
-    {isCompleted && (
+    {!isCompleted ? (
       <button
-        onClick={() => {
-          if (downloadError) {
-            // Cert download failed (most commonly score below threshold).
-            // Clear the inline error and take the user back into the
-            // assessment so they can re-attempt and earn the cert.
-            setDownloadErrors(prev => {
-              const next = { ...prev };
-              delete next[item.id];
-              return next;
-            });
-            router.push(`/self-assessment/app/assessment/${item.id}`);
-          } else {
-            handleDownload(item.id);
-          }
-        }}
-        disabled={downloadingId === item.id}
         className="startBtn"
-        style={{
-          flex: 1,
-          /* Indigo when in "retake" state so it visually matches the
-             primary action style of the Start button — green for the
-             happy "download certificate" path. */
-          background: downloadError
-            ? 'linear-gradient(135deg,#4f46e5,#7c3aed)'
-            : '#22c55e',
-          color: '#fff',
-          cursor: downloadingId === item.id ? 'wait' : 'pointer',
-        }}
-        aria-describedby={downloadError ? `cert-err-${item.id}` : undefined}
+        onClick={() => router.push(`/self-assessment/app/assessment/${item.id}`)}
+        style={{ flex: 1, height: '38px', background: 'linear-gradient(135deg,#4f46e5,#7c3aed)', color: '#fff', cursor: 'pointer' }}
       >
-        {downloadingId === item.id
-          ? 'Preparing…'
-          : downloadError
-          ? 'Retake assessment →'
-          : 'Certificate'}
+        Start
       </button>
+    ) : (
+      <>
+        <button className="startBtn" disabled
+          style={{ flex: 1, height: '38px', background: '#9ca3af', color: '#fff', cursor: 'not-allowed' }}>
+          Attempted
+        </button>
+
+        {passed ? (
+          /* Passed → download the certificate. */
+          <button
+            onClick={() => handleDownload(item.id)}
+            disabled={downloadingId === item.id}
+            className="startBtn"
+            style={{ flex: 1, height: '38px', background: '#22c55e', color: '#fff', cursor: downloadingId === item.id ? 'wait' : 'pointer' }}
+          >
+            {downloadingId === item.id ? 'Preparing…' : 'Download certificate'}
+          </button>
+        ) : canRetakeNow ? (
+          /* Failed and the wait has elapsed → allow a retake. */
+          <button
+            onClick={() => router.push(`/self-assessment/app/assessment/${item.id}`)}
+            className="startBtn"
+            style={{ flex: 1, height: '38px', background: 'linear-gradient(135deg,#4f46e5,#7c3aed)', color: '#fff', cursor: 'pointer' }}
+          >
+            Retake assessment →
+          </button>
+        ) : (
+          /* Failed but still inside the retake-wait window → live countdown,
+             disabled (no certificate, no early retake). */
+          <button
+            disabled
+            className="startBtn"
+            style={{ flex: 1, height: '38px', background: '#e5e7eb', color: '#6b7280', cursor: 'not-allowed' }}
+            title={item.retake_available_at ? `Retake unlocks at ${new Date(item.retake_available_at).toLocaleString()}` : undefined}
+          >
+            Retake in {countdown}
+          </button>
+        )}
+      </>
     )}
   </div>
 
-  {/* Inline error message so the user knows WHY the download failed.
-      Replaces the previous one-shot alert() that hid the backend's
-      meaningful message ("Score below passing threshold...") behind
-      a generic "Failed to fetch certificate" string. */}
+  {/* Score summary for a completed-but-failed attempt (so the user knows
+      where they stand without clicking anything). */}
+  {isCompleted && !passed && item.score_percent != null && (
+    <div role="status" style={{ marginTop: '10px', padding: '10px 12px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', color: '#991b1b', fontSize: '12px', lineHeight: 1.5 }}>
+      You scored <strong>{item.score_percent}%</strong> ({item.raw_score}/{item.total_marks}). You need <strong>{item.passing_score ?? 70}%</strong> to earn a certificate.
+      {!canRetakeNow && countdown ? <> Retake available in <strong>{countdown}</strong>.</> : <> You can retake it now.</>}
+    </div>
+  )}
+
+  {/* Certificate download error (only relevant on the passed → download path). */}
   {downloadError && (
     <div
       id={`cert-err-${item.id}`}
       role="alert"
-      style={{
-        marginTop: '10px',
-        padding: '10px 12px',
-        background: '#fef2f2',
-        border: '1px solid #fecaca',
-        borderRadius: '8px',
-        color: '#991b1b',
-        fontSize: '12px',
-        lineHeight: 1.5,
-      }}
+      style={{ marginTop: '10px', padding: '10px 12px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', color: '#991b1b', fontSize: '12px', lineHeight: 1.5 }}
     >
       {downloadError}
     </div>

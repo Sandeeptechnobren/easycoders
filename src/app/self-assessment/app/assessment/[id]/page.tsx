@@ -9,11 +9,15 @@ import QuestionRenderer from './QuestionRenderer';
 import AssessmentSuccess from './AssessmentSuccess';
 
 type Answer = { selected_option_id: number } | { answer_text: string };
-type Phase = 'loading' | 'ready' | 'active' | 'submitted';
+type Phase = 'loading' | 'ready' | 'active' | 'submitted' | 'locked';
 
 type AssessmentQuestion = { id: number; [key: string]: unknown };
 type QuestionType       = { type_id: number; type_name: string; questions: AssessmentQuestion[] };
-type AssessmentData     = { id: number; title: string; duration: number; total_marks?: number; passing_score?: number };
+type AssessmentData     = {
+  id: number; title: string; duration: number; total_marks?: number; passing_score?: number;
+  attempted?: boolean; passed?: boolean; can_retake?: boolean;
+  retake_available_at?: string | null; last_score_percent?: number | null;
+};
 
 /* ──────────────────────────────────────────────────────────────────────────
  * Assessment-take page with a proctoring layer.
@@ -63,6 +67,7 @@ export default function AssessmentPage() {
   const [phase, setPhase]                 = useState<Phase>('loading');
   const [violations, setViolations]       = useState(0);
   const [warningMsg, setWarningMsg]       = useState<string | null>(null);
+  const [lockInfo, setLockInfo]           = useState<{ retakeAt: string | null; passed: boolean; percent: number | null } | null>(null);
 
   /* ─── Refs used to coordinate the proctoring callbacks ─── */
   const intentionalExitRef = useRef(false);   // true while we ourselves exit FS
@@ -87,9 +92,19 @@ export default function AssessmentPage() {
       })
       .then(res => {
         const d = res.data.data;
-        setAssessment(d.assessment);
+        const a = d.assessment;
+        // Defense against deep-linking past the dashboard gate: block a
+        // re-entry if the user already passed, or failed but is still inside
+        // the retake-wait window. (can_retake is computed server-side.)
+        if (a.attempted && (a.passed || a.can_retake === false)) {
+          setAssessment(a);
+          setLockInfo({ retakeAt: a.retake_available_at ?? null, passed: !!a.passed, percent: a.last_score_percent ?? null });
+          setPhase('locked');
+          return;
+        }
+        setAssessment(a);
         setQuestionTypes(d.question_types);
-        setTimeLeft(d.assessment.duration * 60);
+        setTimeLeft(a.duration * 60);
         setPhase('ready');
       });
   }, [id]);
@@ -267,6 +282,34 @@ export default function AssessmentPage() {
         <div style={{ textAlign: 'center', color: '#64748b' }}>
           <div style={{ fontSize: 32, marginBottom: 12 }}>⏳</div>
           <p style={{ fontWeight: 600 }}>Loading assessment…</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (phase === 'locked') {
+    const retakeDate = lockInfo?.retakeAt ? new Date(lockInfo.retakeAt) : null;
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, background: 'linear-gradient(135deg,#0B1B3A 0%,#152D5A 100%)', fontFamily: "'DM Sans', system-ui, -apple-system, sans-serif" }}>
+        <div style={{ background: '#fff', borderRadius: 22, maxWidth: 460, width: '100%', padding: '40px 34px', textAlign: 'center', boxShadow: '0 24px 60px rgba(0,0,0,0.35)' }}>
+          <div style={{ width: 64, height: 64, borderRadius: '50%', margin: '0 auto 18px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: lockInfo?.passed ? '#ecfdf5' : '#fef6e7', color: lockInfo?.passed ? '#166534' : '#B97A0F', fontSize: 28 }}>
+            {lockInfo?.passed ? '✓' : '⏳'}
+          </div>
+          <h1 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 24, fontWeight: 700, color: '#0B1B3A', margin: '0 0 8px' }}>
+            {lockInfo?.passed ? 'You already passed this assessment' : 'Retake not available yet'}
+          </h1>
+          <p style={{ fontSize: 14, color: '#4A5568', lineHeight: 1.6, margin: '0 0 24px' }}>
+            {lockInfo?.passed
+              ? <>You scored {lockInfo?.percent != null ? <strong>{lockInfo.percent}%</strong> : 'a passing score'} and earned your certificate. Download it from your dashboard.</>
+              : <>You scored {lockInfo?.percent != null ? <strong>{lockInfo.percent}%</strong> : 'below the passing mark'}.{' '}
+                  {retakeDate ? <>You can retake this assessment on <strong>{retakeDate.toLocaleString()}</strong>.</> : <>Please try again later.</>}</>}
+          </p>
+          <button
+            onClick={() => router.replace('/self-assessment/app')}
+            style={{ width: '100%', padding: '13px 24px', borderRadius: 12, border: 'none', background: '#E8A020', color: '#0B1B3A', fontFamily: 'inherit', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
+          >
+            Back to dashboard
+          </button>
         </div>
       </div>
     );
