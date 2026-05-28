@@ -389,94 +389,169 @@ export default function AssessmentsPage() {
         </div>
       </div>
 
-      {/* ── Create / Edit Assessment Modal ── */}
+      {/* ── Create / Edit Assessment Modal (navy/gold, 2-column) ── */}
       {showAssessModal && (
-        <div className="modal fade show d-block" style={{ background: 'rgba(0,0,0,.5)' }}>
-          <div className="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">{editAssess ? 'Edit Assessment' : 'New Assessment'}</h5>
-                <button className="btn-close" onClick={() => setShowAssessModal(false)} />
+        <div className="am-backdrop" onClick={e => { if (e.target === e.currentTarget) setShowAssessModal(false); }}>
+          <style jsx>{`
+            .am-backdrop {
+              position: fixed; inset: 0; z-index: 1050;
+              background: rgba(7, 18, 42, 0.55); backdrop-filter: blur(2px);
+              display: flex; align-items: center; justify-content: center;
+              padding: 20px; animation: am-fade 0.18s ease;
+              font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+            }
+            @keyframes am-fade { from { opacity: 0; } to { opacity: 1; } }
+            .am-card {
+              background: #ffffff; border-radius: 20px; width: 100%; max-width: 820px;
+              max-height: 92vh; display: flex; flex-direction: column; overflow: hidden;
+              box-shadow: 0 24px 60px rgba(7, 18, 42, 0.45);
+              animation: am-rise 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+            }
+            @keyframes am-rise { from { opacity: 0; transform: translateY(12px) scale(0.98); } to { opacity: 1; transform: none; } }
+            @media (prefers-reduced-motion: reduce) { .am-backdrop, .am-card { animation: none; } }
+            .am-head {
+              display: flex; align-items: center; justify-content: space-between;
+              padding: 20px 26px 16px; border-bottom: 1px solid #F1F4F9;
+            }
+            .am-eyebrow {
+              display: inline-flex; align-items: center; gap: 7px;
+              font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+              color: #B97A0F; margin-bottom: 6px;
+            }
+            .am-eyebrow::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #E8A020; }
+            .am-title { font-family: 'Playfair Display', Georgia, serif; font-size: 22px; font-weight: 700; color: #0B1B3A; margin: 0; letter-spacing: -0.01em; }
+            .am-close { background: transparent; border: none; cursor: pointer; color: #94A3B8; padding: 6px; border-radius: 8px; line-height: 0; transition: background 0.15s, color 0.15s; }
+            .am-close:hover { background: #F4F6FB; color: #0B1B3A; }
+            .am-body { padding: 22px 26px; overflow-y: auto; flex: 1; }
+            .am-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+            @media (max-width: 720px) { .am-grid { grid-template-columns: 1fr; gap: 18px; } }
+            .am-col { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+            .am-col-title {
+              font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+              color: #94A3B8; padding-bottom: 8px; border-bottom: 1px solid #F1F4F9; margin: 0;
+            }
+            .am-fld { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+            .am-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+            .am-lbl { font-size: 12px; font-weight: 600; color: #4A5568; }
+            .am-req { color: #B97A0F; }
+            .am-in {
+              background: #ffffff; border: 1px solid #E5E9F2; border-radius: 10px;
+              padding: 10px 12px; font-family: inherit; font-size: 13px; color: #0B1B3A;
+              outline: none; width: 100%; box-sizing: border-box;
+              transition: border-color 0.18s ease, box-shadow 0.18s ease;
+            }
+            .am-in:focus { border-color: #E8A020; box-shadow: 0 0 0 3px rgba(232, 160, 32, 0.16); }
+            textarea.am-in { resize: vertical; }
+            .am-check { display: flex; align-items: center; gap: 9px; font-size: 13px; font-weight: 500; color: #0B1B3A; cursor: pointer; padding-top: 2px; }
+            .am-check input { width: 16px; height: 16px; accent-color: #E8A020; cursor: pointer; }
+            .am-alert { background: #FEF2F2; color: #991B1B; border: 1px solid #FCA5A5; border-radius: 10px; padding: 10px 14px; font-size: 13px; margin-bottom: 18px; }
+            .am-foot { display: flex; gap: 10px; justify-content: flex-end; padding: 16px 26px; border-top: 1px solid #F1F4F9; background: #FAFBFD; }
+            .am-btn { display: inline-flex; align-items: center; justify-content: center; padding: 10px 22px; border-radius: 10px; font-family: inherit; font-size: 13px; font-weight: 700; border: 1px solid transparent; cursor: pointer; transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease; }
+            .am-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+            .am-btn-ghost { background: #ffffff; color: #4A5568; border-color: #E5E9F2; }
+            .am-btn-ghost:hover { border-color: #E8A020; color: #0B1B3A; }
+            .am-btn-primary { background: #0B1B3A; color: #ffffff; }
+            .am-btn-primary:hover:not(:disabled) { background: #E8A020; color: #0B1B3A; }
+          `}</style>
+          <div className="am-card" role="dialog" aria-modal="true" aria-labelledby="am-title">
+            <div className="am-head">
+              <div>
+                <div className="am-eyebrow">Easy Assess</div>
+                <h2 className="am-title" id="am-title">{editAssess ? 'Edit Assessment' : 'New Assessment'}</h2>
               </div>
-              <form onSubmit={saveAssess}>
-                <div className="modal-body">
-                  {assessMsg && <div className="alert alert-danger">{assessMsg}</div>}
-                  <div className="row g-3">
-                    <div className="col-12">
-                      <label className="form-label">Title *</label>
-                      <input className="form-control" required value={assessForm.title}
+              <button type="button" className="am-close" onClick={() => setShowAssessModal(false)} aria-label="Close">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+              </button>
+            </div>
+            <form onSubmit={saveAssess} style={{ display: 'contents' }}>
+              <div className="am-body">
+                {assessMsg && <div className="am-alert">{assessMsg}</div>}
+                <div className="am-grid">
+                  {/* LEFT — content */}
+                  <div className="am-col">
+                    <p className="am-col-title">Content</p>
+                    <div className="am-fld">
+                      <label className="am-lbl">Title <span className="am-req">*</span></label>
+                      <input className="am-in" required value={assessForm.title}
                         onChange={e => setAssessForm(f => ({ ...f, title: e.target.value }))} />
                     </div>
-                    <div className="col-12">
-                      <label className="form-label">Description</label>
-                      <textarea className="form-control" rows={2} value={assessForm.description}
+                    <div className="am-fld">
+                      <label className="am-lbl">Description</label>
+                      <textarea className="am-in" rows={5} value={assessForm.description}
+                        placeholder="Shown on the assessment card and intro screen."
                         onChange={e => setAssessForm(f => ({ ...f, description: e.target.value }))} />
                     </div>
-                    <div className="col-md-4">
-                      <label className="form-label">Status</label>
-                      <select className="form-select" value={assessForm.status}
+                    <div className="am-fld">
+                      <label className="am-lbl">Instructions</label>
+                      <textarea className="am-in" rows={6} value={assessForm.instructions}
+                        placeholder="Instructions shown to students before starting…"
+                        onChange={e => setAssessForm(f => ({ ...f, instructions: e.target.value }))} />
+                    </div>
+                  </div>
+
+                  {/* RIGHT — settings */}
+                  <div className="am-col">
+                    <p className="am-col-title">Settings</p>
+                    <div className="am-fld">
+                      <label className="am-lbl">Status</label>
+                      <select className="am-in" value={assessForm.status}
                         onChange={e => setAssessForm(f => ({ ...f, status: e.target.value }))}>
                         <option value="draft">Draft</option>
                         <option value="published">Published</option>
                         <option value="archived">Archived</option>
                       </select>
                     </div>
-                    <div className="col-md-4">
-                      <label className="form-label">Passing Score (%)</label>
-                      <input type="number" min={1} max={100} className="form-control" value={assessForm.passing_score}
-                        onChange={e => setAssessForm(f => ({ ...f, passing_score: e.target.value }))} />
-                    </div>
-                    <div className="col-md-4">
-                      <label className="form-label">Duration (minutes)</label>
-                      <input type="number" min={5} className="form-control" value={assessForm.duration_minutes}
-                        onChange={e => setAssessForm(f => ({ ...f, duration_minutes: e.target.value }))} />
-                    </div>
-                    <div className="col-md-4">
-                      <label className="form-label">Max Attempts</label>
-                      <input type="number" min={1} className="form-control" value={assessForm.max_attempts}
-                        onChange={e => setAssessForm(f => ({ ...f, max_attempts: e.target.value }))} />
-                    </div>
-                    <div className="col-md-4">
-                      <label className="form-label">Retake Wait (hours)</label>
-                      <input type="number" min={0} className="form-control" value={assessForm.retake_wait_hours}
-                        onChange={e => setAssessForm(f => ({ ...f, retake_wait_hours: e.target.value }))} />
-                    </div>
-                    <div className="col-md-4">
-                      <label className="form-label">Expiry Date</label>
-                      <input type="date" className="form-control" value={assessForm.expiry_date}
-                        onChange={e => setAssessForm(f => ({ ...f, expiry_date: e.target.value }))} />
-                    </div>
-                    <div className="col-md-3">
-                      <div className="form-check mt-4">
-                        <input type="checkbox" className="form-check-input" id="is-paid"
-                          checked={assessForm.is_paid}
-                          onChange={e => setAssessForm(f => ({ ...f, is_paid: e.target.checked }))} />
-                        <label className="form-check-label" htmlFor="is-paid">Paid Assessment</label>
+                    <div className="am-row2">
+                      <div className="am-fld">
+                        <label className="am-lbl">Passing Score (%)</label>
+                        <input type="number" min={1} max={100} className="am-in" value={assessForm.passing_score}
+                          onChange={e => setAssessForm(f => ({ ...f, passing_score: e.target.value }))} />
+                      </div>
+                      <div className="am-fld">
+                        <label className="am-lbl">Duration (minutes)</label>
+                        <input type="number" min={5} className="am-in" value={assessForm.duration_minutes}
+                          onChange={e => setAssessForm(f => ({ ...f, duration_minutes: e.target.value }))} />
                       </div>
                     </div>
+                    <div className="am-row2">
+                      <div className="am-fld">
+                        <label className="am-lbl">Max Attempts</label>
+                        <input type="number" min={1} className="am-in" value={assessForm.max_attempts}
+                          onChange={e => setAssessForm(f => ({ ...f, max_attempts: e.target.value }))} />
+                      </div>
+                      <div className="am-fld">
+                        <label className="am-lbl">Retake Wait (hours)</label>
+                        <input type="number" min={0} className="am-in" value={assessForm.retake_wait_hours}
+                          onChange={e => setAssessForm(f => ({ ...f, retake_wait_hours: e.target.value }))} />
+                      </div>
+                    </div>
+                    <div className="am-fld">
+                      <label className="am-lbl">Expiry Date</label>
+                      <input type="date" className="am-in" value={assessForm.expiry_date}
+                        onChange={e => setAssessForm(f => ({ ...f, expiry_date: e.target.value }))} />
+                    </div>
+                    <label className="am-check">
+                      <input type="checkbox" checked={assessForm.is_paid}
+                        onChange={e => setAssessForm(f => ({ ...f, is_paid: e.target.checked }))} />
+                      Paid Assessment
+                    </label>
                     {assessForm.is_paid ? (
-                      <div className="col-md-4">
-                        <label className="form-label">Amount (₹)</label>
-                        <input type="number" min={0} className="form-control" value={assessForm.amount}
+                      <div className="am-fld">
+                        <label className="am-lbl">Amount (₹)</label>
+                        <input type="number" min={0} className="am-in" value={assessForm.amount}
                           onChange={e => setAssessForm(f => ({ ...f, amount: e.target.value }))} />
                       </div>
                     ) : null}
-                    <div className="col-12">
-                      <label className="form-label">Instructions</label>
-                      <textarea className="form-control" rows={3} value={assessForm.instructions}
-                        onChange={e => setAssessForm(f => ({ ...f, instructions: e.target.value }))}
-                        placeholder="Instructions shown to students before starting..." />
-                    </div>
                   </div>
                 </div>
-                <div className="modal-footer">
-                  <button type="button" className="btn btn-secondary" onClick={() => setShowAssessModal(false)}>Cancel</button>
-                  <button type="submit" className="btn btn-primary" disabled={assessSaving}>
-                    {assessSaving ? 'Saving...' : editAssess ? 'Update' : 'Create'}
-                  </button>
-                </div>
-              </form>
-            </div>
+              </div>
+              <div className="am-foot">
+                <button type="button" className="am-btn am-btn-ghost" onClick={() => setShowAssessModal(false)}>Cancel</button>
+                <button type="submit" className="am-btn am-btn-primary" disabled={assessSaving}>
+                  {assessSaving ? 'Saving…' : editAssess ? 'Update assessment' : 'Create assessment'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
