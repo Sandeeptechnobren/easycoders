@@ -72,6 +72,13 @@ export default function AdminStudentDetailsPage() {
   const [markBusy, setMarkBusy] = useState(false);
   const [markForm, setMarkForm] = useState({ title: '', score: '', max_score: '100', remark: '' });
 
+  // Login credentials — temp-password lifecycle for admin-admitted students.
+  const [credData, setCredData] = useState<{ enrollment_id?: string; email?: string; password?: string; expires_at?: string } | null>(null);
+  const [credAvailable, setCredAvailable] = useState(false);
+  const [credBusy, setCredBusy] = useState(false);
+  const [credReveal, setCredReveal] = useState(false);
+  const [credCopied, setCredCopied] = useState(false);
+
   const loadStudent = async () => {
     try {
       setLoading(true);
@@ -81,9 +88,9 @@ export default function AdminStudentDetailsPage() {
       );
       setStudent(json.data || null);
       setCallResponse(json.data?.interest?.call_response || '');
-    } catch (e: any) {
+    } catch (e: unknown) {
       setStudent(null);
-      setError(e?.message === 'Unauthorized' ? 'Session expired. Please login again.' : 'Failed to load student');
+      setError(e instanceof Error && e.message === 'Unauthorized' ? 'Session expired. Please login again.' : 'Failed to load student');
     } finally {
       setLoading(false);
     }
@@ -114,11 +121,51 @@ export default function AdminStudentDetailsPage() {
     }
   };
 
+  const loadCredentials = async () => {
+    // 200 → temp password still readable; 404 (thrown) → none active.
+    try {
+      const json = await fetchWithAuth(
+        `https://api.easycoders.in/projects/backend/public/api/admin/students/${encodeURIComponent(id)}/credentials`
+      );
+      setCredData(json?.data || null);
+      setCredAvailable(true);
+    } catch {
+      setCredData(null);
+      setCredAvailable(false);
+    }
+  };
+
+  const regeneratePassword = async () => {
+    if (!confirm('Issue a new temporary password for this student? They will be asked to change it on next login.')) return;
+    try {
+      setCredBusy(true);
+      const json = await fetchWithAuth(
+        `https://api.easycoders.in/projects/backend/public/api/admin/students/${encodeURIComponent(id)}/regenerate-password`,
+        { method: 'POST' }
+      );
+      setCredData(json?.data || null);
+      setCredAvailable(true);
+      setCredReveal(true);
+    } catch (e: unknown) {
+      alert(e instanceof Error ? e.message : 'Could not regenerate the password.');
+    } finally {
+      setCredBusy(false);
+    }
+  };
+
+  const copyCreds = async () => {
+    if (!credData) return;
+    const text = `Enrolment ID: ${credData.enrollment_id || '—'}\nEmail: ${credData.email || ''}\nTemporary password: ${credData.password || ''}`;
+    try { await navigator.clipboard.writeText(text); setCredCopied(true); setTimeout(() => setCredCopied(false), 1600); } catch { /* clipboard blocked */ }
+  };
+
   useEffect(() => {
     if (!id) return;
     loadStudent();
     loadInterestOptions();
     loadFinance();
+    loadCredentials();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   const interestLabel = useMemo(
@@ -146,8 +193,8 @@ export default function AdminStudentDetailsPage() {
         }
       );
       await loadStudent();
-    } catch (e: any) {
-      setError(e?.message === 'Unauthorized' ? 'Session expired.' : 'Failed to update interest');
+    } catch (e: unknown) {
+      setError(e instanceof Error && e.message === 'Unauthorized' ? 'Session expired.' : 'Failed to update interest');
     } finally {
       setBusyInterest(false);
     }
@@ -371,6 +418,57 @@ export default function AdminStudentDetailsPage() {
                   ))}
                 </div>
               </div>
+            </div>
+
+            {/* Row 1b: Login credentials */}
+            <div className={styles.card}>
+              <div className={styles.cardHead}>
+                <span className={styles.cardTitle}>Login Credentials</span>
+                <span className={styles.cardSub}>Student dashboard access</span>
+              </div>
+              {credAvailable && credData ? (
+                <>
+                  <div className={styles.fieldGrid}>
+                    <div className={styles.field}>
+                      <span className={styles.fieldKey}>Enrolment ID</span>
+                      <span className={styles.fieldVal} style={{ fontFamily: 'ui-monospace, Menlo, monospace' }}>{credData.enrollment_id || '—'}</span>
+                    </div>
+                    <div className={styles.field}>
+                      <span className={styles.fieldKey}>Email</span>
+                      <span className={styles.fieldVal}>{credData.email}</span>
+                    </div>
+                    <div className={styles.field}>
+                      <span className={styles.fieldKey}>Temporary password</span>
+                      <span className={styles.fieldVal} style={{ fontFamily: 'ui-monospace, Menlo, monospace', color: '#B97A0F', fontWeight: 700 }}>
+                        {credReveal ? credData.password : '•'.repeat(Math.max(8, (credData.password || '').length))}
+                      </span>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: 8, marginTop: 14, flexWrap: 'wrap' }}>
+                    <button type="button" className={styles.primaryBtn} onClick={() => setCredReveal((v) => !v)}>
+                      {credReveal ? 'Hide' : 'Reveal'}
+                    </button>
+                    <button type="button" className={styles.primaryBtn} onClick={copyCreds} disabled={!credReveal}>
+                      {credCopied ? 'Copied!' : 'Copy'}
+                    </button>
+                    <button type="button" className={styles.deleteBtn} onClick={regeneratePassword} disabled={credBusy}>
+                      {credBusy ? 'Working…' : 'Regenerate'}
+                    </button>
+                  </div>
+                  <p style={{ fontSize: 12, color: '#94A3B8', marginTop: 12, lineHeight: 1.5 }}>
+                    The temporary password stays readable until the student changes it (or for 7 days). Regenerate to issue a fresh one.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p style={{ fontSize: 13, color: '#4A5568', margin: '4px 0 14px', lineHeight: 1.5 }}>
+                    No active temporary password. Either the student has set their own, or the 7-day window has passed.
+                  </p>
+                  <button type="button" className={styles.primaryBtn} onClick={regeneratePassword} disabled={credBusy}>
+                    {credBusy ? 'Working…' : 'Issue a new temporary password'}
+                  </button>
+                </>
+              )}
             </div>
 
             {/* Row 2: Finance summary */}
