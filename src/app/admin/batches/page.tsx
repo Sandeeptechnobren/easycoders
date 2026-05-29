@@ -6,17 +6,38 @@ import { fetchWithAuth } from '@/lib/api';
 
 const BASE = 'https://api.easycoders.in/projects/backend/public/api';
 
+/**
+ * Extract an array from any response shape the backend throws at us:
+ *  - a bare array `[...]`
+ *  - `{ data: [...] }`
+ *  - a Laravel paginator `{ data: { data: [...], current_page, ... } }`
+ * The /batches index uses paginate(20), so its rows live at res.data.data —
+ * reading res.data alone returned the paginator OBJECT and crashed
+ * `batches.map(...)` ("map is not a function"). This unwraps all three.
+ */
+function asArray<T>(x: unknown): T[] {
+  if (Array.isArray(x)) return x as T[];
+  const d = (x as { data?: unknown } | null)?.data;
+  if (Array.isArray(d)) return d as T[];
+  const dd = (d as { data?: unknown } | null)?.data;
+  if (Array.isArray(dd)) return dd as T[];
+  return [];
+}
+
+/** Courses expose `title`; some payloads use `name`. Show whichever exists. */
+const courseLabel = (c?: { name?: string; title?: string } | null) => c?.title ?? c?.name ?? '';
+
 type Batch = {
   id: number;
   name: string;
-  course?: { id: number; name: string };
+  course?: { id: number; name?: string; title?: string };
   start_date: string;
   end_date: string;
   status: string;
   trainers?: { id: number; name: string }[];
   students_count?: number;
 };
-type Course = { id: number; name: string };
+type Course = { id: number; name?: string; title?: string };
 type User = { id: number; name: string; email: string; role: string };
 
 export default function BatchesPage() {
@@ -46,8 +67,8 @@ export default function BatchesPage() {
         fetchWithAuth(`${BASE}/batches`),
         fetchWithAuth(`${BASE}/courses`),
       ]);
-      setBatches(batchRes.data || []);
-      setCourses(courseRes.data || courseRes || []);
+      setBatches(asArray<Batch>(batchRes));   // /batches is paginated → rows at .data.data
+      setCourses(asArray<Course>(courseRes));
     } catch {} finally { setLoading(false); }
   }, []);
 
@@ -60,7 +81,7 @@ export default function BatchesPage() {
     setMsg('');
     if (!trainers.length) {
       const res = await fetchWithAuth(`${BASE}/commanAPIs/users?role=trainer`).catch(() => ({ data: [] }));
-      setTrainers(res.data || []);
+      setTrainers(asArray<User>(res));
     }
     setShowModal(true);
   };
@@ -78,7 +99,7 @@ export default function BatchesPage() {
     setMsg('');
     if (!trainers.length) {
       const res = await fetchWithAuth(`${BASE}/commanAPIs/users?role=trainer`).catch(() => ({ data: [] }));
-      setTrainers(res.data || []);
+      setTrainers(asArray<User>(res));
     }
     setShowModal(true);
   };
@@ -101,7 +122,7 @@ export default function BatchesPage() {
       }
       setShowModal(false);
       load();
-    } catch (e: any) { setMsg(e.message || 'Failed.'); } finally { setSaving(false); }
+    } catch (e: unknown) { setMsg(e instanceof Error ? e.message : 'Failed.'); } finally { setSaving(false); }
   };
 
   const deleteBatch = async (id: number) => {
@@ -109,7 +130,7 @@ export default function BatchesPage() {
     try {
       await fetchWithAuth(`${BASE}/batches/${id}`, { method: 'DELETE' });
       load();
-    } catch (e: any) { alert(e.message || 'Delete failed.'); }
+    } catch (e: unknown) { alert(e instanceof Error ? e.message : 'Delete failed.'); }
   };
 
   const openStudents = async (b: Batch) => {
@@ -118,16 +139,17 @@ export default function BatchesPage() {
     setShowStudentModal(true);
     // Load full batch detail (with students)
     try {
+      // show() is NOT paginated → { data: <batch> }; students live on the batch.
       const res = await fetchWithAuth(`${BASE}/batches/${b.id}`);
-      const detail = res.data || {};
-      setBatchStudents(detail.students || []);
+      const detail = (res?.data ?? {}) as { students?: User[] };
+      setBatchStudents(Array.isArray(detail.students) ? detail.students : []);
     } catch {}
     // Load all students if not loaded
     if (!allStudents.length) {
       // Pull REAL enrolled students (users.role=3) so batch membership writes a
       // valid users.id into batch_students. (Was /hr/students = assessment-takers.)
       const res = await fetchWithAuth(`${BASE}/admin/students`).catch(() => ({ data: [] }));
-      setAllStudents(res.data || []);
+      setAllStudents(asArray<User>(res));
     }
   };
 
@@ -140,7 +162,7 @@ export default function BatchesPage() {
       });
       const res = await fetchWithAuth(`${BASE}/batches/${managingBatch.id}`);
       setBatchStudents((res.data || {}).students || []);
-    } catch (e: any) { alert(e.message || 'Failed.'); }
+    } catch (e: unknown) { alert(e instanceof Error ? e.message : 'Failed.'); }
   };
 
   const removeStudent = async (studentId: number) => {
@@ -148,7 +170,7 @@ export default function BatchesPage() {
     try {
       await fetchWithAuth(`${BASE}/batches/${managingBatch.id}/students/${studentId}`, { method: 'DELETE' });
       setBatchStudents(prev => prev.filter(s => s.id !== studentId));
-    } catch (e: any) { alert(e.message || 'Failed.'); }
+    } catch (e: unknown) { alert(e instanceof Error ? e.message : 'Failed.'); }
   };
 
   const toggleTrainer = (id: number) => {
@@ -193,7 +215,7 @@ export default function BatchesPage() {
                         <h5 className="card-title mb-0">{b.name}</h5>
                         <span className={`badge ${statusColor[b.status] || 'bg-secondary'} text-capitalize`}>{b.status}</span>
                       </div>
-                      {b.course && <div className="text-muted small mb-2">Course: {b.course.name}</div>}
+                      {b.course && <div className="text-muted small mb-2">Course: {courseLabel(b.course)}</div>}
                       <div className="small text-muted mb-1">
                         {b.start_date?.slice(0, 10)} → {b.end_date?.slice(0, 10)}
                       </div>
@@ -241,7 +263,7 @@ export default function BatchesPage() {
                       <select className="form-select" value={form.course_id}
                         onChange={e => setForm(f => ({ ...f, course_id: e.target.value }))}>
                         <option value="">— Select Course —</option>
-                        {courses.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                        {courses.map(c => <option key={c.id} value={c.id}>{courseLabel(c)}</option>)}
                       </select>
                     </div>
                     <div className="col-md-4">
