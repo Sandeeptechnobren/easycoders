@@ -32,8 +32,12 @@ type Student = {
   score?: number;
   joinedAt?: string;
   created_at?: string;
+  total_fee?: number;
+  due_amount?: number;
+  enrolment_id?: string | null;
+  batch?: string | null;
   assessments_attempts?: AssessmentAttempt[];
-  interest: Interest | null;
+  interest?: Interest | null;
 };
 
 type College = {
@@ -54,17 +58,6 @@ function normalizeStatus(s: Student['status']): 'Active' | 'Inactive' {
 
 function getJoinedDate(s: Student): string {
   return s.joinedAt || (s as any).created_at || '';
-}
-
-function normalizeInterestLabel(interest: Student['interest']): string {
-  const label = interest?.interest_status?.interest?.trim();
-  if (!label) return 'Not Set';
-  const l = label.toLowerCase();
-  if (l === 'interested') return 'Interested';
-  if (l === 'not interest' || l === 'not interested') return 'Not Interested';
-  if (l === 'call back later') return 'Call Back Later';
-  if (l === 'not reachable') return 'Not Reachable';
-  return label;
 }
 
 function getGreeting() {
@@ -88,9 +81,9 @@ const KPI_CONFIG = [
     ),
   },
   {
-    key: 'Interested',
-    label: 'Interested',
-    hint: 'Ready to join',
+    key: 'active',
+    label: 'Active',
+    hint: 'Currently active',
     accent: '#10b981',
     bg: 'rgba(16,185,129,0.07)',
     icon: (
@@ -100,9 +93,9 @@ const KPI_CONFIG = [
     ),
   },
   {
-    key: 'Not Interested',
-    label: 'Not Interested',
-    hint: 'No follow-up',
+    key: 'withDues',
+    label: 'With Dues',
+    hint: 'Fees outstanding',
     accent: '#ef4444',
     bg: 'rgba(239,68,68,0.07)',
     icon: (
@@ -112,9 +105,9 @@ const KPI_CONFIG = [
     ),
   },
   {
-    key: 'Call Back Later',
-    label: 'Call Back Later',
-    hint: 'Follow-up pending',
+    key: 'fullyPaid',
+    label: 'Fully Paid',
+    hint: 'Cleared in full',
     accent: '#f59e0b',
     bg: 'rgba(245,158,11,0.07)',
     icon: (
@@ -124,9 +117,9 @@ const KPI_CONFIG = [
     ),
   },
   {
-    key: 'Not Reachable',
-    label: 'Not Reachable',
-    hint: 'Try again later',
+    key: 'inactive',
+    label: 'Inactive',
+    hint: 'Not active',
     accent: '#3b82f6',
     bg: 'rgba(59,130,246,0.07)',
     icon: (
@@ -136,9 +129,9 @@ const KPI_CONFIG = [
     ),
   },
   {
-    key: 'Not Set',
-    label: 'Not Set',
-    hint: 'Needs first call',
+    key: 'recent',
+    label: 'New (30d)',
+    hint: 'Joined recently',
     accent: '#94a3b8',
     bg: 'rgba(148,163,184,0.07)',
     icon: (
@@ -254,7 +247,7 @@ export default function HrHomePage() {
         setError('');
         const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
         if (!token) throw new Error('Unauthorized');
-        const url = 'https://api.easycoders.in/projects/backend/public/api/hr/students' +
+        const url = 'https://api.easycoders.in/projects/backend/public/api/admin/students' +
           (selectedCollegeID ? `?college_id=${encodeURIComponent(selectedCollegeID)}` : '');
         const res = await fetch(url, {
           method: 'GET',
@@ -278,15 +271,18 @@ export default function HrHomePage() {
 
   const loading = loadingStudents || loadingColleges;
 
-  const interestStats = useMemo(() => {
+  const studentStats = useMemo(() => {
     const total = students.length;
-    const buckets: Record<string, number> = { Interested: 0, 'Not Interested': 0, 'Call Back Later': 0, 'Not Reachable': 0, 'Not Set': 0, Other: 0 };
-    for (const s of students) {
-      const label = normalizeInterestLabel(s.interest);
-      if (label in buckets) buckets[label] += 1;
-      else buckets.Other += 1;
-    }
-    return { total, ...buckets };
+    const active = students.filter(s => normalizeStatus(s.status) === 'Active').length;
+    const withDues = students.filter(s => Number(s.due_amount ?? 0) > 0).length;
+    const fullyPaid = students.filter(s => Number(s.total_fee ?? 0) > 0 && Number(s.due_amount ?? 0) <= 0).length;
+    const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
+    const recent = students.filter(s => {
+      const d = getJoinedDate(s);
+      const t = d ? new Date(d).getTime() : NaN;
+      return !Number.isNaN(t) && t >= cutoff;
+    }).length;
+    return { total, active, inactive: total - active, withDues, fullyPaid, recent };
   }, [students]);
 
   const greeting = getGreeting();
@@ -410,14 +406,14 @@ export default function HrHomePage() {
             <section className={styles.kpiSection}>
               <div className={styles.sectionHeader}>
                 <span className={styles.sectionTitle}>Student Overview</span>
-                <span className={styles.sectionMeta}>{interestStats.total} records total</span>
+                <span className={styles.sectionMeta}>{studentStats.total} students total</span>
               </div>
               <div className={styles.kpiGrid}>
                 {KPI_CONFIG.map((cfg) => {
                   const value = cfg.key === 'total'
-                    ? interestStats.total
-                    : (interestStats as any)[cfg.key] ?? 0;
-                  const pct = interestStats.total > 0 ? Math.round((value / interestStats.total) * 100) : 0;
+                    ? studentStats.total
+                    : (studentStats as Record<string, number>)[cfg.key] ?? 0;
+                  const pct = studentStats.total > 0 ? Math.round((value / studentStats.total) * 100) : 0;
                   return (
                     <div key={cfg.key} className={styles.kpiCard} style={{ '--accent': cfg.accent, '--bg': cfg.bg } as React.CSSProperties}>
                       <div className={styles.kpiTop}>
