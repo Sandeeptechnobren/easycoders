@@ -1,0 +1,207 @@
+/* Styles for /admin/admissions (Admit a Student).
+   Moved out of styled-jsx into a CSS Module so the 12-column span classes
+   apply deterministically to the helper-rendered fields (styled-jsx scoping
+   of dynamic classNames inside render helpers was unreliable, which made
+   every field collapse to one column and overflow the panel). */
+
+/* ── 12-column grid → 2-col ≤900px → 1-col ≤560px ───────────────────────── */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr)); /* minmax(0,…) lets columns shrink → no overflow */
+  gap: 16px;
+  align-items: start;
+}
+.s2 { grid-column: span 2; }
+.s3 { grid-column: span 3; }
+.s4 { grid-column: span 4; }
+.s5 { grid-column: span 5; }
+.s6 { grid-column: span 6; }
+.s8 { grid-column: span 8; }
+.sfull { grid-column: 1 / -1; }
+
+@media (max-width: 900px) {
+  .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .grid > .fld { grid-column: auto; }
+  .grid > .sfull { grid-column: 1 / -1; }
+}
+@media (max-width: 560px) {
+  .grid { grid-template-columns: minmax(0, 1fr); }
+  .grid > .fld, .grid > .sfull { grid-column: 1 / -1; }
+}
+
+/* ── Fields ─────────────────────────────────────────────────────────────── */
+.fld { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.fldLbl { font-size: 12px; font-weight: 600; color: #4A5568; }
+.req { color: #B97A0F; }
+.fldIn {
+  box-sizing: border-box;
+  background: #ffffff;
+  border: 1px solid #D7DEEA;
+  border-radius: 10px;
+  padding: 11px 13px;
+  font-family: inherit;
+  font-size: 13.5px;
+  color: #0B1B3A;
+  outline: none;
+  width: 100%;
+  max-width: 100%;
+  height: 44px;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+textarea.fldIn { height: auto; resize: vertical; min-height: 66px; }
+.fldIn::placeholder { color: #9CA7BC; }
+.fldIn:hover:not(:disabled):not(:focus) { border-color: #C2CCDD; }
+.fldIn:focus { border-color: #E8A020; box-shadow: 0 0 0 3px rgba(232,160,32,0.16); }
+.fldIn:disabled { background: #F4F6FB; color: #94A3B8; cursor: not-allowed; }
+.fldIn.invalid { border-color: #EF4444; box-shadow: 0 0 0 3px rgba(239,68,68,0.12); }
+.fldErr { font-size: 11.5px; color: #B91C1C; font-weight: 500; }
+
+.panelGap { margin-bottom: 18px; }
+
+/* Sub-section heading inside a panel */
+.subhead {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.07em;
+  text-transform: uppercase; color: #94A3B8;
+  margin: 4px 0 12px;
+}
+.subhead::after { content: ''; flex: 1; height: 1px; background: #EEF1F7; }
+.subgap { margin-top: 22px; }
+
+/* Coupon row */
+.couponRow { display: flex; gap: 8px; align-items: stretch; }
+.couponRow .fldIn { flex: 1; }
+.couponMsg { font-size: 12px; margin-top: 6px; }
+.couponMsg.ok  { color: #166534; }
+.couponMsg.err { color: #991B1B; }
+
+/* Fee summary */
+.feeSummary {
+  display: flex; gap: 14px; flex-wrap: wrap;
+  background: linear-gradient(180deg,#FBFCFE 0%,#F4F7FC 100%);
+  border: 1px solid #E5E9F2; border-radius: 14px;
+  padding: 16px 18px; margin-top: 18px;
+}
+.feeCell { flex: 1 1 120px; }
+.feeLbl { font-size: 11px; color: #94A3B8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+.feeVal {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 22px; font-weight: 700; color: #0B1B3A; line-height: 1.25; margin-top: 4px;
+}
+.feeCell.final { border-left: 1px solid #E5E9F2; padding-left: 14px; }
+.feeCell.final .feeVal { color: #B97A0F; }
+
+.instWarn {
+  font-size: 12px; color: #92660D; background: #FEF6E7;
+  border: 1px solid #F5C356; border-radius: 8px; padding: 7px 11px; margin-top: 10px;
+}
+
+/* Installments */
+.instRow { display: flex; gap: 10px; align-items: flex-end; margin-bottom: 10px; flex-wrap: wrap; }
+.instRow .fld { flex: 1 1 160px; }
+.instNo {
+  font-size: 12px; font-weight: 700; color: #94A3B8;
+  min-width: 26px; height: 44px; display: inline-flex; align-items: center;
+}
+.instHead { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px; }
+.optional { color: #94A3B8; font-weight: 400; }
+
+/* Buttons */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  padding: 10px 18px; border-radius: 10px; font-family: inherit; font-size: 13px;
+  font-weight: 700; border: 1px solid transparent; cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease, transform 0.15s ease;
+  white-space: nowrap; text-decoration: none;
+}
+.btn:active { transform: translateY(1px); }
+.btn:disabled { opacity: 0.55; cursor: not-allowed; }
+.btnPrimary { background: #0B1B3A; color: #fff; }
+.btnPrimary:hover:not(:disabled) { background: #E8A020; color: #0B1B3A; }
+.btnGold { background: #E8A020; color: #0B1B3A; }
+.btnGold:hover:not(:disabled) { background: #B97A0F; color: #fff; }
+.btnGhost { background: #fff; color: #4A5568; border-color: #D7DEEA; }
+.btnGhost:hover { border-color: #E8A020; color: #0B1B3A; }
+.btnSm { padding: 8px 13px; font-size: 12px; }
+.btnLinkDanger {
+  background: transparent; border: none; color: #991B1B; cursor: pointer;
+  font-size: 12px; font-weight: 600; height: 44px;
+}
+.btnLinkDanger:hover { color: #EF4444; }
+
+.formError {
+  background: #FEF2F2; color: #991B1B; border: 1px solid #FCA5A5;
+  border-radius: 10px; padding: 11px 14px; font-size: 13px; margin-bottom: 16px;
+  display: flex; align-items: center; gap: 9px;
+}
+
+/* Sticky action bar */
+.submitBar {
+  position: sticky; bottom: 14px; z-index: 5;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 14px; flex-wrap: wrap;
+  background: rgba(255,255,255,0.92); backdrop-filter: blur(8px);
+  border: 1px solid #E5E9F2; border-radius: 14px;
+  padding: 13px 18px; box-shadow: 0 12px 30px rgba(11,27,58,0.12); margin-top: 6px;
+}
+.submitMeta { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.submitPayable { font-size: 13px; color: #4A5568; }
+.submitPayable strong { color: #0B1B3A; font-size: 15px; }
+.submitHint { font-size: 12px; color: #94A3B8; }
+.submitHint.warn { color: #B91C1C; }
+
+/* ── Success modal ──────────────────────────────────────────────────────── */
+.admitBackdrop {
+  position: fixed; inset: 0; z-index: 1050;
+  background: rgba(7,18,42,0.55); backdrop-filter: blur(2px);
+  display: flex; align-items: center; justify-content: center; padding: 20px;
+  animation: admitFade 0.18s ease;
+}
+@keyframes admitFade { from { opacity: 0; } to { opacity: 1; } }
+.admitCard {
+  background: #fff; border-radius: 20px; width: 100%; max-width: 520px;
+  box-shadow: 0 24px 60px rgba(7,18,42,0.45); overflow: hidden; position: relative;
+  animation: admitRise 0.22s cubic-bezier(0.2,0.9,0.3,1.2);
+}
+@keyframes admitRise { from { opacity: 0; transform: translateY(12px) scale(0.98); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .admitBackdrop, .admitCard { animation: none; }
+}
+.admitX {
+  position: absolute; top: 14px; right: 14px; z-index: 2;
+  width: 30px; height: 30px; border-radius: 50%; border: none; cursor: pointer;
+  background: rgba(255,255,255,0.16); color: #fff;
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: background 0.16s ease;
+}
+.admitX:hover { background: rgba(255,255,255,0.3); }
+.admitTop {
+  background: linear-gradient(180deg, #0B1B3A 0%, #152D5A 100%);
+  color: #fff; padding: 26px 24px 22px; text-align: center;
+}
+.admitCheck {
+  width: 54px; height: 54px; border-radius: 50%;
+  background: rgba(232,160,32,0.18); border: 1px solid rgba(232,160,32,0.4);
+  color: #F5C356; display: inline-flex; align-items: center; justify-content: center;
+  margin-bottom: 12px;
+}
+.admitH { font-family: 'Playfair Display', Georgia, serif; font-size: 22px; font-weight: 700; margin: 0; }
+.admitSub { font-size: 13px; color: rgba(255,255,255,0.72); margin: 6px 0 0; }
+.admitBody { padding: 22px 24px; }
+.cred {
+  display: flex; justify-content: space-between; align-items: center; gap: 12px;
+  padding: 11px 0; border-bottom: 1px solid #F1F4F9;
+}
+.cred:last-child { border-bottom: none; }
+.credLbl { font-size: 12px; color: #94A3B8; font-weight: 600; }
+.credVal {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 14px; color: #0B1B3A; font-weight: 600; text-align: right; word-break: break-all;
+}
+.credVal.pw { color: #B97A0F; font-size: 16px; letter-spacing: 0.02em; }
+.admitNote { font-size: 12px; color: #94A3B8; margin: 14px 0 0; line-height: 1.55; }
+.admitActions {
+  display: flex; gap: 10px; flex-wrap: wrap; padding: 16px 24px;
+  border-top: 1px solid #F1F4F9; background: #FAFBFD;
+}
+.admitActions .btn { flex: 1 1 auto; }
