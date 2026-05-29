@@ -87,6 +87,7 @@ export default function Navbar() {
 
   const trainerLinks: NavLink[] = [
     { name: "Home", href: "/trainer" },
+    { name: "Batches", href: "/trainer/batches" },
     { name: "Tasks", href: "/trainer/tasks" },
     { name: "Syllabus", href: "/trainer/syllabus" },
     { name: "Attendance", href: "/trainer/attendance" },
@@ -97,7 +98,7 @@ export default function Navbar() {
   const hrLinks: NavLink[] = [
     { name: "Home", href: "/hr" },
     { name: "Students", href: "/hr/students" },
-    { name: "Batch", href: "/hr/batchManagement" },
+    { name: "Batch", href: "/admin/batches" },
     { name: "Enrolled Students", href: "/hr/enrolledStudents" },
     { name: "Payments", href: "/hr/fee" },
     { name: "Logout", onClick: handleLogout },

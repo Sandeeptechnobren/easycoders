@@ -5,6 +5,7 @@ import RoleGuard from '@/components/RoleGuard';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import api from '@/lib/axios';
+import MyBatchCard from '@/components/MyBatchCard';
 
 export default function StudentDashboard() {
   const { user } = useAuth();
@@ -298,6 +299,9 @@ export default function StudentDashboard() {
               <div className="sd-stat-sub">{activeTickets > openTickets ? `${activeTickets} active total` : 'Support requests'}</div>
             </div>
           </div>
+
+          {/* My Batch (renders only when the student is enrolled in a batch) */}
+          <MyBatchCard />
 
           {/* Main Grid */}
           <div className="sd-grid">
