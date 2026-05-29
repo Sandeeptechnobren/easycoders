@@ -65,7 +65,6 @@ export default function EasyAssessAdminHome() {
 
           <AdminCard
             href="/admin/easy-assess/users"
-            status="coming-soon"
             title="Assessment Users"
             description="Browse registered Easy Assess accounts, view their interest status, completed attempts and contact details."
             icon={

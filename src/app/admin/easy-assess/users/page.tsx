@@ -319,7 +319,7 @@ export default function AssessmentUsersAdmin() {
                         <td><span className={`pill ${cssCls[label]}`}>{label}</span></td>
                         <td>{u.created_at ? new Date(u.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}</td>
                         <td style={{ textAlign: 'right' }}>
-                          <Link href={`/admin/students/${u.id}`} className="openBtn">
+                          <Link href={`/admin/easy-assess/users/${u.id}`} className="openBtn">
                             Open
                             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                               <line x1="5" y1="12" x2="19" y2="12" />

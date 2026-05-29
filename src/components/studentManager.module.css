@@ -1,0 +1,424 @@
+/* Shared styles for <StudentDetailManager> — used by the admin, HR and
+   trainer enrolled-student detail pages. Relocated from
+   admin/students/[id]/student-details.module.css so all three portals
+   render an identical, brand-aligned management surface. */
+
+/* ─── Base ────────────────────────────────────── */
+.wrap {
+  margin-top: 90px;
+  min-height: 100vh;
+  background: #f4f6f9;
+  font-family: 'DM Sans', 'Segoe UI', system-ui, sans-serif;
+  color: #111827;
+}
+
+/* ─── Topbar ──────────────────────────────────── */
+.topbar {
+  background: #fff;
+  border-bottom: 1px solid #e8eaed;
+  padding: 1.4rem 2rem;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.topLeft { display: flex; flex-direction: column; gap: 2px; }
+
+.crumbs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 6px;
+}
+.crumbLink { color: #185fa5; text-decoration: none; font-weight: 500; }
+.crumbLink:hover { text-decoration: underline; }
+.crumbSep { color: #d1d5db; }
+.crumbNow { color: #6b7280; }
+
+.pageTitle {
+  font-size: 20px;
+  font-weight: 700;
+  color: #111827;
+  letter-spacing: -0.4px;
+}
+.pageSub { font-size: 13px; color: #6b7280; margin-top: 2px; }
+
+.backBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 18px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: #374151;
+  text-decoration: none;
+  background: #fff;
+  white-space: nowrap;
+  transition: background 0.12s, border-color 0.12s;
+}
+.backBtn:hover { background: #f9fafb; border-color: #9ca3af; }
+
+/* ─── Page body ───────────────────────────────── */
+.pageBody {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.5rem 2rem 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ─── Card ────────────────────────────────────── */
+.card {
+  background: #fff;
+  border: 1px solid #e8eaed;
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+}
+
+.cardHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+.cardTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+}
+.cardSub {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.divider {
+  height: 1px;
+  background: #f3f4f6;
+  margin: 1rem 0;
+}
+
+/* ─── Two-column row ──────────────────────────── */
+.row2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* ─── Profile hero ────────────────────────────── */
+.profileHero {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 1rem;
+}
+.avatarLg {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #e6f1fb;
+  color: #0c447c;
+  font-size: 20px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.heroName { font-size: 17px; font-weight: 700; color: #111827; }
+.heroId { font-size: 12px; color: #9ca3af; margin-top: 2px; }
+
+/* ─── Field grid ──────────────────────────────── */
+.fieldGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+.field { display: flex; flex-direction: column; gap: 4px; }
+.fieldKey {
+  font-size: 11px;
+  font-weight: 600;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.fieldVal { font-size: 13px; color: #111827; font-weight: 500; word-break: break-word; }
+
+/* ─── Status pills ────────────────────────────── */
+.statusPill {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.pill {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 500;
+}
+.pillGreen  { background: #eaf3de; color: #27500a; border: 1px solid #c0dd97; }
+.pillRed    { background: #fcebeb; color: #791f1f; border: 1px solid #f7c1c1; }
+.pillAmber  { background: #faeeda; color: #633806; border: 1px solid #fac775; }
+.pillGray   { background: #f1efe8; color: #444441; border: 1px solid #d3d1c7; }
+.pillBlue   { background: #e6f1fb; color: #0c447c; border: 1px solid #b5d4f4; }
+.neutral    { background: #e6f1fb; color: #0c447c; border: 1px solid #b5d4f4; }
+
+/* ─── Fee row ─────────────────────────────────── */
+.feeRow {
+  background: #fff;
+  border: 1px solid #e8eaed;
+  border-radius: 12px;
+  padding: 1.1rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  flex-wrap: wrap;
+}
+.feeStat {
+  flex: 1;
+  min-width: 120px;
+  padding: 0 1.25rem;
+}
+.feeStat:first-child { padding-left: 0; }
+.feeStat:last-child  { padding-right: 0; }
+.feeLabel {
+  font-size: 11px;
+  font-weight: 600;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+.feeVal {
+  font-size: 22px;
+  font-weight: 700;
+  color: #111827;
+}
+.feeGreen { color: #27500a; }
+.feeRed   { color: #791f1f; }
+.feeDivider {
+  width: 1px;
+  height: 40px;
+  background: #e8eaed;
+  flex-shrink: 0;
+}
+
+/* ─── Table ───────────────────────────────────── */
+.tableWrap { overflow-x: auto; }
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.table thead tr {
+  background: #f9fafb;
+  border-bottom: 1px solid #e8eaed;
+}
+.table th {
+  padding: 9px 14px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  text-align: left;
+  white-space: nowrap;
+}
+.table tbody tr {
+  border-bottom: 1px solid #f3f4f6;
+  transition: background 0.1s;
+}
+.table tbody tr:last-child { border-bottom: none; }
+.table tbody tr:hover { background: #f9fafb; }
+.table td { padding: 12px 14px; vertical-align: middle; }
+.tdBold { font-weight: 600; color: #111827; }
+.tdSub  { font-size: 12px; color: #9ca3af; margin-top: 2px; }
+.emptyRow { text-align: center; color: #9ca3af; padding: 2rem; }
+
+/* ─── Forms ───────────────────────────────────── */
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+.formStack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.row2Inline {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.formField { display: flex; flex-direction: column; gap: 5px; }
+.formLabel {
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+.input {
+  padding: 9px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 13px;
+  color: #111827;
+  background: #fff;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  width: 100%;
+  box-sizing: border-box;
+}
+.input:focus {
+  border-color: #185fa5;
+  box-shadow: 0 0 0 3px rgba(24, 95, 165, 0.08);
+}
+.input::placeholder { color: #9ca3af; }
+
+/* ─── Buttons ─────────────────────────────────── */
+.primaryBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 20px;
+  background: #185fa5;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+.primaryBtn:hover { background: #0c447c; }
+.primaryBtn:disabled { background: #93c5fd; cursor: not-allowed; }
+
+.deleteBtn {
+  padding: 5px 12px;
+  background: transparent;
+  border: 1px solid #fca5a5;
+  border-radius: 7px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  color: #dc2626;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.deleteBtn:hover { background: #fef2f2; }
+.deleteBtn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ─── Attendance toggle ───────────────────────── */
+.toggleRow { display: flex; gap: 8px; }
+.toggleBtn {
+  flex: 1;
+  padding: 9px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  background: #f9fafb;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.toggleActive {
+  background: #eaf3de;
+  border-color: #c0dd97;
+  color: #27500a;
+}
+.toggleAbsent {
+  background: #fcebeb;
+  border-color: #f7c1c1;
+  color: #791f1f;
+}
+
+/* ─── Skeleton ────────────────────────────────── */
+.skCard {
+  background: #fff;
+  border: 1px solid #e8eaed;
+  border-radius: 12px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.skRow {
+  height: 16px;
+  border-radius: 8px;
+  background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+}
+.skRow:nth-child(2) { width: 70%; }
+.skRow:nth-child(3) { width: 85%; }
+.skRow:nth-child(4) { width: 55%; }
+.skRow:nth-child(5) { width: 75%; }
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ─── Empty state ─────────────────────────────── */
+.emptyState {
+  background: #fff;
+  border: 1px solid #e8eaed;
+  border-radius: 12px;
+  padding: 4rem 2rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.emptyIcon  { font-size: 28px; color: #d1d5db; margin-bottom: 4px; }
+.emptyTitle { font-size: 15px; font-weight: 600; color: #374151; }
+.emptyText  { font-size: 13px; color: #9ca3af; }
+.emptyAction {
+  margin-top: 10px;
+  padding: 9px 20px;
+  background: #185fa5;
+  color: #fff;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+}
+.emptyAction:hover { background: #0c447c; }
+
+/* ─── Responsive ──────────────────────────────── */
+@media (max-width: 900px) {
+  .pageBody { padding: 1rem; }
+  .row2 { grid-template-columns: 1fr; }
+  .formGrid { grid-template-columns: 1fr 1fr; }
+  .fieldGrid { grid-template-columns: 1fr; }
+  .feeRow { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .feeDivider { width: 100%; height: 1px; }
+  .feeStat { padding: 0; }
+}
+
+@media (max-width: 600px) {
+  .topbar { padding: 1rem; flex-direction: column; }
+  .formGrid { grid-template-columns: 1fr; }
+  .row2Inline { grid-template-columns: 1fr; }
+}

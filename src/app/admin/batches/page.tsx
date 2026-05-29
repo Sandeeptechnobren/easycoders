@@ -124,7 +124,9 @@ export default function BatchesPage() {
     } catch {}
     // Load all students if not loaded
     if (!allStudents.length) {
-      const res = await fetchWithAuth(`${BASE}/hr/students`).catch(() => ({ data: [] }));
+      // Pull REAL enrolled students (users.role=3) so batch membership writes a
+      // valid users.id into batch_students. (Was /hr/students = assessment-takers.)
+      const res = await fetchWithAuth(`${BASE}/admin/students`).catch(() => ({ data: [] }));
       setAllStudents(res.data || []);
     }
   };
