@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import api from '@/lib/axios';
 import MyBatchCard from '@/components/MyBatchCard';
+import MyTasksCard from '@/components/MyTasksCard';
 
 export default function StudentDashboard() {
   const { user } = useAuth();
@@ -14,6 +15,8 @@ export default function StudentDashboard() {
   // Real ticket counters (was previously hardcoded to 0 on the dashboard).
   const [openTickets,    setOpenTickets]    = useState(0);
   const [activeTickets,  setActiveTickets]  = useState(0);
+  // Real pending-task count (batch tasks not yet completed/approved).
+  const [pendingTasks,   setPendingTasks]   = useState(0);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -33,6 +36,19 @@ export default function StudentDashboard() {
           t.status === 'open' || t.status === 'assigned' ||
           t.status === 'in_progress' || t.status === 'resolved'
         ).length);
+      })
+      .catch(() => { /* leave at 0 */ });
+  }, []);
+
+  // Count the student's batch tasks that aren't completed/approved yet.
+  useEffect(() => {
+    api.get('/student/tasks')
+      .then(res => {
+        const list: Array<{ my_submission?: { status?: string } | null }> = res.data?.data ?? [];
+        setPendingTasks(list.filter(t => {
+          const s = t.my_submission?.status;
+          return s !== 'completed' && s !== 'approved';
+        }).length);
       })
       .catch(() => { /* leave at 0 */ });
   }, []);
@@ -288,7 +304,7 @@ export default function StudentDashboard() {
               <div className="sd-stat-accent" style={{ background: '#d97706' }} />
               <div className="sd-stat-icon" style={{ background: '#fffbeb' }}>⏳</div>
               <div className="sd-stat-label">Pending Tasks</div>
-              <div className="sd-stat-value" style={{ color: '#d97706' }}>0</div>
+              <div className="sd-stat-value" style={{ color: '#d97706' }}>{pendingTasks}</div>
               <div className="sd-stat-sub">Awaiting completion</div>
             </div>
             <div className="sd-stat-card">
@@ -302,6 +318,9 @@ export default function StudentDashboard() {
 
           {/* My Batch (renders only when the student is enrolled in a batch) */}
           <MyBatchCard />
+
+          {/* My Tasks (renders only when the student has batch tasks) */}
+          <MyTasksCard />
 
           {/* Main Grid */}
           <div className="sd-grid">
@@ -397,7 +416,7 @@ export default function StudentDashboard() {
                       <div className="sd-progress-sub">Waiting for you</div>
                     </div>
                   </div>
-                  <span className="sd-pill" style={{ background: '#fffbeb', color: '#d97706' }}>0 Left</span>
+                  <span className="sd-pill" style={{ background: '#fffbeb', color: '#d97706' }}>{pendingTasks} Left</span>
                 </div>
 
               </div>

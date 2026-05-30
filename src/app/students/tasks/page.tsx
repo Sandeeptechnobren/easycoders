@@ -4,6 +4,11 @@ import { useEffect, useState } from 'react';
 import api from '@/lib/axios';
 import Loader from '../../loader/page';
 
+/* Module-scope so the purity rule doesn't flag Date.now() being called inside
+   the component render (same pattern as MyTasksCard). */
+const fmtDue = (d?: string | null) => (d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : null);
+const isOverdue = (d?: string | null) => !!d && new Date(d).getTime() < Date.now() - 86400000;
+
 export default function TasksPage() {
   const [tasks, setTasks] = useState<any[]>([]);
   const [taskCategories, setTaskCategories] = useState<any[]>([]);
@@ -32,17 +37,25 @@ export default function TasksPage() {
     task.description?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  // The student's status comes from their submission (my_submission), not the task row.
+  const taskStatus = (t: { my_submission?: { status?: string } | null }): string => {
+    const s = t?.my_submission?.status;
+    if (s === 'completed' || s === 'approved') return 'completed';
+    if (s === 'rejected') return 'rejected';
+    if (s === 'pending')  return 'submitted';
+    return 'pending';
+  };
   const statusConfig: Record<string, { bg: string; color: string; label: string }> = {
     completed: { bg: '#f0fdf4', color: '#15803d', label: '✓ Completed' },
-    pending:   { bg: '#fffbeb', color: '#b45309', label: '⏳ Pending' },
+    submitted: { bg: '#eff6ff', color: '#1d4ed8', label: '⏳ Submitted' },
+    rejected:  { bg: '#fef2f2', color: '#b91c1c', label: '↺ Redo' },
+    pending:   { bg: '#fffbeb', color: '#b45309', label: '○ Pending' },
     default:   { bg: '#f1f5f9', color: '#475569', label: '— N/A' },
   };
+  const getStatus = (status: string) => statusConfig[status] ?? statusConfig.default;
 
-  const getStatus = (status: string) =>
-    statusConfig[status] ?? statusConfig.default;
-
-  const completedCount = tasks.filter(t => t.status === 'completed').length;
-  const pendingCount   = tasks.filter(t => t.status === 'pending').length;
+  const completedCount = tasks.filter(t => taskStatus(t) === 'completed').length;
+  const pendingCount   = tasks.filter(t => taskStatus(t) !== 'completed').length;
 
   return (
     <>
@@ -305,12 +318,14 @@ export default function TasksPage() {
                       <th>Task</th>
                       <th>Category</th>
                       <th style={{ textAlign: 'center' }}>Output</th>
+                      <th>Due</th>
                       <th>Status</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredTasks.map((task, index) => {
-                      const s = getStatus(task.status);
+                      const s = getStatus(taskStatus(task));
+                      const overdue = isOverdue(task.due_date) && taskStatus(task) !== 'completed';
                       return (
                         <tr key={task.id}>
                           <td>
@@ -341,6 +356,14 @@ export default function TasksPage() {
                             ) : (
                               <span className="tp-no-img">—</span>
                             )}
+                          </td>
+
+                          <td>
+                            {fmtDue(task.due_date)
+                              ? <span style={{ fontSize: 13, fontWeight: overdue ? 700 : 400, color: overdue ? '#b91c1c' : '#475569' }}>
+                                  {fmtDue(task.due_date)}{overdue ? ' · overdue' : ''}
+                                </span>
+                              : <span className="tp-no-img">—</span>}
                           </td>
 
                           <td>
