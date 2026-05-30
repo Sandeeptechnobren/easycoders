@@ -89,6 +89,17 @@ export default function StudentTicketsPage() {
 
   useEffect(() => { fetchTickets(); }, []);
 
+  // Deep-link from a notification: /students/tickets?ticket=<id> → open it once.
+  useEffect(() => {
+    const id = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('ticket') : null;
+    if (!id) return;
+    setDetailLoading(true);
+    api.get(`/tickets/${id}`)
+      .then(res => { const full = res.data?.data ?? res.data; if (full) setDetail(full); })
+      .catch(() => {})
+      .finally(() => setDetailLoading(false));
+  }, []);
+
   useEffect(() => {
     api.get('/getTaskCategories')
       .then(res => setTaskCategories(res.data?.data ?? []))
