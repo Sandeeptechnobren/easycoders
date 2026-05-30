@@ -1,8 +1,10 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import PermissionGuard from '@/components/PermissionGuard';
 import { fetchWithAuth } from '@/lib/api';
+import { useHasPermission } from '@/lib/permissions';
+import styles from './ticketManagement.module.css';
 
 const BASE = 'https://api.easycoders.in/projects/backend/public/api';
 
@@ -16,6 +18,7 @@ type Ticket = {
   priority: string;
   student?: { id: number; name: string; email: string };
   assignedTo?: { id: number; name: string };
+  category?: { id: number; name: string };
   responses?: TicketResponse[];
   created_at: string;
   closed_at?: string;
@@ -26,17 +29,11 @@ type TicketResponse = {
   responder?: { id: number; name: string; role: string };
   created_at: string;
 };
-type Staff = { id: number; name: string; email?: string; phone?: string; role: string };
+type Staff = { id: number; name: string; email?: string; role: string };
 
-// ─── Helpers ────────────────────────────────────────────────────────────────
-// Map both numeric ('1'..'4') and string ('admin'/'hr'/'student'/'trainer')
-// role values to a human label. Duplicates the helper in
-// AttendanceManagement; will dedupe to a shared module in a later cleanup.
 const ROLE_NAMES: Record<string, string> = {
-  '1': 'Admin',   'admin':   'Admin',
-  '2': 'HR',      'hr':      'HR',
-  '3': 'Student', 'student': 'Student',
-  '4': 'Trainer', 'trainer': 'Trainer',
+  '1': 'Admin', 'admin': 'Admin', '2': 'HR', 'hr': 'HR',
+  '3': 'Student', 'student': 'Student', '4': 'Trainer', 'trainer': 'Trainer',
 };
 const roleLabel = (role?: string | number | null): string => {
   if (role === null || role === undefined || role === '') return '—';
@@ -47,49 +44,34 @@ const isStudentRole = (role?: string | number | null): boolean => {
   const key = String(role ?? '').trim().toLowerCase();
   return key === 'student' || key === '3';
 };
+const fmtStatus = (s: string) => (s || '').replace(/_/g, ' ');
+const fmtDate = (d?: string) => (d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—');
 
-const statusColor: Record<string, string> = {
-  open:         'bg-warning text-dark',
-  assigned:     'bg-primary',
-  in_progress:  'bg-info',
-  resolved:     'bg-success',
-  closed:       'bg-secondary',
-};
-const priorityColor: Record<string, string> = {
-  low: 'bg-success', medium: 'bg-warning text-dark', high: 'bg-danger',
-};
-const formatStatus = (s: string) => (s || '').replace(/_/g, ' ');
-
-// ─── Component ──────────────────────────────────────────────────────────────
-//
-// Shared ticket-management surface. Mounted at both /admin/tickets and
-// /hr/tickets. (Phase 3 will mount a slimmer view at /trainer/tickets.)
-// Gated by the manage_queries permission, so any user the admin grants this
-// to (role-wide via Spatie OR per-user via UserPermissionOverride) sees it.
 export default function TicketManagement() {
+  const canAssign = useHasPermission(['manage_queries']); // admins/HR; trainers (respond_queries only) → false
+
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [staff, setStaff]     = useState<Staff[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
 
+  const [query, setQuery] = useState('');
   const [filterStatus, setFilterStatus]     = useState('');
   const [filterPriority, setFilterPriority] = useState('');
 
   const [selected, setSelected]     = useState<Ticket | null>(null);
   const [showDetail, setShowDetail] = useState(false);
+  const [deepHandled, setDeepHandled] = useState(false);
 
-  // Assign
   const [assignUserId, setAssignUserId] = useState('');
   const [assignMsg, setAssignMsg]       = useState('');
 
-  // Respond
-  const [replyText, setReplyText]     = useState('');
-  const [closeTicket, setCloseTicket] = useState(false);
+  const [replyText, setReplyText]       = useState('');
+  const [closeTicket, setCloseTicket]   = useState(false);
   const [markResolved, setMarkResolved] = useState(false);
-  const [replying, setReplying]       = useState(false);
-  const [replyMsg, setReplyMsg]       = useState('');
+  const [replying, setReplying]         = useState(false);
+  const [replyMsg, setReplyMsg]         = useState('');
 
-  // ── Load ticket list ─────────────────────────────────────────────────────
   const load = useCallback(async () => {
     setLoading(true); setLoadError('');
     try {
@@ -98,48 +80,44 @@ export default function TicketManagement() {
       if (filterPriority) params.append('priority', filterPriority);
       const res = await fetchWithAuth(`${BASE}/tickets?${params}`);
       const paginator = res.data;
-      const list: Ticket[] = Array.isArray(paginator)
-        ? paginator
-        : (paginator?.data ?? []);
-      setTickets(list);
-    } catch (e: any) {
+      setTickets(Array.isArray(paginator) ? paginator : (paginator?.data ?? []));
+    } catch (e: unknown) {
       setTickets([]);
-      setLoadError(e?.message || 'Could not load tickets.');
-    } finally {
-      setLoading(false);
-    }
+      setLoadError(e instanceof Error ? e.message : 'Could not load tickets.');
+    } finally { setLoading(false); }
   }, [filterStatus, filterPriority]);
 
   useEffect(() => { load(); }, [load]);
 
-  // ── Load eligible assignees (admin / HR / trainer — anyone non-student) ──
-  // Previously this fetched ?role=hr which excluded trainers. Now we pull a
-  // broader set and filter out students client-side so any staff member —
-  // including trainers granted manage_queries — can be picked.
+  // Eligible assignees (non-students). Only needed when the user can assign.
   useEffect(() => {
+    if (!canAssign) return;
     (async () => {
       try {
         const res = await fetchWithAuth(`${BASE}/commanAPIs/users?limit=200`);
         const all = (res.data || []) as Staff[];
-        const eligible = all.filter((u) => !isStudentRole(u.role));
-        setStaff(eligible);
-      } catch {
-        setStaff([]);
-      }
+        setStaff(all.filter(u => !isStudentRole(u.role)));
+      } catch { setStaff([]); }
     })();
+  }, [canAssign]);
+
+  const openById = useCallback(async (id: number) => {
+    try {
+      const res = await fetchWithAuth(`${BASE}/tickets/${id}`);
+      const t = (res.data || null) as Ticket | null;
+      setSelected(t);
+      setAssignUserId(String(t?.assignedTo?.id || ''));
+    } catch { /* ignore */ }
+    setReplyText(''); setCloseTicket(false); setMarkResolved(false); setReplyMsg(''); setAssignMsg('');
+    setShowDetail(true);
   }, []);
 
-  const openDetail = async (t: Ticket) => {
-    try {
-      const res = await fetchWithAuth(`${BASE}/tickets/${t.id}`);
-      setSelected(res.data || t);
-    } catch {
-      setSelected(t);
-    }
-    setReplyText(''); setCloseTicket(false); setMarkResolved(false); setReplyMsg(''); setAssignMsg('');
-    setAssignUserId(String(t.assignedTo?.id || ''));
-    setShowDetail(true);
-  };
+  // Deep-link: a notification routes here with ?ticket=<id> — auto-open it once.
+  useEffect(() => {
+    if (deepHandled || loading) return;
+    const id = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('ticket') : null;
+    if (id) { setDeepHandled(true); openById(Number(id)); }
+  }, [loading, deepHandled, openById]);
 
   const assignTicket = async () => {
     if (!selected || !assignUserId) return;
@@ -150,12 +128,9 @@ export default function TicketManagement() {
         body: JSON.stringify({ assigned_to: Number(assignUserId) }),
       });
       setAssignMsg('Assigned.');
-      const res = await fetchWithAuth(`${BASE}/tickets/${selected.id}`);
-      setSelected(res.data || selected);
+      await openById(selected.id);
       load();
-    } catch (e: any) {
-      setAssignMsg(e?.message || 'Failed.');
-    }
+    } catch (e: unknown) { setAssignMsg(e instanceof Error ? e.message : 'Failed.'); }
   };
 
   const respond = async (e: React.FormEvent) => {
@@ -165,23 +140,24 @@ export default function TicketManagement() {
     try {
       await fetchWithAuth(`${BASE}/tickets/${selected.id}/respond`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: replyText,
-          close_ticket:   closeTicket,
-          mark_resolved:  markResolved,
-        }),
+        body: JSON.stringify({ message: replyText, close_ticket: closeTicket, mark_resolved: markResolved }),
       });
-      setReplyText(''); setCloseTicket(false); setMarkResolved(false);
-      setReplyMsg('Response sent.');
-      const res = await fetchWithAuth(`${BASE}/tickets/${selected.id}`);
-      setSelected(res.data || selected);
+      const id = selected.id;
+      setReplyText(''); setCloseTicket(false); setMarkResolved(false); setReplyMsg('Response sent.');
+      await openById(id);
       load();
-    } catch (e: any) {
-      setReplyMsg(e?.message || 'Failed.');
-    } finally {
-      setReplying(false);
-    }
+    } catch (e: unknown) { setReplyMsg(e instanceof Error ? e.message : 'Failed.'); }
+    finally { setReplying(false); }
   };
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return tickets;
+    return tickets.filter(t =>
+      [t.title, t.ticket_id, t.student?.name, t.student?.email, t.category?.name]
+        .filter(Boolean).some(v => String(v).toLowerCase().includes(q))
+    );
+  }, [tickets, query]);
 
   const openCount       = tickets.filter(t => t.status === 'open').length;
   const inProgressCount = tickets.filter(t => t.status === 'in_progress' || t.status === 'assigned').length;
@@ -189,252 +165,183 @@ export default function TicketManagement() {
 
   return (
     <PermissionGuard requires={['manage_queries', 'respond_queries']} fallback={
-      <div className="container py-5 text-center">
-        <h4 className="text-muted">No access to tickets</h4>
-        <p className="text-muted small">
-          You need either <code>manage_queries</code> or <code>respond_queries</code> to
-          access this page. Ask an admin to grant it from the Permissions page.
-        </p>
+      <div className={styles.fallback}>
+        <h4>No access to tickets</h4>
+        <p>You need <code>manage_queries</code> or <code>respond_queries</code>. Ask an admin to grant it from the Permissions page.</p>
       </div>
     }>
-      <div className="admin-wrap">
-        <div className="container-fluid py-4 px-4">
+      <div className={styles.wrap}>
+        <div className={styles.inner}>
 
-          {/* Header */}
-          <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
-            <div>
-              <h3 className="fw-bold mb-1">Tickets / Queries</h3>
-              <p className="text-muted mb-0">Manage student support requests</p>
-            </div>
-            <div className="d-flex gap-3">
-              <div className="text-center">
-                <div className="fw-bold fs-5 text-warning">{openCount}</div>
-                <small className="text-muted">Open</small>
-              </div>
-              <div className="text-center">
-                <div className="fw-bold fs-5 text-info">{inProgressCount}</div>
-                <small className="text-muted">In Progress</small>
-              </div>
-              <div className="text-center">
-                <div className="fw-bold fs-5 text-success">{resolvedCount}</div>
-                <small className="text-muted">Resolved</small>
-              </div>
-            </div>
+          <div className={styles.header}>
+            <div className={styles.eyebrow}>● Support</div>
+            <h1 className={styles.title}>Tickets &amp; Queries</h1>
+            <div className={styles.sub}>{canAssign ? 'Triage student support requests, assign a responder and reply.' : 'Respond to the tickets assigned to you.'}</div>
+            {!canAssign && <div className={styles.note}>You&apos;re viewing the tickets assigned to you.</div>}
           </div>
 
-          {/* Filters */}
-          <div className="d-flex gap-3 mb-4 flex-wrap">
-            <select className="form-select" style={{ maxWidth: 200 }} value={filterStatus}
-              onChange={e => setFilterStatus(e.target.value)}>
-              <option value="">All Statuses</option>
+          <div className={styles.stats}>
+            {[
+              { lbl: 'Open', val: openCount, c: '#E8A020', f: 'open' },
+              { lbl: 'In Progress', val: inProgressCount, c: '#4338CA', f: 'in_progress' },
+              { lbl: 'Resolved', val: resolvedCount, c: '#16a34a', f: 'resolved' },
+              { lbl: 'Total', val: tickets.length, c: '#185fa5', f: '' },
+            ].map(s => (
+              <button key={s.lbl} className={styles.stat} style={{ cursor: 'pointer', textAlign: 'left', font: 'inherit' }} onClick={() => setFilterStatus(s.f)}>
+                <span className={styles.statBar} style={{ background: s.c }} />
+                <div className={styles.statVal} style={{ color: s.c }}>{s.val}</div>
+                <div className={styles.statLbl}>{s.lbl}</div>
+              </button>
+            ))}
+          </div>
+
+          <div className={styles.toolbar}>
+            <div className={styles.search}>
+              <span className={styles.searchIcon}>⌕</span>
+              <input className={styles.searchIn} placeholder="Search by student, title, ticket ID, category…" value={query} onChange={e => setQuery(e.target.value)} />
+            </div>
+            <select className={styles.sel} value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
+              <option value="">All statuses</option>
               <option value="open">Open</option>
               <option value="assigned">Assigned</option>
-              <option value="in_progress">In Progress</option>
+              <option value="in_progress">In progress</option>
               <option value="resolved">Resolved</option>
               <option value="closed">Closed</option>
             </select>
-            <select className="form-select" style={{ maxWidth: 200 }} value={filterPriority}
-              onChange={e => setFilterPriority(e.target.value)}>
-              <option value="">All Priorities</option>
+            <select className={styles.sel} value={filterPriority} onChange={e => setFilterPriority(e.target.value)}>
+              <option value="">All priorities</option>
               <option value="low">Low</option>
               <option value="medium">Medium</option>
               <option value="high">High</option>
             </select>
-            <button className="btn btn-outline-secondary" onClick={load}>Refresh</button>
+            <button className={`${styles.btn} ${styles.btnGhost}`} onClick={load}>Refresh</button>
           </div>
 
-          {loadError && (
-            <div className="alert alert-danger py-2 small">{loadError}</div>
-          )}
+          {loadError && <div className={`${styles.alert} ${styles.alertErr}`}>{loadError}</div>}
 
-          {/* Table */}
-          {loading ? (
-            <div className="text-center py-5 text-muted">Loading...</div>
-          ) : (
-            <div className="card">
-              <div className="table-responsive">
-                <table className="table table-hover mb-0">
-                  <thead className="table-light">
+          <div className={styles.panel}>
+            {loading ? (
+              <div className={styles.state}>Loading tickets…</div>
+            ) : filtered.length === 0 ? (
+              <div className={styles.state}>{tickets.length === 0 ? 'No tickets found.' : 'No tickets match your search/filters.'}</div>
+            ) : (
+              <div className={styles.tableWrap}>
+                <table className={styles.table}>
+                  <thead>
                     <tr>
-                      <th>Ticket ID</th>
-                      <th>Student</th>
-                      <th>Title</th>
-                      <th>Priority</th>
-                      <th>Status</th>
-                      <th>Assigned To</th>
-                      <th>Date</th>
-                      <th>Action</th>
+                      <th>Ticket</th><th>Student</th><th>Title</th><th>Category</th>
+                      <th>Priority</th><th>Status</th><th>Assigned To</th><th>Date</th><th style={{ textAlign: 'right' }}>Action</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {tickets.length === 0 ? (
-                      <tr><td colSpan={8} className="text-center text-muted py-4">No tickets found.</td></tr>
-                    ) : tickets.map(t => (
+                    {filtered.map(t => (
                       <tr key={t.id}>
-                        <td><code className="small">{t.ticket_id}</code></td>
-                        <td>
-                          <div className="fw-semibold">{t.student?.name || '—'}</div>
-                          <small className="text-muted">{t.student?.email}</small>
-                        </td>
+                        <td><span className={styles.code}>{t.ticket_id}</span></td>
+                        <td><div className={styles.uName}>{t.student?.name || '—'}</div><div className={styles.uMail}>{t.student?.email}</div></td>
                         <td>{t.title}</td>
-                        <td><span className={`badge ${priorityColor[t.priority] || 'bg-secondary'}`}>{t.priority}</span></td>
-                        <td><span className={`badge ${statusColor[t.status] || 'bg-secondary'}`}>{formatStatus(t.status)}</span></td>
-                        <td>{t.assignedTo?.name || <span className="text-muted">Unassigned</span>}</td>
-                        <td className="small text-muted">{t.created_at?.slice(0, 10)}</td>
-                        <td><button className="btn btn-sm btn-outline-primary" onClick={() => openDetail(t)}>Open</button></td>
+                        <td>{t.category?.name ? <span className={styles.catPill}>{t.category.name}</span> : <span className={styles.muted}>—</span>}</td>
+                        <td><span className={`${styles.badge} ${styles[`pr_${t.priority}`] || ''}`}>{t.priority}</span></td>
+                        <td><span className={`${styles.badge} ${styles[`st_${t.status}`] || ''}`}>{fmtStatus(t.status)}</span></td>
+                        <td className={styles.muted}>{t.assignedTo?.name || <span style={{ color: '#94A3B8' }}>Unassigned</span>}</td>
+                        <td className={styles.muted}>{fmtDate(t.created_at)}</td>
+                        <td style={{ textAlign: 'right' }}><button className={`${styles.btn} ${styles.btnPrimary} ${styles.btnSm}`} onClick={() => openById(t.id)}>Open</button></td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
 
-      {/* ── Ticket Detail Modal ── */}
+      {/* ── Detail modal ── */}
       {showDetail && selected && (
-        <div className="modal fade show d-block" style={{ background: 'rgba(0,0,0,.5)' }}>
-          <div className="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-            <div className="modal-content">
-              <div className="modal-header">
-                <div>
-                  <h5 className="modal-title mb-0">{selected.title}</h5>
-                  <small className="text-muted">{selected.ticket_id} · {selected.student?.name}</small>
-                </div>
-                <div className="d-flex gap-2 align-items-center">
-                  <span className={`badge ${priorityColor[selected.priority]}`}>{selected.priority}</span>
-                  <span className={`badge ${statusColor[selected.status]}`}>{formatStatus(selected.status)}</span>
-                  <button className="btn-close" onClick={() => setShowDetail(false)} />
-                </div>
+        <div className={styles.backdrop} onClick={() => setShowDetail(false)}>
+          <div className={styles.modal} onClick={e => e.stopPropagation()}>
+            <div className={styles.mTop}>
+              <div>
+                <h2 className={styles.mTitle}>{selected.title}</h2>
+                <div className={styles.mSub}>{selected.ticket_id} · {selected.student?.name} · {selected.category?.name || 'General'}</div>
               </div>
-              <div className="modal-body">
-                <div className="row g-4">
-
-                  {/* Left: conversation */}
-                  <div className="col-md-8">
-                    {/* Original message */}
-                    <div className="border rounded p-3 mb-3 bg-light">
-                      <div className="d-flex justify-content-between mb-2">
-                        <strong>{selected.student?.name}</strong>
-                        <small className="text-muted">{selected.created_at?.slice(0, 10)}</small>
-                      </div>
-                      <p className="mb-0">{selected.description}</p>
-                    </div>
-
-                    {/* Responses */}
-                    {(selected.responses || []).map(r => {
-                      const isStudent = isStudentRole(r.responder?.role);
-                      return (
-                        <div key={r.id} className={`border rounded p-3 mb-3 ${isStudent ? 'bg-light' : 'border-primary bg-primary bg-opacity-5'}`}>
-                          <div className="d-flex justify-content-between mb-2">
-                            <div>
-                              <strong>{r.responder?.name || 'Staff'}</strong>
-                              {!isStudent && (
-                                <span className="badge bg-primary ms-2 small">{roleLabel(r.responder?.role)}</span>
-                              )}
-                            </div>
-                            <small className="text-muted">{r.created_at?.slice(0, 16)?.replace('T', ' ')}</small>
-                          </div>
-                          <p className="mb-0">{r.message}</p>
-                        </div>
-                      );
-                    })}
-
-                    {/* Reply form */}
-                    {selected.status !== 'closed' && (
-                      <form onSubmit={respond} className="mt-3">
-                        {replyMsg && <div className={`alert py-2 ${replyMsg.includes('sent') ? 'alert-success' : 'alert-danger'}`}>{replyMsg}</div>}
-                        <textarea className="form-control mb-2" rows={3} placeholder="Write a response..."
-                          value={replyText} onChange={e => setReplyText(e.target.value)} required />
-                        <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                          <div className="d-flex gap-3 flex-wrap">
-                            <div className="form-check">
-                              <input type="checkbox" className="form-check-input" id="mark-resolved"
-                                checked={markResolved}
-                                onChange={e => { setMarkResolved(e.target.checked); if (e.target.checked) setCloseTicket(false); }} />
-                              <label className="form-check-label" htmlFor="mark-resolved" title="Status → Resolved. Student confirms or reopens.">
-                                Mark as Resolved
-                              </label>
-                            </div>
-                            <div className="form-check">
-                              <input type="checkbox" className="form-check-input" id="close-ticket"
-                                checked={closeTicket}
-                                onChange={e => { setCloseTicket(e.target.checked); if (e.target.checked) setMarkResolved(false); }} />
-                              <label className="form-check-label" htmlFor="close-ticket" title="Status → Closed immediately. Skip student-confirm step.">
-                                Close ticket after response
-                              </label>
-                            </div>
-                          </div>
-                          <button type="submit" className="btn btn-primary btn-sm" disabled={replying}>
-                            {replying ? 'Sending...' : 'Send Response'}
-                          </button>
-                        </div>
-                      </form>
-                    )}
-                    {selected.status === 'closed' && (
-                      <div className="alert alert-secondary">This ticket is closed. Closed at: {selected.closed_at?.slice(0, 10) || '—'}</div>
-                    )}
-                  </div>
-
-                  {/* Right: meta */}
-                  <div className="col-md-4">
-                    <div className="card">
-                      <div className="card-header fw-semibold">Ticket Info</div>
-                      <div className="card-body">
-                        <div className="mb-3">
-                          <label className="form-label text-muted small">Assign To</label>
-                          <div className="d-flex gap-2">
-                            <select className="form-select form-select-sm" value={assignUserId}
-                              onChange={e => setAssignUserId(e.target.value)}>
-                              <option value="">— Unassigned —</option>
-                              {staff.map(s => (
-                                <option key={s.id} value={s.id}>
-                                  {s.name} · {roleLabel(s.role)}
-                                </option>
-                              ))}
-                            </select>
-                            <button className="btn btn-sm btn-outline-primary" onClick={assignTicket}>
-                              Assign
-                            </button>
-                          </div>
-                          {assignMsg && <small className={assignMsg === 'Assigned.' ? 'text-success' : 'text-danger'}>{assignMsg}</small>}
-                          {staff.length === 0 && (
-                            <small className="text-muted d-block mt-1">No eligible staff loaded — refresh, or grant <code>manage_queries</code> to a trainer first.</small>
-                          )}
-                        </div>
-                        <div className="mb-2">
-                          <span className="text-muted small">Student: </span>
-                          <span>{selected.student?.name}</span>
-                        </div>
-                        <div className="mb-2">
-                          <span className="text-muted small">Email: </span>
-                          <span className="small">{selected.student?.email}</span>
-                        </div>
-                        <div className="mb-2">
-                          <span className="text-muted small">Priority: </span>
-                          <span className={`badge ${priorityColor[selected.priority]}`}>{selected.priority}</span>
-                        </div>
-                        <div className="mb-2">
-                          <span className="text-muted small">Status: </span>
-                          <span className={`badge ${statusColor[selected.status]}`}>{formatStatus(selected.status)}</span>
-                        </div>
-                        <div className="mb-2">
-                          <span className="text-muted small">Responses: </span>
-                          <span>{(selected.responses || []).length}</span>
-                        </div>
-                        <div>
-                          <span className="text-muted small">Opened: </span>
-                          <span className="small">{selected.created_at?.slice(0, 10)}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                </div>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <span className={`${styles.badge} ${styles[`pr_${selected.priority}`] || ''}`}>{selected.priority}</span>
+                <span className={`${styles.badge} ${styles[`st_${selected.status}`] || ''}`}>{fmtStatus(selected.status)}</span>
+                <button className={styles.mClose} onClick={() => setShowDetail(false)} aria-label="Close">✕</button>
               </div>
-              <div className="modal-footer">
-                <button className="btn btn-secondary" onClick={() => setShowDetail(false)}>Close</button>
+            </div>
+
+            <div className={styles.mBody}>
+              {/* Conversation */}
+              <div>
+                <div className={styles.bubble}>
+                  <div className={styles.bubbleHead}>
+                    <span className={styles.bubbleName}>{selected.student?.name || 'Student'}</span>
+                    <span className={styles.bubbleTime}>{fmtDate(selected.created_at)}</span>
+                  </div>
+                  <div className={styles.bubbleMsg}>{selected.description}</div>
+                </div>
+
+                {(selected.responses || []).map(r => {
+                  const student = isStudentRole(r.responder?.role);
+                  return (
+                    <div key={r.id} className={`${styles.bubble} ${student ? '' : styles.bubbleStaff}`}>
+                      <div className={styles.bubbleHead}>
+                        <span className={styles.bubbleName}>
+                          {r.responder?.name || 'Staff'}
+                          {!student && <span className={styles.bubbleRole}>{roleLabel(r.responder?.role)}</span>}
+                        </span>
+                        <span className={styles.bubbleTime}>{(r.created_at || '').slice(0, 16).replace('T', ' ')}</span>
+                      </div>
+                      <div className={styles.bubbleMsg}>{r.message}</div>
+                    </div>
+                  );
+                })}
+
+                {selected.status !== 'closed' ? (
+                  <form onSubmit={respond} className={styles.replyArea}>
+                    {replyMsg && <div className={`${styles.alert} ${replyMsg.includes('sent') ? styles.alertOk : styles.alertErr}`}>{replyMsg}</div>}
+                    <textarea className={styles.ta} rows={3} placeholder="Write a response…" value={replyText} onChange={e => setReplyText(e.target.value)} required />
+                    <div className={styles.replyRow}>
+                      <div className={styles.checks}>
+                        <label className={styles.check}>
+                          <input type="checkbox" checked={markResolved} onChange={e => { setMarkResolved(e.target.checked); if (e.target.checked) setCloseTicket(false); }} />
+                          Mark as resolved
+                        </label>
+                        <label className={styles.check}>
+                          <input type="checkbox" checked={closeTicket} onChange={e => { setCloseTicket(e.target.checked); if (e.target.checked) setMarkResolved(false); }} />
+                          Close after response
+                        </label>
+                      </div>
+                      <button type="submit" className={`${styles.btn} ${styles.btnPrimary} ${styles.btnSm}`} disabled={replying}>{replying ? 'Sending…' : 'Send response'}</button>
+                    </div>
+                  </form>
+                ) : (
+                  <div className={`${styles.alert}`} style={{ background: '#F1F5F9', color: '#475569' }}>This ticket is closed{selected.closed_at ? ` · ${fmtDate(selected.closed_at)}` : ''}.</div>
+                )}
+              </div>
+
+              {/* Side */}
+              <div className={styles.side}>
+                <div className={styles.sideTitle}>Ticket info</div>
+                {canAssign && (
+                  <div style={{ marginBottom: 14 }}>
+                    <div className={styles.metaKey} style={{ marginBottom: 6 }}>Assign to</div>
+                    <div className={styles.assignRow}>
+                      <select className={styles.sel} value={assignUserId} onChange={e => setAssignUserId(e.target.value)}>
+                        <option value="">— Unassigned —</option>
+                        {staff.map(s => <option key={s.id} value={s.id}>{s.name} · {roleLabel(s.role)}</option>)}
+                      </select>
+                      <button className={`${styles.btn} ${styles.btnGold} ${styles.btnSm}`} onClick={assignTicket}>Assign</button>
+                    </div>
+                    {assignMsg && <div style={{ fontSize: 12, marginTop: 4, color: assignMsg === 'Assigned.' ? '#166534' : '#991B1B' }}>{assignMsg}</div>}
+                  </div>
+                )}
+                <div className={styles.metaRow}><span className={styles.metaKey}>Student</span><span>{selected.student?.name || '—'}</span></div>
+                <div className={styles.metaRow}><span className={styles.metaKey}>Email</span><span style={{ fontSize: 12 }}>{selected.student?.email || '—'}</span></div>
+                <div className={styles.metaRow}><span className={styles.metaKey}>Assigned</span><span>{selected.assignedTo?.name || 'Unassigned'}</span></div>
+                <div className={styles.metaRow}><span className={styles.metaKey}>Responses</span><span>{(selected.responses || []).length}</span></div>
+                <div className={styles.metaRow}><span className={styles.metaKey}>Opened</span><span>{fmtDate(selected.created_at)}</span></div>
               </div>
             </div>
           </div>
