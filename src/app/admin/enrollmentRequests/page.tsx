@@ -220,7 +220,9 @@ export default function EnrollmentRequestsPage() {
                           <td className={styles.muted}>{r.college || '—'}</td>
                           <td>
                             <span className={styles.payPill}>{payLabel(r.payment_method)}</span>
-                            {r.transaction_number && <div className={styles.mono} style={{ marginTop: 4 }}>{r.transaction_number}</div>}
+                            <div className={styles.mono} style={{ marginTop: 4 }} title="Transaction number">
+                              <span style={{ color: '#94A3B8' }}>Txn: </span>{r.transaction_number || '—'}
+                            </div>
                           </td>
                           <td className={styles.muted}>{fmtDate(r.created_at)}</td>
                           <td><span className={`${styles.badge} ${styles[`st_${st}`] || ''}`}>{st}</span></td>
@@ -249,7 +251,7 @@ export default function EnrollmentRequestsPage() {
                       <div className={styles.mMeta}>
                         <div>Course: {r.course?.title || '—'}</div>
                         <div>Phone: {r.phone_number || '—'} · {r.college || '—'}</div>
-                        <div>Payment: {payLabel(r.payment_method)}{r.transaction_number ? ` · ${r.transaction_number}` : ''}</div>
+                        <div>Payment: {payLabel(r.payment_method)} · Txn: {r.transaction_number || '—'}</div>
                         <div>Applied: {fmtDate(r.created_at)}</div>
                       </div>
                       <button className={`${styles.btn} ${st === 'pending' ? styles.btnPrimary : styles.btnGhost} ${styles.btnSm}`} onClick={() => openReview(r)}>
