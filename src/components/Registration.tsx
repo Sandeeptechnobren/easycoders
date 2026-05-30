@@ -65,6 +65,7 @@ export default function Registration({ onClose }: RegistrationProps) {
   const [courses, setCourses]               = useState<ApiCourse[]>([]);
   const [selectedCourse, setSelectedCourse] = useState('');
   const [openForm, setOpenForm]             = useState(false);
+  const [submitted, setSubmitted]           = useState(false);
   const [submitting, setSubmitting]         = useState(false);
 
   const [step, setStep]         = useState<1 | 2 | 3>(1);
@@ -193,10 +194,7 @@ export default function Registration({ onClose }: RegistrationProps) {
         payment_method:     payMethod,
         transaction_number: payMethod === 'qr' ? txnNumber.trim() : null,
       });
-      alert('Registration submitted. Our team will contact you within 24 hours.');
-      setOpenForm(false);
-      resetFormState();
-      closePopup();
+      setSubmitted(true);
     } catch (err) {
       console.error(err);
       alert('Something went wrong. Please try again later.');
@@ -218,7 +216,18 @@ export default function Registration({ onClose }: RegistrationProps) {
             </svg>
           </button>
 
-          {!openForm ? (
+          {submitted ? (
+            <div style={{ textAlign: 'center', padding: '36px 16px 28px' }}>
+              <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'rgba(232,160,32,0.16)', border: '1px solid rgba(232,160,32,0.4)', color: '#B97A0F', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+              </div>
+              <h2 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 24, fontWeight: 700, color: '#0B1B3A', margin: '0 0 8px' }}>Application received!</h2>
+              <p style={{ fontSize: 14, color: '#4A5568', lineHeight: 1.6, maxWidth: 380, margin: '0 auto 22px' }}>
+                Thanks{name ? `, ${name.trim().split(' ')[0]}` : ''} — your application is in. Our team will confirm your spot and reach out within 24 hours.
+              </p>
+              <button type="button" className="cta" onClick={() => { setSubmitted(false); setOpenForm(false); resetFormState(); closePopup(); }}>Done</button>
+            </div>
+          ) : !openForm ? (
             <>
               {/* ── INITIAL VIEW: summer-training batches only ── */}
               <div className="batchesHead">
