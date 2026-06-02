@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import api from '@/lib/axios';
@@ -20,6 +20,88 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  // ── Forgot-password flow ──
+  const [view, setView] = useState<'login' | 'fp-email' | 'fp-otp' | 'fp-reset' | 'fp-done'>('login');
+  const [info, setInfo] = useState('');
+  const [fpEmail, setFpEmail] = useState('');
+  const [otp, setOtp] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [resendIn, setResendIn] = useState(0);
+
+  // Reset to the sign-in view whenever the modal (re)opens.
+  useEffect(() => {
+    if (isOpen) { setView('login'); setError(''); setInfo(''); }
+  }, [isOpen]);
+
+  // Resend cooldown tick.
+  useEffect(() => {
+    if (resendIn <= 0) return;
+    const t = setTimeout(() => setResendIn((s) => s - 1), 1000);
+    return () => clearTimeout(t);
+  }, [resendIn]);
+
+  const HEADINGS: Record<string, { title: string; sub: string }> = {
+    'login':    { title: 'Welcome back',     sub: 'Sign in to continue your learning journey' },
+    'fp-email': { title: 'Forgot password?', sub: "Enter your account email and we'll send you a verification code." },
+    'fp-otp':   { title: 'Check your email', sub: 'Enter the 6-digit code we just sent you.' },
+    'fp-reset': { title: 'Set a new password', sub: 'Choose a password you haven’t used before.' },
+    'fp-done':  { title: 'Password reset',   sub: 'Your password has been updated.' },
+  };
+
+  const msgOf = (err: unknown) =>
+    (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+
+  const goForgot = () => {
+    setError(''); setInfo(''); setOtp(''); setNewPassword(''); setConfirmPassword('');
+    setFpEmail(email); setView('fp-email');
+  };
+  const backToLogin = () => { setError(''); setInfo(''); setView('login'); };
+
+  const submitForgotEmail = async (e: React.FormEvent) => {
+    e.preventDefault(); setLoading(true); setError(''); setInfo('');
+    try {
+      const res = await api.post('/forgot-password', { email: fpEmail });
+      setInfo(res.data?.message || 'A verification code has been sent to your email.');
+      setOtp(''); setView('fp-otp'); setResendIn(30);
+    } catch (err: unknown) { setError(msgOf(err) || 'Could not send the code. Please try again.'); }
+    finally { setLoading(false); }
+  };
+
+  const resendOtp = async () => {
+    if (resendIn > 0) return;
+    setError(''); setInfo('');
+    try {
+      const res = await api.post('/forgot-password', { email: fpEmail });
+      setInfo(res.data?.message || 'A new code has been sent.');
+      setResendIn(30);
+    } catch (err: unknown) { setError(msgOf(err) || 'Could not resend the code.'); }
+  };
+
+  const submitVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault(); setLoading(true); setError(''); setInfo('');
+    try {
+      await api.post('/verify-reset-otp', { email: fpEmail, otp });
+      setView('fp-reset');
+    } catch (err: unknown) { setError(msgOf(err) || 'Invalid or expired code.'); }
+    finally { setLoading(false); }
+  };
+
+  const submitReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newPassword !== confirmPassword) { setError('The two passwords do not match.'); return; }
+    if (newPassword.length < 8) { setError('Password must be at least 8 characters.'); return; }
+    setLoading(true); setError(''); setInfo('');
+    try {
+      await api.post('/reset-password', {
+        email: fpEmail, otp, new_password: newPassword, new_password_confirmation: confirmPassword,
+      });
+      setView('fp-done');
+    } catch (err: unknown) { setError(msgOf(err) || 'Could not reset the password.'); }
+    finally { setLoading(false); }
+  };
 
   if (!isOpen) return null;
 
@@ -394,6 +476,91 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
 
         .lm-footer a:hover { color: #E8A020; }
 
+        /* ── FORGOT PASSWORD ── */
+        .lm-forgot {
+          align-self: flex-end;
+          background: none;
+          border: none;
+          padding: 0;
+          margin: -8px 0 2px;
+          font-family: 'DM Sans', sans-serif;
+          font-size: 12.5px;
+          font-weight: 600;
+          color: #1A3A6B;
+          cursor: pointer;
+        }
+        .lm-forgot:hover { color: #E8A020; text-decoration: underline; }
+
+        .lm-info {
+          display: flex;
+          align-items: flex-start;
+          gap: 10px;
+          background: #F0FDF4;
+          border: 1px solid #BBF7D0;
+          border-radius: 10px;
+          padding: 12px 14px;
+          margin-bottom: 20px;
+        }
+        .lm-info-text {
+          font-family: 'DM Sans', sans-serif;
+          font-size: 13px;
+          color: #166534;
+          line-height: 1.5;
+        }
+
+        .lm-back {
+          background: none;
+          border: none;
+          cursor: pointer;
+          font-family: 'DM Sans', sans-serif;
+          font-size: 13px;
+          color: #64748B;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 8px 0 0;
+          align-self: center;
+        }
+        .lm-back:hover { color: #0B1B3A; }
+
+        .lm-otp-input {
+          text-align: center;
+          letter-spacing: 12px;
+          font-size: 22px;
+          font-weight: 600;
+          font-family: 'Sora', sans-serif;
+          padding-left: 14px !important;
+        }
+
+        .lm-resend {
+          font-family: 'DM Sans', sans-serif;
+          font-size: 12.5px;
+          color: #64748B;
+          text-align: center;
+          padding-top: 2px;
+        }
+        .lm-resend button {
+          background: none;
+          border: none;
+          color: #1A3A6B;
+          font-weight: 600;
+          cursor: pointer;
+          padding: 0;
+          font-size: 12.5px;
+        }
+        .lm-resend button:disabled { color: #B0BAC9; cursor: not-allowed; }
+
+        .lm-success-ico {
+          width: 60px;
+          height: 60px;
+          border-radius: 50%;
+          background: #F0FDF4;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin: 4px auto 20px;
+        }
+
         /* ── TRUST BADGES ── */
         .lm-trust {
           display: flex;
@@ -441,8 +608,8 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
             </div>
 
             {/* Heading */}
-            <h2 className="lm-title">Welcome back</h2>
-            <p className="lm-subtitle">Sign in to continue your learning journey</p>
+            <h2 className="lm-title">{HEADINGS[view].title}</h2>
+            <p className="lm-subtitle">{view === 'fp-otp' && fpEmail ? `We sent a 6-digit code to ${fpEmail}.` : HEADINGS[view].sub}</p>
 
             {/* Error */}
             {error && (
@@ -456,7 +623,19 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
               </div>
             )}
 
-            {/* Form */}
+            {/* Info / success notice */}
+            {info && !error && (
+              <div className="lm-info">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, marginTop: 1 }}>
+                  <circle cx="12" cy="12" r="9" stroke="#16A34A" strokeWidth="1.8" fill="rgba(22,163,74,0.1)" />
+                  <path d="M8 12L11 15L16 9" stroke="#16A34A" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                <p className="lm-info-text">{info}</p>
+              </div>
+            )}
+
+            {/* ── Sign-in form ── */}
+            {view === 'login' && (
             <form className="lm-form" onSubmit={handleSubmit}>
               <div className="lm-field">
                 <label className="lm-label">Email Address</label>
@@ -518,6 +697,8 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
                 </div>
               </div>
 
+              <button type="button" className="lm-forgot" onClick={goForgot}>Forgot password?</button>
+
               <button type="submit" className="lm-submit" disabled={loading}>
                 {loading ? (
                   <div className="lm-spinner" />
@@ -544,6 +725,116 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
                 <Link href="/contactus" onClick={onClose}>Contact Us</Link>
               </p>
             </form>
+            )}
+
+            {/* ── Step 1: enter email ── */}
+            {view === 'fp-email' && (
+            <form className="lm-form" onSubmit={submitForgotEmail}>
+              <div className="lm-field">
+                <label className="lm-label">Email Address</label>
+                <div className="lm-input-wrap">
+                  <span className="lm-input-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                      <path d="M20 4H4C2.9 4 2 4.9 2 6V18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V6C22 4.9 21.1 4 20 4Z" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M22 6L12 13L2 6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </span>
+                  <input className="lm-input" type="email" placeholder="you@example.com" value={fpEmail} onChange={(e) => setFpEmail(e.target.value)} required autoComplete="email" autoFocus />
+                </div>
+              </div>
+              <button type="submit" className="lm-submit" disabled={loading}>
+                {loading ? <div className="lm-spinner" /> : <span>Send verification code</span>}
+              </button>
+              <button type="button" className="lm-back" onClick={backToLogin}>← Back to sign in</button>
+            </form>
+            )}
+
+            {/* ── Step 2: enter OTP ── */}
+            {view === 'fp-otp' && (
+            <form className="lm-form" onSubmit={submitVerifyOtp}>
+              <div className="lm-field">
+                <label className="lm-label">Verification Code</label>
+                <input
+                  className="lm-input lm-otp-input"
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  maxLength={6}
+                  placeholder="••••••"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  required
+                  autoFocus
+                />
+              </div>
+              <button type="submit" className="lm-submit" disabled={loading || otp.length !== 6}>
+                {loading ? <div className="lm-spinner" /> : <span>Verify code</span>}
+              </button>
+              <p className="lm-resend">
+                Didn&apos;t get it?{' '}
+                <button type="button" onClick={resendOtp} disabled={resendIn > 0}>
+                  {resendIn > 0 ? `Resend in ${resendIn}s` : 'Resend code'}
+                </button>
+              </p>
+              <button type="button" className="lm-back" onClick={backToLogin}>← Back to sign in</button>
+            </form>
+            )}
+
+            {/* ── Step 3: set new password ── */}
+            {view === 'fp-reset' && (
+            <form className="lm-form" onSubmit={submitReset}>
+              <div className="lm-field">
+                <label className="lm-label">New Password</label>
+                <div className="lm-input-wrap">
+                  <span className="lm-input-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                      <rect x="3" y="11" width="18" height="11" rx="2" stroke="currentColor" strokeWidth="1.6"/>
+                      <path d="M7 11V7C7 4.24 9.24 2 12 2C14.76 2 17 4.24 17 7V11" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+                    </svg>
+                  </span>
+                  <input className="lm-input" type={showNewPassword ? 'text' : 'password'} placeholder="At least 8 characters" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required autoComplete="new-password" style={{ paddingRight: '42px' }} autoFocus />
+                  <button type="button" className="lm-eye-btn" onClick={() => setShowNewPassword(!showNewPassword)} aria-label={showNewPassword ? 'Hide password' : 'Show password'}>
+                    {showNewPassword ? (
+                      <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20C7 20 2.73 16.39 1 12C1.9 9.63 3.44 7.55 5.41 6M9.9 4.24A9.12 9.12 0 0 1 12 4C17 4 21.27 7.61 23 12C22.27 13.96 21.06 15.7 19.54 17.08M1 1L23 23" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
+                    ) : (
+                      <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M1 12C2.73 7.61 7 4 12 4C17 4 21.27 7.61 23 12C21.27 16.39 17 20 12 20C7 20 2.73 16.39 1 12Z" stroke="currentColor" strokeWidth="1.6"/><circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.6"/></svg>
+                    )}
+                  </button>
+                </div>
+              </div>
+              <div className="lm-field">
+                <label className="lm-label">Confirm New Password</label>
+                <div className="lm-input-wrap">
+                  <span className="lm-input-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                      <rect x="3" y="11" width="18" height="11" rx="2" stroke="currentColor" strokeWidth="1.6"/>
+                      <path d="M7 11V7C7 4.24 9.24 2 12 2C14.76 2 17 4.24 17 7V11" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+                    </svg>
+                  </span>
+                  <input className="lm-input" type={showNewPassword ? 'text' : 'password'} placeholder="Re-enter the new password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required autoComplete="new-password" />
+                </div>
+              </div>
+              <button type="submit" className="lm-submit" disabled={loading}>
+                {loading ? <div className="lm-spinner" /> : <span>Reset password</span>}
+              </button>
+              <button type="button" className="lm-back" onClick={backToLogin}>← Back to sign in</button>
+            </form>
+            )}
+
+            {/* ── Done ── */}
+            {view === 'fp-done' && (
+            <div>
+              <div className="lm-success-ico">
+                <svg width="30" height="30" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="12" r="10" fill="rgba(22,163,74,0.12)" />
+                  <path d="M7 12.5L10.5 16L17 9" stroke="#16A34A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+              <button type="button" className="lm-submit" onClick={backToLogin}>
+                <span>Back to sign in</span>
+              </button>
+            </div>
+            )}
           </div>
 
           {/* Trust bar */}
