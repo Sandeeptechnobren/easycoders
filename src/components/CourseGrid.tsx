@@ -1,5 +1,6 @@
 'use client';
 import Link from 'next/link';
+import { useEffect, useRef, useState } from 'react';
 
 type Course = {
   id: number | string;
@@ -12,6 +13,7 @@ type Course = {
 
 type CourseGridProps = {
   filteredCourses: Course[];
+  loading?: boolean;
 };
 
 const levelColors: Record<string, { bg: string; color: string }> = {
@@ -40,7 +42,25 @@ function StarRating({ rating }: { rating: number }) {
   );
 }
 
-export default function CourseGrid({ filteredCourses }: CourseGridProps) {
+export default function CourseGrid({ filteredCourses, loading = false }: CourseGridProps) {
+  const gridRef = useRef<HTMLDivElement>(null);
+  const [inView, setInView] = useState(false);
+
+  useEffect(() => {
+    const el = gridRef.current;
+    if (!el) return;
+    if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setInView(true);
+      return;
+    }
+    const io = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setInView(true); io.disconnect(); } },
+      { threshold: 0.08 },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
   return (
     <>
       <style>{`
@@ -201,15 +221,76 @@ export default function CourseGrid({ filteredCourses }: CourseGridProps) {
           color: #94A3B8;
           font-family: 'DM Sans', sans-serif;
         }
+
+        /* ── Staggered card entrance (runs once the grid scrolls into view).
+           Kept on the 'animation' property so the card's own hover 'transition'
+           is untouched. Easing is ease-out-expo — no bounce. ── */
+        @keyframes cgIn {
+          from { opacity: 0; transform: translateY(18px); }
+          to   { opacity: 1; transform: none; }
+        }
+
+        /* ── Skeleton loaders shown while /api/courses is in flight.
+           Neutrals tinted toward the brand navy/cream, never flat gray. ── */
+        .cg-skel {
+          background: #fff;
+          border: 1px solid #E8ECF5;
+          border-radius: 16px;
+          overflow: hidden;
+          display: flex;
+          flex-direction: column;
+        }
+        .cg-skel-img { aspect-ratio: 16/9; }
+        .cg-skel-body { padding: 20px 22px 22px; display: flex; flex-direction: column; gap: 13px; }
+        .cg-skel-line { height: 12px; border-radius: 6px; }
+        .cg-skel-line.w90 { width: 90%; }
+        .cg-skel-line.w65 { width: 65%; }
+        .cg-skel-line.w40 { width: 40%; }
+        .cg-skel-btn { height: 42px; border-radius: 10px; margin-top: 6px; }
+        .cg-skel-img,
+        .cg-skel-line,
+        .cg-skel-btn {
+          background: linear-gradient(100deg, #EAEEF6 28%, #F6F8FC 50%, #EAEEF6 72%);
+          background-size: 220% 100%;
+          animation: cgShimmer 1.5s ease-in-out infinite;
+        }
+        @keyframes cgShimmer {
+          from { background-position: 220% 0; }
+          to   { background-position: -220% 0; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .cg-card { animation: none !important; opacity: 1 !important; transform: none !important; }
+          .cg-skel-img, .cg-skel-line, .cg-skel-btn { animation: none !important; }
+        }
       `}</style>
 
-      <div className="cg-grid">
-        {filteredCourses.length > 0 ? (
-          filteredCourses.map((course) => {
+      <div className="cg-grid" ref={gridRef}>
+        {loading ? (
+          Array.from({ length: 4 }).map((_, i) => (
+            <div className="cg-skel" key={`skel-${i}`}>
+              <div className="cg-skel-img" />
+              <div className="cg-skel-body">
+                <div className="cg-skel-line w90" />
+                <div className="cg-skel-line w65" />
+                <div className="cg-skel-line w40" />
+                <div className="cg-skel-btn" />
+              </div>
+            </div>
+          ))
+        ) : filteredCourses.length > 0 ? (
+          filteredCourses.map((course, i) => {
             const badge = levelColors[course.level] ?? { bg: '#F1F5F9', color: '#4A5568' };
             const ratingNum = typeof course.rating === 'string' ? parseFloat(course.rating) : course.rating;
             return (
-              <div className="cg-card" key={course.id}>
+              <div
+                className="cg-card"
+                key={course.id}
+                style={{
+                  opacity: inView ? undefined : 0,
+                  animation: inView ? `cgIn .55s cubic-bezier(.16,1,.3,1) ${Math.min(i, 7) * 70}ms both` : 'none',
+                }}
+              >
                 <div className="cg-image-wrap">
                   <img src={course.image} alt={course.title} loading="lazy" />
                   <span
