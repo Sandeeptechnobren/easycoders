@@ -5,6 +5,8 @@ import { useEffect, useState } from 'react';
 
 import api from '@/lib/axios';
 import CourseGrid from "@/components/CourseGrid";
+import Reveal from '@/components/Reveal';
+import CountUp from '@/components/CountUp';
 import FAQAccordion from '@/components/FAQAccordion';
 import Registration from '@/components/Registration'; // ← adjust path if needed
 import TestimonialCarousel from '@/components/TestimonialCarousel';
@@ -70,6 +72,7 @@ const FALLBACK_COURSES: HomeCourse[] = [
 
 export default function HomePage() {
   const [courses, setCourses] = useState<HomeCourse[]>(FALLBACK_COURSES);
+  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [scrolled, setScrolled] = useState(false);
@@ -100,7 +103,8 @@ export default function HomePage() {
           image:  c.image_url || c.image || FALLBACK_COURSES[idx % FALLBACK_COURSES.length].image,
         })));
       })
-      .catch(() => { /* keep fallback */ });
+      .catch(() => { /* keep fallback */ })
+      .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
   }, []);
 
@@ -426,22 +430,22 @@ export default function HomePage() {
       <section className="stats-bar" aria-label="Why students choose Easy Coders">
         <div className="container">
           <div className="stats-inner">
-            <div className="stat-item">
-              <div className="stat-value">4</div>
+            <Reveal className="stat-item" delay={0} y={14}>
+              <div className="stat-value"><CountUp end={4} /></div>
               <div className="stat-label">Core programs</div>
-            </div>
-            <div className="stat-item">
-              <div className="stat-value">100%</div>
+            </Reveal>
+            <Reveal className="stat-item" delay={90} y={14}>
+              <div className="stat-value"><CountUp end={100} suffix="%" /></div>
               <div className="stat-label">Project-based learning</div>
-            </div>
-            <div className="stat-item">
+            </Reveal>
+            <Reveal className="stat-item" delay={180} y={14}>
               <div className="stat-value">1 : 1</div>
               <div className="stat-label">Mentor support</div>
-            </div>
-            <div className="stat-item">
-              <div className="stat-value">3</div>
+            </Reveal>
+            <Reveal className="stat-item" delay={270} y={14}>
+              <div className="stat-value"><CountUp end={3} /></div>
               <div className="stat-label">Flexible batch timings</div>
-            </div>
+            </Reveal>
           </div>
         </div>
       </section>
@@ -450,12 +454,12 @@ export default function HomePage() {
       <section className="section section-white">
         <div className="container">
           <div className="section-header">
-            <div>
+            <Reveal>
               <div className="section-label">Our Programs</div>
               <h2 className="section-title">Explore Top Courses</h2>
               <p className="section-sub">Industry-aligned training programs designed to make you job-ready from day one.</p>
-            </div>
-            <div className="filter-tabs">
+            </Reveal>
+            <Reveal className="filter-tabs" delay={120} y={10}>
               {['All', 'Beginner', 'Intermediate', 'Advanced'].map((lvl) => (
                 <button
                   key={lvl}
@@ -465,9 +469,9 @@ export default function HomePage() {
                   {lvl}
                 </button>
               ))}
-            </div>
+            </Reveal>
           </div>
-          <CourseGrid filteredCourses={filteredCourses} />
+          <CourseGrid filteredCourses={filteredCourses} loading={loading} />
         </div>
       </section>
 
