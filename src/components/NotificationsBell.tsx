@@ -13,7 +13,7 @@ type NotificationItem = {
   type: string;
   title: string;
   message: string;
-  data?: { ticket_id?: number; ticket_code?: string } | null;
+  data?: { ticket_id?: number; ticket_code?: string; task_id?: number; category_id?: number } | null;
   read_at: string | null;
   created_at: string;
 };
@@ -25,6 +25,14 @@ const ticketRouteForRole = (role: string | null): string => {
   if (n === 4) return '/trainer/tickets';
   // admin (1) and HR (2)
   return '/admin/tickets';
+};
+
+// Map role → which tasks page to land on when a task notification is clicked.
+const taskRouteForRole = (role: string | null): string => {
+  const n = parseInt(role || '0', 10);
+  if (n === 3) return '/students/tasks';
+  if (n === 4) return '/trainer/tasks';
+  return '/admin/tasks';
 };
 
 const formatRel = (s?: string): string => {
@@ -101,6 +109,17 @@ export default function NotificationsBell() {
       } catch {}
       // Optimistic refresh.
       refreshCount();
+    }
+
+    // Task notifications go to the tasks page (optionally pre-filtered by
+    // category); everything else is a ticket notification.
+    const isTask = n.type === 'task_assigned' || n.type === 'tasks_assigned'
+      || n.data?.task_id != null || n.data?.category_id != null;
+    if (isTask) {
+      const taskBase = taskRouteForRole(role);
+      const cat = n.data?.category_id;
+      router.push(cat ? `${taskBase}?category=${cat}` : taskBase);
+      return;
     }
 
     // Build the destination URL based on the recipient's role.
