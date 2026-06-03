@@ -152,9 +152,9 @@ export default function EasyCodersAdminHome() {
           />
 
           <AdminCard
-            href="/admin/addCourse"
+            href="/admin/courses"
             title="Courses"
-            description="Add a new course offering with description, duration, level, pricing and category."
+            description="Manage course offerings — pricing, level, seats, thumbnail and publish status across the public site."
             icon={
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
@@ -164,9 +164,9 @@ export default function EasyCodersAdminHome() {
           />
 
           <AdminCard
-            href="/admin/addcategory"
+            href="/admin/categories"
             title="Categories"
-            description="Create and edit course categories (Summer Training, Internship, Job-Oriented Programs)."
+            description="Create and edit course categories and their feature bullets (Summer Training, Internship, Job-Oriented Programs)."
             icon={
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
