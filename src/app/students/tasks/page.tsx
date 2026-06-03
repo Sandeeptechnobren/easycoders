@@ -16,7 +16,7 @@ export default function TasksPage() {
   const [loadingTasks, setLoadingTasks] = useState(true);
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [previewImg, setPreviewImg] = useState<string | null>(null);
+  const [preview, setPreview] = useState<any | null>(null);
 
   useEffect(() => {
     api.get('/student/tasks', { params: { category_id: selectedCategory } })
@@ -28,6 +28,13 @@ export default function TasksPage() {
     api.get('/getTaskCategories')
       .then(res => setTaskCategories(res.data?.data ?? res.data))
       .finally(() => setLoadingCategories(false));
+  }, []);
+
+  // Deep-link from a task notification: ?category=<id> preselects that category.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const cat = new URLSearchParams(window.location.search).get('category');
+    if (cat) setSelectedCategory(cat);
   }, []);
 
   if (loadingTasks || loadingCategories) return <Loader />;
@@ -170,6 +177,20 @@ export default function TasksPage() {
           background: #eff6ff; color: #1d4ed8;
           border: 1px solid #bfdbfe;
         }
+        .tp-diff {
+          display: inline-block; font-size: 10px; font-weight: 700;
+          text-transform: capitalize; padding: 2px 8px; border-radius: 20px;
+          margin: 2px 0 4px;
+        }
+        .tp-diff[data-d="easy"]   { background: #ecfdf5; color: #15803d; }
+        .tp-diff[data-d="medium"] { background: #fffbeb; color: #b45309; }
+        .tp-diff[data-d="hard"]   { background: #fef2f2; color: #b91c1c; }
+        .tp-out-btn {
+          background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 8px;
+          padding: 5px 10px; font-size: 11px; font-weight: 700; color: #475569;
+          cursor: pointer; font-family: inherit; white-space: nowrap;
+        }
+        .tp-out-btn:hover { background: #e2e8f0; color: #0f172a; }
         .tp-img-thumb {
           width: 48px; height: 48px; border-radius: 10px;
           object-fit: cover; border: 1px solid #e2e8f0; cursor: pointer;
@@ -285,14 +306,21 @@ export default function TasksPage() {
           {/* Table card */}
           <div className="tp-card" style={{ position: 'relative' }}>
 
-            {/* Image preview overlay */}
-            {previewImg && (
-              <div className="tp-overlay" onClick={() => setPreviewImg(null)}>
-                <div className="tp-preview-box" onClick={e => e.stopPropagation()}>
-                  <img src={previewImg} alt="Task output preview" />
-                  <button className="tp-close-btn" onClick={() => setPreviewImg(null)}>
-                    Close
-                  </button>
+            {/* Expected-output preview overlay (image / live preview / text) */}
+            {preview && (
+              <div className="tp-overlay" onClick={() => setPreview(null)}>
+                <div className="tp-preview-box" onClick={e => e.stopPropagation()} style={{ maxWidth: preview.output_type === 'image' ? 360 : 680, width: '92%' }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: '#475569', marginBottom: 10, textAlign: 'left' }}>Expected output · {preview.title}</div>
+                  {preview.output_type === 'image' && preview.expected_output_image && (
+                    <img src={preview.expected_output_image} alt="Expected output" />
+                  )}
+                  {preview.output_type === 'preview' && (
+                    <iframe title="expected output" sandbox="allow-scripts" srcDoc={preview.expected_output || ''} style={{ width: '100%', height: 320, border: '1px solid #e2e8f0', borderRadius: 10, background: '#fff', marginBottom: 12 }} />
+                  )}
+                  {preview.output_type === 'text' && (
+                    <pre style={{ textAlign: 'left', background: '#0f172a', color: '#e2e8f0', padding: 14, borderRadius: 10, fontSize: 13, lineHeight: 1.5, overflowX: 'auto', marginBottom: 12, maxHeight: 360, whiteSpace: 'pre-wrap' }}>{preview.expected_output}</pre>
+                  )}
+                  <button className="tp-close-btn" onClick={() => setPreview(null)}>Close</button>
                 </div>
               </div>
             )}
@@ -334,6 +362,7 @@ export default function TasksPage() {
 
                           <td>
                             <div className="tp-task-title">{task.title}</div>
+                            {task.difficulty && <span className="tp-diff" data-d={task.difficulty}>{task.difficulty}</span>}
                             {task.description && (
                               <div className="tp-task-desc">{task.description}</div>
                             )}
@@ -346,13 +375,12 @@ export default function TasksPage() {
                           </td>
 
                           <td style={{ textAlign: 'center' }}>
-                            {task.image ? (
-                              <img
-                                src={task.image}
-                                alt="Task output"
-                                className="tp-img-thumb"
-                                onClick={() => setPreviewImg(task.image)}
-                              />
+                            {task.output_type === 'image' && task.expected_output_image ? (
+                              <img src={task.expected_output_image} alt="Expected output" className="tp-img-thumb" onClick={() => setPreview(task)} />
+                            ) : task.output_type === 'preview' && task.expected_output ? (
+                              <button className="tp-out-btn" onClick={() => setPreview(task)}>▢ Preview</button>
+                            ) : task.output_type === 'text' && task.expected_output ? (
+                              <button className="tp-out-btn" onClick={() => setPreview(task)}>{'</> Output'}</button>
                             ) : (
                               <span className="tp-no-img">—</span>
                             )}
