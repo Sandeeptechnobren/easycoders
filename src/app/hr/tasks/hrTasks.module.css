@@ -1,0 +1,73 @@
+/* HR → Tasks (mark student tasks complete). Navy/gold, self-contained so it
+   reads correctly inside the global navbar/footer chrome. */
+
+.wrap { min-height: 100vh; background: #F4F6FB; font-family: 'DM Sans', system-ui, -apple-system, sans-serif; color: #0B1B3A; padding: 96px 24px 64px; }
+.inner { max-width: 1180px; margin: 0 auto; }
+
+.header { background: linear-gradient(135deg,#0B1B3A 0%,#152D5A 100%); border-radius: 18px; padding: 24px 26px; color: #fff; margin-bottom: 18px; }
+.eyebrow { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #F5C356; }
+.title { font-family: 'Playfair Display', Georgia, serif; font-size: 26px; font-weight: 700; margin: 6px 0 4px; }
+.sub { font-size: 13.5px; color: rgba(255,255,255,.72); }
+
+.toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
+.search { position: relative; flex: 1; min-width: 220px; }
+.searchIn { width: 100%; box-sizing: border-box; height: 42px; background: #fff; border: 1px solid #D7DEEA; border-radius: 10px; padding: 10px 12px 10px 36px; font-family: inherit; font-size: 13.5px; color: #0B1B3A; outline: none; transition: border-color .18s, box-shadow .18s; }
+.searchIn:focus { border-color: #E8A020; box-shadow: 0 0 0 3px rgba(232,160,32,.16); }
+.searchIcon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94A3B8; font-size: 15px; }
+.sel { height: 42px; background: #fff; border: 1px solid #D7DEEA; border-radius: 10px; padding: 0 12px; font-family: inherit; font-size: 13px; color: #0B1B3A; outline: none; cursor: pointer; }
+.sel:focus { border-color: #E8A020; }
+
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 9px 16px; border-radius: 10px; font-family: inherit; font-size: 13px; font-weight: 700; border: 1px solid transparent; cursor: pointer; white-space: nowrap; text-decoration: none; transition: background .18s, color .18s, border-color .18s, transform .15s; }
+.btn:active { transform: translateY(1px); }
+.btn:disabled { opacity: .55; cursor: not-allowed; }
+.btnPrimary { background: #0B1B3A; color: #fff; }
+.btnPrimary:hover:not(:disabled) { background: #E8A020; color: #0B1B3A; }
+.btnGold { background: #E8A020; color: #0B1B3A; }
+.btnGold:hover:not(:disabled) { background: #B97A0F; color: #fff; }
+.btnGhost { background: #fff; color: #4A5568; border-color: #D7DEEA; }
+.btnGhost:hover { border-color: #E8A020; color: #0B1B3A; }
+.btnSm { padding: 6px 11px; font-size: 12px; }
+
+.panel { background: #fff; border: 1px solid #E5E9F2; border-radius: 16px; overflow: hidden; }
+.tableWrap { overflow-x: auto; }
+.table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.table th { text-align: left; font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: #94A3B8; padding: 12px 14px; border-bottom: 1px solid #E5E9F2; background: #FBFCFE; white-space: nowrap; }
+.table td { padding: 12px 14px; border-bottom: 1px solid #F1F4F9; color: #0B1B3A; vertical-align: middle; }
+.table tr:last-child td { border-bottom: none; }
+.table tbody tr:hover td { background: #F8FAFD; }
+.tName { font-weight: 600; }
+.tDesc { font-size: 12px; color: #94A3B8; max-width: 360px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.uName { font-weight: 600; }
+.uMail { font-size: 12px; color: #94A3B8; }
+.muted { color: #94A3B8; }
+.catPill { background: #F4F6FB; color: #475569; padding: 2px 9px; border-radius: 100px; font-size: 11px; font-weight: 600; }
+.batchChip { display: inline-block; background: #FEF6E7; color: #92660D; padding: 2px 9px; border-radius: 100px; font-size: 11px; font-weight: 600; margin: 2px 3px 0 0; }
+.count { font-variant-numeric: tabular-nums; font-weight: 700; }
+
+.badge { display: inline-block; padding: 3px 11px; border-radius: 100px; font-size: 11px; font-weight: 700; letter-spacing: .03em; text-transform: capitalize; white-space: nowrap; }
+.st_pending { background: #FEF6E7; color: #92660D; }
+.st_completed { background: #EFF6FF; color: #1D4ED8; }
+.st_approved { background: #ECFDF5; color: #166534; }
+.st_rejected { background: #FEF2F2; color: #991B1B; }
+
+.state { text-align: center; padding: 52px 20px; color: #94A3B8; background: #fff; border: 1px solid #E5E9F2; border-radius: 16px; }
+.stateTitle { font-family: 'Playfair Display', Georgia, serif; font-size: 17px; color: #0B1B3A; margin-bottom: 6px; }
+.alert { border-radius: 10px; padding: 10px 14px; font-size: 13px; margin-bottom: 14px; }
+.alertErr { background: #FEF2F2; color: #991B1B; border: 1px solid #FCA5A5; }
+.alertOk { background: #ECFDF5; color: #166534; border: 1px solid #A7F3D0; }
+
+/* Modal */
+.backdrop { position: fixed; inset: 0; z-index: 1050; background: rgba(7,18,42,.55); backdrop-filter: blur(3px); display: flex; align-items: center; justify-content: center; padding: 20px; animation: hfade .18s ease; }
+@keyframes hfade { from { opacity: 0; } to { opacity: 1; } }
+.modal { background: #fff; border-radius: 20px; width: 100%; max-width: 760px; max-height: 92vh; overflow: auto; box-shadow: 0 24px 60px rgba(7,18,42,.4); animation: hrise .22s cubic-bezier(.2,.9,.3,1.2); }
+@keyframes hrise { from { opacity: 0; transform: translateY(12px) scale(.98); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .backdrop, .modal { animation: none; } }
+.mTop { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 18px 24px; border-bottom: 1px solid #F1F4F9; }
+.mTitle { font-family: 'Playfair Display', Georgia, serif; font-size: 19px; font-weight: 700; color: #0B1B3A; margin: 0; }
+.mSub { font-size: 12px; color: #94A3B8; margin-top: 2px; }
+.mClose { width: 32px; height: 32px; border-radius: 50%; border: none; background: #F4F6FB; color: #4A5568; cursor: pointer; flex-shrink: 0; font-size: 16px; }
+.mClose:hover { background: #E5E9F2; color: #0B1B3A; }
+.mBar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 14px 24px; border-bottom: 1px solid #F1F4F9; background: #FBFCFE; }
+.mBody { padding: 6px 24px 20px; }
+.spacer { flex: 1; }
+.chk { width: 16px; height: 16px; cursor: pointer; }
