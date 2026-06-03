@@ -99,6 +99,7 @@ export default function Navbar() {
     { name: "Home", href: "/hr" },
     { name: "Students", href: "/hr/students" },
     { name: "Batch", href: "/admin/batches" },
+    { name: "Tasks", href: "/hr/tasks" },
     { name: "Enrolled Students", href: "/hr/enrolledStudents" },
     { name: "Payments", href: "/hr/fee" },
     { name: "Logout", onClick: handleLogout },
