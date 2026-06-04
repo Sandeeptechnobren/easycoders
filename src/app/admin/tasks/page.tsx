@@ -224,6 +224,7 @@ export default function AdminTasksPage() {
             {TYPES.map(t => <option key={t} value={t} style={{ textTransform: 'capitalize' }}>{t}</option>)}
           </select>
           <div className={styles.spacer} />
+          <a className={`${styles.btn} ${styles.btnGhost}`} href="/admin/grade-tasks">Grade student tasks →</a>
           <button className={`${styles.btn} ${styles.btnGold}`} onClick={openAssign}>Assign category → Batch</button>
           <button className={`${styles.btn} ${styles.btnPrimary}`} onClick={openCreate}>+ New Task</button>
         </div>
