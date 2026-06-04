@@ -14,6 +14,8 @@ function asArray<T>(x: unknown): T[] {
   if (Array.isArray(x)) return x as T[];
   const d = (x as { data?: unknown } | null)?.data;
   if (Array.isArray(d)) return d as T[];
+  const dd = (d as { data?: unknown } | null)?.data;   // {data:<paginator>}
+  if (Array.isArray(dd)) return dd as T[];
   return [];
 }
 

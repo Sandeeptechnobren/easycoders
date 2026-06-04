@@ -55,7 +55,7 @@ export default function TaskGrading({ eyebrow = 'Easy Coders · Grading' }: { ey
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [b, c] = await Promise.all([fetchWithAuth(`${BASE}/batches`), fetchWithAuth(`${BASE}/getTaskCategories`)]);
+      const [b, c] = await Promise.all([fetchWithAuth(`${BASE}/batches?per_page=200`), fetchWithAuth(`${BASE}/getTaskCategories`)]);
       setBatches(asArray<Batch>(b));
       setCategories(asArray<Category>(c));
     } catch { setBatches([]); } finally { setLoading(false); }

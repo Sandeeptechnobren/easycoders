@@ -102,7 +102,7 @@ export default function AdminTasksPage() {
 
   useEffect(() => {
     load();
-    fetchWithAuth(`${BASE}/batches`).then(r => setBatches(asArray<Batch>(r))).catch(() => setBatches([]));
+    fetchWithAuth(`${BASE}/batches?per_page=200`).then(r => setBatches(asArray<Batch>(r))).catch(() => setBatches([]));
   }, [load]);
 
   const openCreate = () => { setEditId(null); setForm(EMPTY); setMsg(''); setShowModal(true); };
@@ -293,9 +293,9 @@ export default function AdminTasksPage() {
                     <textarea className={styles.fIn} required rows={3} value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="What should the student build / submit?" />
                   </div>
                   <div className={styles.fld}>
-                    <label className={styles.fLbl}>Category</label>
-                    <select className={styles.fIn} value={form.category_id} onChange={e => setForm(f => ({ ...f, category_id: e.target.value }))}>
-                      <option value="">— None —</option>
+                    <label className={styles.fLbl}>Category<span className={styles.req}> *</span></label>
+                    <select className={styles.fIn} required value={form.category_id} onChange={e => setForm(f => ({ ...f, category_id: e.target.value }))}>
+                      <option value="">— Select category —</option>
                       {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                     </select>
                   </div>
