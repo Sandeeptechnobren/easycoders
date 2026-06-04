@@ -14,6 +14,9 @@ function asArray<T>(x: unknown): T[] {
   if (Array.isArray(x)) return x as T[];
   const d = (x as { data?: unknown } | null)?.data;
   if (Array.isArray(d)) return d as T[];
+  // /batches returns { data: <paginator> } → the array is at data.data.
+  const dd = (d as { data?: unknown } | null)?.data;
+  if (Array.isArray(dd)) return dd as T[];
   return [];
 }
 const initials = (name: string) => name.split(' ').filter(Boolean).slice(0, 2).map(w => w[0]?.toUpperCase()).join('') || '?';
