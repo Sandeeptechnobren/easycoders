@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import styles from './fee.module.css';
 import RoleGuard from '@/components/RoleGuard';
+import { useFeeVisibility, maskAmount, FeeToggle } from '@/lib/feeMask';
 import {
   searchStudents,
   getStudentDetails,
@@ -650,6 +651,7 @@ export default function FeeDetails() {
     transaction_id: '',       // ✅ NEW: transaction/reference field
   });
   const [errorMsg, setErrorMsg] = useState('');
+  const [feesVisible] = useFeeVisibility();
   const [pdfLoading, setPdfLoading] = useState(false);
   const [toast, setToast] = useState<{
     visible: boolean;
@@ -860,7 +862,10 @@ const handleDownloadReceipt = async () => {
           <span className={styles.crumbSep}>/</span>
           <span className={styles.crumbNow}>Fee Management</span>
         </div>
-        <h1 className={styles.title}>Fee Management</h1>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
+          <h1 className={styles.title} style={{ marginBottom: 0 }}>Fee Management</h1>
+          <FeeToggle />
+        </div>
 
         {/* ── Search ── */}
         <div className={styles.searchWrap}>
@@ -936,7 +941,7 @@ const handleDownloadReceipt = async () => {
               <div className={styles.metric}>
                 <div className={styles.metricLabel}>Total Fee</div>
                 <div className={styles.metricVal}>
-                  ₹{Number(profile.total_fee).toLocaleString('en-IN')}
+                  {maskAmount(profile.total_fee, feesVisible)}
                 </div>
                 <div className={styles.progressTrack}>
                   <div className={styles.progressFill} style={{ width: `${paidPct}%` }} />
@@ -945,13 +950,13 @@ const handleDownloadReceipt = async () => {
               <div className={styles.metric}>
                 <div className={styles.metricLabel}>Amount Paid</div>
                 <div className={`${styles.metricVal} ${styles.paid}`}>
-                  ₹{Number(profile.paid_amount).toLocaleString('en-IN')}
+                  {maskAmount(profile.paid_amount, feesVisible)}
                 </div>
               </div>
               <div className={styles.metric}>
                 <div className={styles.metricLabel}>Balance Due</div>
                 <div className={`${styles.metricVal} ${styles.due}`}>
-                  ₹{Number(profile.due_amount).toLocaleString('en-IN')}
+                  {maskAmount(profile.due_amount, feesVisible)}
                 </div>
               </div>
             </div>
@@ -1111,7 +1116,7 @@ const handleDownloadReceipt = async () => {
                       {payments.map((p) => (
                         <tr key={p.id}>
                           <td className={styles.amtCell}>
-                            ₹{Number(p.amount).toLocaleString('en-IN')}
+                            {maskAmount(p.amount, feesVisible)}
                           </td>
                           <td>
                             <span className={`${styles.modePill} ${styles[p.payment_mode] ?? ''}`}>
@@ -1158,14 +1163,14 @@ const handleDownloadReceipt = async () => {
 
               <div className={styles.modalBody}>
                 {([
-                  ['Amount', `₹${Number(lastPayment.amount).toLocaleString('en-IN')}`],
+                  ['Amount', maskAmount(lastPayment.amount, feesVisible)],
                   ['Mode', modeLabel[lastPayment.mode] ?? lastPayment.mode],
                   ...(['upi', 'netbanking'].includes(lastPayment.mode) && lastPayment.transactionId
                     ? [['Transaction ID', lastPayment.transactionId]]
                     : []),
                   ['Date & Time', lastPayment.date],
                   ['Balance After', lastPayment.balance > 0
-                    ? `₹${Number(lastPayment.balance).toLocaleString('en-IN')} remaining`
+                    ? `${maskAmount(lastPayment.balance, feesVisible)} remaining`
                     : '✓ Fully Paid'],
                 ] as [string, string][]).map(([k, v]) => (
                   <div key={k} className={styles.mRow}>

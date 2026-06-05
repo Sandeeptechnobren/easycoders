@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import styles from './studentManager.module.css';
 import { fetchWithAuth } from '@/lib/api';
+import { useFeeVisibility, maskAmount, FeeToggle } from '@/lib/feeMask';
 
 /* ──────────────────────────────────────────────────────────────────────────
  * <StudentDetailManager> — enrolled-student (users.role=3) detail + management.
@@ -76,8 +77,6 @@ type StudentDetails = {
 function isActive(s: StudentDetails['status'] | undefined | null): boolean {
   return s === 1 || s === '1' || String(s ?? '').toLowerCase() === 'active';
 }
-
-const inr = (n: number | undefined | null) => `₹${Number(n ?? 0).toLocaleString('en-IN')}`;
 
 type Props = {
   studentId: string;
@@ -167,6 +166,8 @@ export default function StudentDetailManager({ studentId, canManage, backHref, c
   const paidAmount = Number(fees?.paid ?? student?.profile?.paid_amount ?? 0);
   const dueAmount = Number(fees?.due ?? Math.max(0, totalFee - paidAmount));
   const nextDueDate = (fees?.next_due_date || student?.profile?.next_due_date || '') as string;
+  const [feesVisible] = useFeeVisibility();
+  const inr = (n: number | undefined | null) => maskAmount(n, feesVisible);
   const payments = useMemo(() => student?.payments ?? [], [student]);
   const marks = useMemo(() => student?.marks ?? [], [student]);
   const attendance = useMemo(() => student?.attendance ?? [], [student]);
@@ -275,7 +276,10 @@ export default function StudentDetailManager({ studentId, canManage, backHref, c
             {canManage ? 'Profile, credentials, fees, attendance and marks' : 'Profile, fees, attendance and marks (read-only)'}
           </p>
         </div>
-        <Link href={backHref} className={styles.backBtn}>← Back</Link>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <FeeToggle />
+          <Link href={backHref} className={styles.backBtn}>← Back</Link>
+        </div>
       </header>
 
       {loading && (

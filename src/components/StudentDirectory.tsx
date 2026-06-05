@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import styles from './studentDirectory.module.css';
 import { fetchWithAuth } from '@/lib/api';
+import { useFeeVisibility, maskAmount, FeeToggle } from '@/lib/feeMask';
 
 /* ──────────────────────────────────────────────────────────────────────────
  * <StudentDirectory> — enrolled-students roster (users.role=3).
@@ -38,8 +39,6 @@ function isActive(s: Student['status']): boolean {
   return s === 1 || s === '1' || String(s ?? '').toLowerCase() === 'active';
 }
 
-const inr = (n: number | undefined | null) => `₹${Number(n ?? 0).toLocaleString('en-IN')}`;
-
 type Props = {
   crumbs: Crumb[];
   /** Detail links go to `${detailBase}/${id}`. */
@@ -59,6 +58,8 @@ export default function StudentDirectory({ crumbs, detailBase, showAdmit = false
   const [error, setError] = useState('');
   const [selectedCollegeID, setSelectedCollegeID] = useState<string>('');
   const [colleges, setColleges] = useState<College[]>([]);
+  const [feesVisible] = useFeeVisibility();
+  const inr = (n: number | undefined | null) => maskAmount(n, feesVisible);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -150,7 +151,10 @@ export default function StudentDirectory({ crumbs, detailBase, showAdmit = false
           <h1 className={styles.pageTitle}>Student Directory</h1>
           <p className={styles.pageSub}>Enrolled students — fees, attendance and login credentials</p>
         </div>
-        {showAdmit && <Link href="/admin/admissions" className={styles.refreshBtn}>+ Admit a Student</Link>}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <FeeToggle />
+          {showAdmit && <Link href="/admin/admissions" className={styles.refreshBtn}>+ Admit a Student</Link>}
+        </div>
       </header>
 
       {/* ── KPI Cards ── */}
