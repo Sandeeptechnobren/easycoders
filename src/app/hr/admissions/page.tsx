@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import RoleGuard from '@/components/RoleGuard';
 import { fetchWithAuth } from '@/lib/api';
+import { useFeeVisibility, maskAmount, FeeToggle } from '@/lib/feeMask';
 
 const BASE = 'https://api.easycoders.in/projects/backend/public/api';
 
@@ -51,6 +52,7 @@ export default function AdmissionsPage() {
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState('');
   const [search, setSearch] = useState('');
+  const [feesVisible] = useFeeVisibility();
 
   // Modals
   const [showCreate, setShowCreate] = useState(false);
@@ -188,9 +190,12 @@ export default function AdmissionsPage() {
               <h3 className="fw-bold mb-1">Admissions</h3>
               <p className="text-muted mb-0">Manage student admissions and fee installments</p>
             </div>
-            <button className="btn btn-primary" onClick={() => { setShowCreate(true); setCreateMsg(''); }}>
-              + New Admission
-            </button>
+            <div className="d-flex align-items-center gap-2">
+              <FeeToggle />
+              <button className="btn btn-primary" onClick={() => { setShowCreate(true); setCreateMsg(''); }}>
+                + New Admission
+              </button>
+            </div>
           </div>
 
           {/* Filters */}
@@ -241,8 +246,8 @@ export default function AdmissionsPage() {
                         <td>{a.course?.name || '—'}</td>
                         <td>{a.batch?.name || '—'}</td>
                         <td>
-                          <div>₹{a.final_fees?.toLocaleString()}</div>
-                          {a.total_fees !== a.final_fees && <small className="text-muted text-decoration-line-through">₹{a.total_fees?.toLocaleString()}</small>}
+                          <div>{maskAmount(a.final_fees, feesVisible)}</div>
+                          {a.total_fees !== a.final_fees && <small className="text-muted text-decoration-line-through">{maskAmount(a.total_fees, feesVisible)}</small>}
                         </td>
                         <td><span className={`badge ${payColor[a.payment_status] || 'bg-secondary'}`}>{a.payment_status}</span></td>
                         <td><span className={`badge ${statusColor[a.admission_status] || 'bg-secondary'}`}>{a.admission_status}</span></td>
@@ -406,11 +411,11 @@ export default function AdmissionsPage() {
                   </div>
                   <div className="col-md-3">
                     <label className="text-muted small">Total Fees</label>
-                    <div>₹{selected.total_fees?.toLocaleString()}</div>
+                    <div>{maskAmount(selected.total_fees, feesVisible)}</div>
                   </div>
                   <div className="col-md-3">
                     <label className="text-muted small">Final Fees</label>
-                    <div className="fw-semibold">₹{selected.final_fees?.toLocaleString()}</div>
+                    <div className="fw-semibold">{maskAmount(selected.final_fees, feesVisible)}</div>
                   </div>
                   <div className="col-md-3">
                     <label className="text-muted small">Payment</label>
@@ -435,9 +440,9 @@ export default function AdmissionsPage() {
                       {selected.installments.map(inst => (
                         <tr key={inst.id}>
                           <td>{inst.installment_number}</td>
-                          <td>₹{inst.amount?.toLocaleString()}</td>
+                          <td>{maskAmount(inst.amount, feesVisible)}</td>
                           <td className="small">{inst.due_date?.slice(0, 10)}</td>
-                          <td>₹{inst.paid_amount?.toLocaleString() || 0}</td>
+                          <td>{maskAmount(inst.paid_amount, feesVisible)}</td>
                           <td><span className={`badge ${inst.status === 'paid' ? 'bg-success' : inst.status === 'partial' ? 'bg-info' : inst.status === 'overdue' ? 'bg-danger' : 'bg-warning text-dark'}`}>{inst.status}</span></td>
                           <td>
                             {inst.status !== 'paid' && (
