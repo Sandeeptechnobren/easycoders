@@ -175,6 +175,18 @@ export default function EasyCodersAdminHome() {
           />
 
           <AdminCard
+            href="/admin/ads"
+            title="Ad Settings"
+            description="Manage the promos shown on the app login screen and review the leads captured when students tap an ad."
+            icon={
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 11l18-5v12L3 14v-3z" />
+                <path d="M11.6 16.8a3 3 0 1 1-5.8-1.6" />
+              </svg>
+            }
+          />
+
+          <AdminCard
             href="/admin/permissions"
             title="Permissions"
             description="Set role defaults and per-user grant / revoke overrides across admin, HR, trainer and student roles."
