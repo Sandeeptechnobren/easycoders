@@ -24,6 +24,22 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [navSearch, setNavSearch] = useState("");
   const [isScrolled, setIsScrolled] = useState(false);
+  const [showAppNote, setShowAppNote] = useState(false);
+
+  const APP_DOWNLOAD_URL =
+    "https://api.easycoders.in/projects/backend/public/downloads/easycoders.apk";
+
+  /** On Android, let the link download the APK; elsewhere show a short note. */
+  const downloadApp = (e?: { preventDefault: () => void }) => {
+    const isAndroid =
+      typeof navigator !== "undefined" && /android/i.test(navigator.userAgent);
+    if (!isAndroid) {
+      e?.preventDefault();
+      setShowAppNote(true);
+      return;
+    }
+    setIsOpen(false);
+  };
 
   /* Keep the navbar's search input in sync with the URL's `?search=` param.
    * Reads `window.location.search` directly (instead of useSearchParams)
@@ -332,6 +348,104 @@ export default function Navbar() {
           color: #fff !important;
         }
 
+        /* Get-the-App button (desktop pill) */
+        .nb-link.nb-app {
+          margin-left: 10px;
+          display: inline-flex;
+          align-items: center;
+          gap: 7px;
+          padding: 9px 18px;
+          border-radius: 100px;
+          background: linear-gradient(135deg, #E8A020, #F5C356);
+          color: #0B1B3A !important;
+          font-weight: 700;
+          box-shadow: 0 6px 16px rgba(232,160,32,0.30);
+          transition: transform 0.18s, box-shadow 0.18s;
+        }
+        .nb-link.nb-app::after { display: none; }
+        .nb-link.nb-app:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 9px 22px rgba(232,160,32,0.45);
+          color: #0B1B3A !important;
+        }
+
+        /* Mobile top-bar app icon (shown < 900px via media query) */
+        .nb-app-icon {
+          display: none;
+          align-items: center;
+          justify-content: center;
+          width: 40px;
+          height: 40px;
+          margin-right: 4px;
+          border-radius: 12px;
+          color: #E8A020;
+          background: rgba(232,160,32,0.12);
+        }
+
+        /* Mobile drawer app button */
+        .nb-drawer-app {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          margin: 4px 20px 14px;
+          padding: 13px 18px;
+          border-radius: 14px;
+          background: linear-gradient(135deg, #E8A020, #F5C356);
+          color: #0B1B3A;
+          font-weight: 700;
+          font-size: 15px;
+          text-decoration: none;
+          box-shadow: 0 6px 16px rgba(232,160,32,0.30);
+        }
+
+        /* "Android only" note popover */
+        .nb-appnote {
+          position: fixed;
+          top: 84px;
+          right: 18px;
+          z-index: 1200;
+          width: 300px;
+          max-width: calc(100vw - 32px);
+          background: #fff;
+          border: 1px solid #E3E8F2;
+          border-radius: 16px;
+          padding: 18px 18px 16px;
+          box-shadow: 0 18px 48px rgba(11,27,58,0.22);
+        }
+        .nb-appnote-x {
+          position: absolute;
+          top: 10px;
+          right: 12px;
+          border: none;
+          background: none;
+          font-size: 15px;
+          color: #5A6680;
+          cursor: pointer;
+        }
+        .nb-appnote-title {
+          font-weight: 800;
+          color: #0B1B3A;
+          font-size: 15px;
+          margin-bottom: 6px;
+        }
+        .nb-appnote-text {
+          color: #5A6680;
+          font-size: 13px;
+          line-height: 1.5;
+          margin: 0 0 14px;
+        }
+        .nb-appnote-btn {
+          display: inline-block;
+          padding: 9px 16px;
+          border-radius: 100px;
+          background: #0B1B3A;
+          color: #fff;
+          font-weight: 700;
+          font-size: 13px;
+          text-decoration: none;
+        }
+
         /* Logout button */
         .nb-link.nb-logout {
           margin-left: 8px;
@@ -544,6 +658,7 @@ export default function Navbar() {
           .nb-search { display: none; }
           .nb-burger { display: flex; }
           .nb-overlay { display: block; }
+          .nb-app-icon { display: inline-flex; }
         }
 
         @media (max-width: 480px) {
@@ -669,7 +784,27 @@ export default function Navbar() {
                   />
                 </div>
               )}
+
+              <a
+                href={APP_DOWNLOAD_URL}
+                className="nb-link nb-app"
+                onClick={downloadApp}
+                title="Download the EasyCoders Android app"
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3v12M7 11l5 5 5-5M5 21h14" /></svg>
+                Get the App
+              </a>
             </div>
+
+            {/* Mobile: quick app-download icon */}
+            <a
+              href={APP_DOWNLOAD_URL}
+              className="nb-app-icon"
+              onClick={downloadApp}
+              aria-label="Get the app"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3v12M7 11l5 5 5-5M5 21h14" /></svg>
+            </a>
 
             {/* Hamburger */}
             <button
@@ -728,6 +863,15 @@ export default function Navbar() {
           </div>
         )}
 
+        <a
+          href={APP_DOWNLOAD_URL}
+          className="nb-drawer-app"
+          onClick={downloadApp}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3v12M7 11l5 5 5-5M5 21h14" /></svg>
+          Get the App
+        </a>
+
         <div className="nb-drawer-links">
           {navLinks.map((link) => {
             const isLogout = link.name === "Logout";
@@ -760,6 +904,26 @@ export default function Navbar() {
           })}
         </div>
       </div>
+
+      {showAppNote && (
+        <div className="nb-appnote" role="dialog" aria-label="Get the app">
+          <button
+            className="nb-appnote-x"
+            onClick={() => setShowAppNote(false)}
+            aria-label="Close"
+          >
+            ✕
+          </button>
+          <div className="nb-appnote-title">📱 EasyCoders is an Android app</div>
+          <p className="nb-appnote-text">
+            Open this page on your Android phone to install it. On a computer you can
+            still download the file and copy it across.
+          </p>
+          <a href={APP_DOWNLOAD_URL} className="nb-appnote-btn" download>
+            Download anyway (.apk · 83 MB)
+          </a>
+        </div>
+      )}
 
       <LoginModal isOpen={showLogin} onClose={() => setShowLogin(false)} />
     </>
