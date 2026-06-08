@@ -28,15 +28,37 @@ function asArray<T>(x: unknown): T[] {
 const fmtDate = (d?: string | null) => (d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—');
 const fmtDateTime = (d?: string | null) => (d ? new Date(d).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—');
 
-type Trainer = { id: number; name: string; email: string; phone?: string | null; is_active: boolean; status?: string | null; batches_count: number; students_count: number; open_tickets_count: number; created_at?: string };
+type Trainer = { id: number; name: string; email: string; phone?: string | null; profile_photo?: string | null; is_active: boolean; status?: string | null; batches_count: number; students_count: number; open_tickets_count: number; created_at?: string };
 type Stats = { total: number; active: number; inactive: number; batches: number };
 type Batch = { id: number; name: string };
 type TrackBatch = { id: number; name: string; course?: string | null; status?: string | null; start_date?: string | null; end_date?: string | null; students_count: number };
 type TicketLite = { id: number; ticket_id?: string | null; title: string; status: string; priority?: string | null; student?: { id: number; name: string } | null; category?: { id: number; name: string } | null };
-type TrainerDetail = { id: number; name: string; email: string; phone?: string | null; is_active: boolean; status?: string | null; created_at?: string; batches: TrackBatch[]; tickets: TicketLite[]; credentials_available: boolean };
+type TrainerDetail = { id: number; name: string; email: string; phone?: string | null; profile_photo?: string | null; is_active: boolean; status?: string | null; created_at?: string; batches: TrackBatch[]; tickets: TicketLite[]; credentials_available: boolean };
 type Credentials = { email?: string; password: string; expires_at?: string | null };
 
 const fmtStatus = (s: string) => s.replace(/_/g, ' ');
+
+const STORAGE_BASE = 'https://api.easycoders.in/projects/backend/public';
+const photoUrl = (p?: string | null) => (!p ? null : p.startsWith('http') ? p : `${STORAGE_BASE}/storage/${p}`);
+const initialsOf = (name: string) => {
+  const p = name.trim().split(/\s+/);
+  if (!p[0]) return '?';
+  return (p.length === 1 ? p[0][0] : p[0][0] + p[p.length - 1][0]).toUpperCase();
+};
+/** Round trainer avatar — profile photo if set, else initials. */
+function Avatar({ name, photo, size = 40 }: { name: string; photo?: string | null; size?: number }) {
+  const url = photoUrl(photo);
+  return (
+    <div style={{ width: size, height: size, borderRadius: '50%', background: '#0B1B3A', color: '#E8A020', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: size * 0.4, overflow: 'hidden', flexShrink: 0 }}>
+      {url ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={url} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+      ) : (
+        initialsOf(name)
+      )}
+    </div>
+  );
+}
 
 export default function TrainerManagementPage() {
   const [trainers, setTrainers] = useState<Trainer[]>([]);
@@ -58,7 +80,10 @@ export default function TrainerManagementPage() {
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailMsg, setDetailMsg] = useState('');
   const [editName, setEditName] = useState('');
+  const [editEmail, setEditEmail] = useState('');
   const [editPhone, setEditPhone] = useState('');
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [savingProfile, setSavingProfile] = useState(false);
   const [detailCreds, setDetailCreds] = useState<Credentials | null>(null);
   const [credBusy, setCredBusy] = useState(false);
@@ -114,7 +139,7 @@ export default function TrainerManagementPage() {
     setDetailOpen(true); setDetail(null); setDetailMsg(''); setDetailCreds(null); setAssignSel(''); setDetailLoading(true);
     try {
       const d = await refreshDetail(id);
-      setEditName(d?.name || ''); setEditPhone(d?.phone || '');
+      setEditName(d?.name || ''); setEditEmail(d?.email || ''); setEditPhone(d?.phone || ''); setPhotoFile(null); setPhotoPreview(null);
     } catch (err: unknown) { setDetailMsg(err instanceof Error ? err.message : 'Could not load the trainer.'); } finally { setDetailLoading(false); }
   };
   const closeDetail = () => { setDetailOpen(false); setDetail(null); setDetailCreds(null); setDetailMsg(''); };
@@ -123,10 +148,17 @@ export default function TrainerManagementPage() {
     if (!detail) return;
     setSavingProfile(true); setDetailMsg('');
     try {
-      await fetchWithAuth(`${BASE}/admin/trainers/${detail.id}`, {
-        method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: editName, phone: editPhone }),
-      });
-      setDetail({ ...detail, name: editName, phone: editPhone });
+      // Multipart + `_method=PUT` (Laravel method spoofing) so the optional
+      // photo reaches the PUT route — PHP can't parse multipart on a real PUT.
+      const fd = new FormData();
+      fd.append('_method', 'PUT');
+      fd.append('name', editName);
+      fd.append('email', editEmail);
+      fd.append('phone', editPhone);
+      if (photoFile) fd.append('profile_photo', photoFile);
+      await fetchWithAuth(`${BASE}/admin/trainers/${detail.id}`, { method: 'POST', body: fd });
+      await refreshDetail(detail.id);
+      setPhotoFile(null); setPhotoPreview(null);
       load();
     } catch (err: unknown) { setDetailMsg(err instanceof Error ? err.message : 'Update failed.'); } finally { setSavingProfile(false); }
   };
@@ -247,7 +279,7 @@ export default function TrainerManagementPage() {
                 <tbody>
                   {filtered.map(t => (
                     <tr key={t.id}>
-                      <td><div className={styles.uName}>{t.name}</div><div className={styles.uMail}>{t.email}</div></td>
+                      <td><div style={{ display: 'flex', alignItems: 'center', gap: 10 }}><Avatar name={t.name} photo={t.profile_photo} size={36} /><div><div className={styles.uName}>{t.name}</div><div className={styles.uMail}>{t.email}</div></div></div></td>
                       <td className={t.phone ? '' : styles.muted}>{t.phone || '—'}</td>
                       <td className={styles.num}>{t.batches_count}</td>
                       <td className={styles.num}>{t.students_count}</td>
@@ -313,9 +345,12 @@ export default function TrainerManagementPage() {
         <div className={styles.backdrop} onClick={closeDetail}>
           <div className={styles.modal} onClick={e => e.stopPropagation()}>
             <div className={styles.mTop}>
-              <div>
-                <h3 className={styles.mTitle}>{detail?.name || 'Trainer'}</h3>
-                <div className={styles.mSub}>{detail?.email}{detail ? ` · ${detail.is_active ? 'Active' : 'Inactive'} · joined ${fmtDate(detail.created_at)}` : ''}</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                {detail && <Avatar name={detail.name} photo={detail.profile_photo} size={44} />}
+                <div>
+                  <h3 className={styles.mTitle}>{detail?.name || 'Trainer'}</h3>
+                  <div className={styles.mSub}>{detail?.email}{detail ? ` · ${detail.is_active ? 'Active' : 'Inactive'} · joined ${fmtDate(detail.created_at)}` : ''}</div>
+                </div>
               </div>
               <button className={styles.mClose} onClick={closeDetail}>×</button>
             </div>
@@ -369,9 +404,37 @@ export default function TrainerManagementPage() {
                   <div>
                     <div className={styles.block}>
                       <div className={styles.blockTitle}>Profile</div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 14 }}>
+                        {photoPreview ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={photoPreview} alt="Preview" style={{ width: 56, height: 56, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+                        ) : (
+                          <Avatar name={editName || detail.name} photo={detail.profile_photo} size={56} />
+                        )}
+                        <div>
+                          <label className={`${styles.btn} ${styles.btnGhost} ${styles.btnSm}`} style={{ cursor: 'pointer', display: 'inline-block' }}>
+                            Change photo
+                            <input
+                              type="file"
+                              accept="image/png,image/jpeg,image/jpg,image/webp"
+                              style={{ display: 'none' }}
+                              onChange={e => {
+                                const f = e.target.files?.[0] || null;
+                                setPhotoFile(f);
+                                setPhotoPreview(f ? URL.createObjectURL(f) : null);
+                              }}
+                            />
+                          </label>
+                          <div className={styles.muted} style={{ fontSize: 12, marginTop: 4 }}>JPG / PNG / WebP, up to 2 MB.</div>
+                        </div>
+                      </div>
                       <div className={styles.field}>
                         <label className={styles.label}>Name</label>
                         <input className={styles.input} value={editName} onChange={e => setEditName(e.target.value)} />
+                      </div>
+                      <div className={styles.field}>
+                        <label className={styles.label}>Email <span className={styles.muted}>(login)</span></label>
+                        <input className={styles.input} type="email" value={editEmail} onChange={e => setEditEmail(e.target.value)} />
                       </div>
                       <div className={styles.field}>
                         <label className={styles.label}>Phone</label>
