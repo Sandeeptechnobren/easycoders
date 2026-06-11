@@ -21,6 +21,12 @@ type Assessment = {
   passing_score?: number;
   can_retake?: boolean;
   retake_available_at?: string | null;
+  // Paid/lock state (from listAssessments). `locked` = paid AND not yet
+  // accessible. EasyCoders students get paid assessments unlocked while their
+  // course is active; otherwise a paid record is required.
+  is_paid?: boolean;
+  amount?: number | string;
+  locked?: boolean;
 };
 
 const API_BASE = 'https://api.easycoders.in/projects/backend/public/api';
@@ -220,17 +226,29 @@ export default function AssessmentCards() {
   <div className="assessmentMeta">
     {item.level && <span>🎯 {item.level}</span>}
     {item.duration && <span>⏱ {item.duration} mins</span>}
+    {item.is_paid && <span>{item.locked ? '🔒 Paid' : '✓ Paid · unlocked'}</span>}
   </div>
 
   <div style={{ display: 'flex', gap: '10px', marginTop: '16px', width: '100%' }}>
     {!isCompleted ? (
-      <button
-        className="startBtn"
-        onClick={() => router.push(`/self-assessment/app/assessment/${item.id}`)}
-        style={{ flex: 1, height: '38px', background: 'linear-gradient(135deg,#4f46e5,#7c3aed)', color: '#fff', cursor: 'pointer' }}
-      >
-        Start
-      </button>
+      item.locked ? (
+        <button
+          className="startBtn"
+          disabled
+          title="This paid assessment unlocks while your EasyCoders course is active."
+          style={{ flex: 1, height: '38px', background: '#e5e7eb', color: '#6b7280', cursor: 'not-allowed' }}
+        >
+          🔒 Locked
+        </button>
+      ) : (
+        <button
+          className="startBtn"
+          onClick={() => router.push(`/self-assessment/app/assessment/${item.id}`)}
+          style={{ flex: 1, height: '38px', background: 'linear-gradient(135deg,#4f46e5,#7c3aed)', color: '#fff', cursor: 'pointer' }}
+        >
+          Start
+        </button>
+      )
     ) : (
       <>
         <button className="startBtn" disabled
@@ -272,6 +290,13 @@ export default function AssessmentCards() {
       </>
     )}
   </div>
+
+  {/* Paid + locked → explain how to unlock (active EasyCoders course). */}
+  {!isCompleted && item.locked && (
+    <div role="status" style={{ marginTop: '10px', padding: '10px 12px', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '8px', color: '#92400e', fontSize: '12px', lineHeight: 1.5 }}>
+      🔒 This is a paid assessment. It unlocks automatically while your EasyCoders course is active.
+    </div>
+  )}
 
   {/* Score summary for a completed-but-failed attempt (so the user knows
       where they stand without clicking anything). */}
