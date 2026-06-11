@@ -268,6 +268,11 @@ export default function AssessmentLogin() {
                 </>
               )}
             </button>
+
+            {/* EasyCoders students share one login across both apps. */}
+            <p style={{ marginTop: 14, textAlign: 'center', fontSize: 12.5, color: '#64748B', lineHeight: 1.5 }}>
+              🎓 <strong>EasyCoders student?</strong> Sign in with your EasyCoders email &amp; password — no separate signup needed.
+            </p>
           </form>
 
           {/* Divider + signup link */}

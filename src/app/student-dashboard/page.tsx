@@ -17,6 +17,28 @@ export default function StudentDashboard() {
   const [activeTickets,  setActiveTickets]  = useState(0);
   // Real pending-task count (batch tasks not yet completed/approved).
   const [pendingTasks,   setPendingTasks]   = useState(0);
+  // One-click SSO into EasyAssess (same EasyCoders identity).
+  const [openingEA, setOpeningEA] = useState(false);
+
+  // EasyAssess and EasyCoders are one system: exchange the student's EasyCoders
+  // session for an EasyAssess token (the backend bridges to their linked
+  // identity), then open the self-assessment app already signed in.
+  const openEasyAssess = async () => {
+    setOpeningEA(true);
+    try {
+      const r = await api.post('/assessment/sso');
+      const token = r.data?.token || r.data?.data?.token;
+      const u = r.data?.user;
+      if (!token) throw new Error('No token');
+      localStorage.setItem('assessment_token', token);
+      localStorage.setItem('assessment_user', u?.email || '');
+      localStorage.setItem('logged_in_user', u?.name || '');
+      window.location.href = '/self-assessment/app';
+    } catch {
+      setOpeningEA(false);
+      alert('Could not open EasyAssess right now. Please try again.');
+    }
+  };
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -371,6 +393,21 @@ export default function StudentDashboard() {
                   </div>
                   <span className="sd-action-arrow">→</span>
                 </Link>
+
+                <button
+                  type="button"
+                  onClick={openEasyAssess}
+                  disabled={openingEA}
+                  className="sd-action-item"
+                  style={{ display: 'flex', width: '100%', border: 'none', background: 'transparent', cursor: openingEA ? 'wait' : 'pointer', textAlign: 'left', font: 'inherit' }}
+                >
+                  <div className="sd-action-icon" style={{ background: '#eef2ff' }}>🧠</div>
+                  <div style={{ flex: 1 }}>
+                    <div className="sd-action-label">{openingEA ? 'Opening EasyAssess…' : 'EasyAssess'}</div>
+                    <div className="sd-action-desc">Take assessments — your active course unlocks the paid ones</div>
+                  </div>
+                  <span className="sd-action-arrow">→</span>
+                </button>
 
               </div>
             </div>
