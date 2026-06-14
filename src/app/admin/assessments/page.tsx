@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import RoleGuard from '@/components/RoleGuard';
 import { fetchWithAuth } from '@/lib/api';
+import { CODING_LANG_LIST } from '@/lib/codingLangs';
 
 const BASE = 'https://api.easycoders.in/projects/backend/public/api';
 
@@ -21,6 +22,7 @@ type Assessment = {
   instructions?: string;
   questions_count?: number;
 };
+type TestCase = { id?: number; stdin: string; expected_output: string; is_hidden: boolean; weight: number };
 type Question = {
   id: number;
   question_text: string;
@@ -29,8 +31,25 @@ type Question = {
   difficulty: string;
   explanation?: string;
   options?: Option[];
+  starter_code?: string;
+  languages?: string[];
+  code_grading?: 'auto' | 'manual';
+  test_cases?: TestCase[];
 };
 type Option = { id: number; option_text: string; is_correct: boolean };
+
+type QForm = {
+  question_text: string;
+  question_type: string;
+  marks: string;
+  difficulty: string;
+  explanation: string;
+  options: { option_text: string; is_correct: boolean }[];
+  code_grading: 'auto' | 'manual';
+  languages: string[];
+  starter_code: string;
+  test_cases: { stdin: string; expected_output: string; is_hidden: boolean; weight: string }[];
+};
 
 const statusColor: Record<string, string> = {
   draft: 'bg-warning text-dark', published: 'bg-success', archived: 'bg-secondary',
@@ -58,7 +77,7 @@ export default function AssessmentsPage() {
   const [managingAssess, setManagingAssess] = useState<Assessment | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [qTab, setQTab] = useState<'list' | 'add' | 'csv'>('list');
-  const [qForm, setQForm] = useState({
+  const [qForm, setQForm] = useState<QForm>({
     question_text: '', question_type: 'mcq', marks: '1', difficulty: 'easy',
     explanation: '',
     options: [
@@ -67,6 +86,10 @@ export default function AssessmentsPage() {
       { option_text: '', is_correct: false },
       { option_text: '', is_correct: false },
     ],
+    code_grading: 'auto',
+    languages: ['python'],
+    starter_code: '',
+    test_cases: [{ stdin: '', expected_output: '', is_hidden: false, weight: '1' }],
   });
   const [qSaving, setQSaving] = useState(false);
   const [qMsg, setQMsg] = useState('');
@@ -166,7 +189,7 @@ export default function AssessmentsPage() {
     } finally { setTogglingId(null); }
   };
 
-  const EMPTY_Q = {
+  const EMPTY_Q: QForm = {
     question_text: '', question_type: 'mcq', marks: '1', difficulty: 'easy', explanation: '',
     options: [
       { option_text: '', is_correct: false },
@@ -174,8 +197,25 @@ export default function AssessmentsPage() {
       { option_text: '', is_correct: false },
       { option_text: '', is_correct: false },
     ],
+    code_grading: 'auto',
+    languages: ['python'],
+    starter_code: '',
+    test_cases: [{ stdin: '', expected_output: '', is_hidden: false, weight: '1' }],
   };
   const resetQForm = () => { setQForm(EMPTY_Q); setEditingQuestionId(null); };
+
+  // ── Coding-form field helpers ──
+  const toggleLanguage = (key: string) =>
+    setQForm(f => ({
+      ...f,
+      languages: f.languages.includes(key) ? f.languages.filter(l => l !== key) : [...f.languages, key],
+    }));
+  const updateTestCase = (idx: number, patch: Partial<QForm['test_cases'][number]>) =>
+    setQForm(f => ({ ...f, test_cases: f.test_cases.map((tc, i) => (i === idx ? { ...tc, ...patch } : tc)) }));
+  const addTestCase = () =>
+    setQForm(f => ({ ...f, test_cases: [...f.test_cases, { stdin: '', expected_output: '', is_hidden: false, weight: '1' }] }));
+  const removeTestCase = (idx: number) =>
+    setQForm(f => ({ ...f, test_cases: f.test_cases.filter((_, i) => i !== idx) }));
 
   // Admin question list — uses the dedicated admin endpoint (the old code hit
   // the STUDENT endpoint /assessment/{id}, which hides answers and returns
@@ -198,14 +238,31 @@ export default function AssessmentsPage() {
     e.preventDefault();
     if (!managingAssess) return;
     setQSaving(true); setQMsg('');
-    const payload = {
+    const isCoding = qForm.question_type === 'coding';
+    const payload: Record<string, unknown> = {
       question_text: qForm.question_text,
       question_type: qForm.question_type,
       marks: Number(qForm.marks),
       difficulty: qForm.difficulty,
       explanation: qForm.explanation,
-      options: qForm.question_type !== 'coding' ? qForm.options.filter(o => o.option_text.trim()) : undefined,
+      options: isCoding ? undefined : qForm.options.filter(o => o.option_text.trim()),
     };
+    if (isCoding) {
+      payload.code_grading = qForm.code_grading;
+      payload.languages = qForm.languages.length ? qForm.languages : ['python'];
+      payload.starter_code = qForm.starter_code;
+      // Test cases only matter in auto mode; clear them for open/manual.
+      payload.test_cases = qForm.code_grading === 'auto'
+        ? qForm.test_cases
+            .filter(tc => tc.stdin.trim() !== '' || tc.expected_output.trim() !== '')
+            .map(tc => ({
+              stdin: tc.stdin,
+              expected_output: tc.expected_output,
+              is_hidden: tc.is_hidden,
+              weight: Number(tc.weight) || 1,
+            }))
+        : [];
+    }
     try {
       if (editingQuestionId) {
         await fetchWithAuth(`${BASE}/assessment/admin/questions/${editingQuestionId}`, {
@@ -232,6 +289,14 @@ export default function AssessmentsPage() {
       ? q.options.map(o => ({ option_text: o.option_text, is_correct: !!o.is_correct }))
       : [{ option_text: '', is_correct: false }, { option_text: '', is_correct: false }];
     while (opts.length < 2) opts.push({ option_text: '', is_correct: false });
+    const tcs = (q.test_cases && q.test_cases.length)
+      ? q.test_cases.map(t => ({
+          stdin: t.stdin ?? '',
+          expected_output: t.expected_output ?? '',
+          is_hidden: !!t.is_hidden,
+          weight: String(t.weight ?? 1),
+        }))
+      : [{ stdin: '', expected_output: '', is_hidden: false, weight: '1' }];
     setQForm({
       question_text: q.question_text,
       question_type: q.question_type,
@@ -239,6 +304,10 @@ export default function AssessmentsPage() {
       difficulty: q.difficulty ?? 'easy',
       explanation: q.explanation ?? '',
       options: opts,
+      code_grading: (q.code_grading as 'auto' | 'manual') ?? 'auto',
+      languages: (Array.isArray(q.languages) && q.languages.length) ? q.languages : ['python'],
+      starter_code: q.starter_code ?? '',
+      test_cases: tcs,
     });
     setQMsg(''); setQTab('add');
   };
@@ -599,6 +668,13 @@ export default function AssessmentsPage() {
                             ))}
                           </div>
                         )}
+                        {q.question_type === 'coding' && (
+                          <div className="ms-3 small text-muted">
+                            <div>Mode: <strong>{q.code_grading === 'manual' ? 'Open / free-form (manual review)' : 'Auto-graded'}</strong></div>
+                            {q.languages && q.languages.length > 0 && <div>Languages: {q.languages.join(', ')}</div>}
+                            {q.code_grading !== 'manual' && <div>{q.test_cases?.length ?? 0} test case{(q.test_cases?.length ?? 0) === 1 ? '' : 's'}</div>}
+                          </div>
+                        )}
                         {q.explanation && <div className="small text-muted mt-2 fst-italic">Explanation: {q.explanation}</div>}
                         <div className="d-flex gap-2 mt-2 pt-2 border-top">
                           <button type="button" className="btn btn-sm btn-outline-primary" onClick={() => openEditQuestion(q)}>Edit</button>
@@ -669,6 +745,108 @@ export default function AssessmentsPage() {
                         ))}
                       </div>
                     )}
+
+                    {/* ── Coding-question authoring ── */}
+                    {qForm.question_type === 'coding' && (
+                      <div className="mb-3 p-3 rounded border bg-light">
+                        {/* Grading mode */}
+                        <label className="form-label fw-semibold">Grading mode</label>
+                        <div className="d-flex flex-column flex-md-row gap-2 mb-3">
+                          <label className={`flex-fill border rounded p-2 d-flex gap-2 align-items-start ${qForm.code_grading === 'auto' ? 'border-primary bg-white' : ''}`} style={{ cursor: 'pointer' }}>
+                            <input type="radio" className="form-check-input mt-1" name="code-grading"
+                              checked={qForm.code_grading === 'auto'}
+                              onChange={() => setQForm(f => ({ ...f, code_grading: 'auto' }))} />
+                            <span>
+                              <span className="fw-semibold d-block small">Auto-graded</span>
+                              <span className="text-muted" style={{ fontSize: 12 }}>Define test cases — scored instantly, trainer can override.</span>
+                            </span>
+                          </label>
+                          <label className={`flex-fill border rounded p-2 d-flex gap-2 align-items-start ${qForm.code_grading === 'manual' ? 'border-primary bg-white' : ''}`} style={{ cursor: 'pointer' }}>
+                            <input type="radio" className="form-check-input mt-1" name="code-grading"
+                              checked={qForm.code_grading === 'manual'}
+                              onChange={() => setQForm(f => ({ ...f, code_grading: 'manual' }))} />
+                            <span>
+                              <span className="fw-semibold d-block small">Open / free-form</span>
+                              <span className="text-muted" style={{ fontSize: 12 }}>Student codes freely — a trainer reviews and scores it.</span>
+                            </span>
+                          </label>
+                        </div>
+
+                        {/* Languages */}
+                        <label className="form-label fw-semibold">Allowed languages</label>
+                        <div className="d-flex flex-wrap gap-3 mb-3">
+                          {CODING_LANG_LIST.map(l => (
+                            <label key={l.key} className="d-flex gap-2 align-items-center small" style={{ cursor: 'pointer' }}>
+                              <input type="checkbox" className="form-check-input"
+                                checked={qForm.languages.includes(l.key)}
+                                onChange={() => toggleLanguage(l.key)} />
+                              {l.label}
+                            </label>
+                          ))}
+                        </div>
+                        {qForm.languages.length === 0 && (
+                          <div className="text-danger small mb-2">Pick at least one language (defaults to Python otherwise).</div>
+                        )}
+
+                        {/* Starter code */}
+                        <label className="form-label fw-semibold">Starter code <small className="text-muted fw-normal">(optional — pre-fills the editor)</small></label>
+                        <textarea className="form-control mb-3" rows={5} style={{ fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', fontSize: 13 }}
+                          placeholder="// Optional boilerplate shown to the student"
+                          value={qForm.starter_code}
+                          onChange={e => setQForm(f => ({ ...f, starter_code: e.target.value }))} />
+
+                        {/* Test cases (auto mode only) */}
+                        {qForm.code_grading === 'auto' && (
+                          <div>
+                            <div className="d-flex justify-content-between align-items-center mb-2">
+                              <label className="form-label fw-semibold mb-0">Test cases <small className="text-muted fw-normal">(input → expected output)</small></label>
+                              <button type="button" className="btn btn-sm btn-outline-primary" onClick={addTestCase}>+ Add case</button>
+                            </div>
+                            <div className="alert alert-secondary small py-2 px-3">
+                              Output is matched on trimmed text. Mark a case <strong>Hidden</strong> to use it for grading without showing it to the student. Visible (non-hidden) cases double as the &ldquo;Run&rdquo; samples.
+                            </div>
+                            {qForm.test_cases.map((tc, idx) => (
+                              <div key={idx} className="border rounded p-2 mb-2 bg-white">
+                                <div className="d-flex justify-content-between align-items-center mb-2">
+                                  <span className="small fw-semibold text-muted">Case {idx + 1}</span>
+                                  <div className="d-flex gap-3 align-items-center">
+                                    <label className="d-flex gap-1 align-items-center small mb-0" style={{ cursor: 'pointer' }}>
+                                      <input type="checkbox" className="form-check-input" checked={tc.is_hidden}
+                                        onChange={e => updateTestCase(idx, { is_hidden: e.target.checked })} />
+                                      Hidden
+                                    </label>
+                                    <div className="d-flex gap-1 align-items-center small">
+                                      Weight
+                                      <input type="number" min={1} className="form-control form-control-sm" style={{ width: 64 }}
+                                        value={tc.weight}
+                                        onChange={e => updateTestCase(idx, { weight: e.target.value })} />
+                                    </div>
+                                    {qForm.test_cases.length > 1 && (
+                                      <button type="button" className="btn btn-sm btn-outline-danger" onClick={() => removeTestCase(idx)}>Remove</button>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="row g-2">
+                                  <div className="col-md-6">
+                                    <label className="text-muted small">Input (stdin)</label>
+                                    <textarea className="form-control form-control-sm" rows={2} style={{ fontFamily: 'ui-monospace, monospace', fontSize: 12 }}
+                                      value={tc.stdin}
+                                      onChange={e => updateTestCase(idx, { stdin: e.target.value })} />
+                                  </div>
+                                  <div className="col-md-6">
+                                    <label className="text-muted small">Expected output</label>
+                                    <textarea className="form-control form-control-sm" rows={2} style={{ fontFamily: 'ui-monospace, monospace', fontSize: 12 }}
+                                      value={tc.expected_output}
+                                      onChange={e => updateTestCase(idx, { expected_output: e.target.value })} />
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
                     <div className="mb-3">
                       <label className="form-label">Explanation <small className="text-muted">(shown after attempt)</small></label>
                       <textarea className="form-control" rows={2} value={qForm.explanation}

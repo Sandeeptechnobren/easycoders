@@ -38,6 +38,19 @@ export default function EasyAssessAdminHome() {
           />
 
           <AdminCard
+            href="/admin/easy-assess/code-review"
+            title="Code Review"
+            description="Review and score coding answers — auto-graded results plus open / free-form submissions waiting for a trainer's mark."
+            icon={
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="16 18 22 12 16 6" />
+                <polyline points="8 6 2 12 8 18" />
+                <line x1="12" y1="2" x2="10" y2="22" />
+              </svg>
+            }
+          />
+
+          <AdminCard
             href="/admin/easy-assess/coding-questions"
             status="coming-soon"
             title="Coding Questions"

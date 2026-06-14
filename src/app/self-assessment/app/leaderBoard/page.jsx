@@ -48,7 +48,7 @@ export default function LeaderboardPage() {
               Live Rankings
             </div>
             <h1 className="lb-hero-title">Hall of Fame</h1>
-            <p className="lb-hero-sub">Top performers at Easy Coders — ranked by assessment score.</p>
+            <p className="lb-hero-sub">Top performers — ranked by total performance points across all assessments.</p>
           </div>
         </div>
 
@@ -71,8 +71,9 @@ export default function LeaderboardPage() {
                       </div>
                       <div className="lb-podium-name">{item.user?.name}</div>
                       <div className="lb-podium-score" style={{ color: medalColors[origIdx] }}>
-                        {item.score} pts
+                        {item.points} pts
                       </div>
+                      <div className="lb-podium-meta">{item.assessments} {item.assessments === 1 ? 'test' : 'tests'} · avg {item.avg_percent}%</div>
                       <div className="lb-podium-block" style={{ background: medalColors[origIdx], height: isFirst ? 90 : origIdx === 1 ? 64 : 48 }}>
                         <span className="lb-podium-rank">{medalLabels[origIdx]}</span>
                       </div>
@@ -95,18 +96,16 @@ export default function LeaderboardPage() {
               {topThree.map((item, i) => (
                 <div key={item.id} className="lb-row lb-row-top">
                   <div className="lb-row-rank" style={{ color: medalColors[i] }}>
-                    <span className="lb-medal" style={{ background: medalColors[i] }}>{i + 1}</span>
+                    <span className="lb-medal" style={{ background: medalColors[i] }}>{item.rank ?? i + 1}</span>
                   </div>
                   <div className="lb-row-avatar" style={{ background: medalColors[i] + '22', color: medalColors[i] }}>
                     {initials(item.user?.name)}
                   </div>
                   <div className="lb-row-info">
                     <span className="lb-row-name">{item.user?.name}</span>
-                    {item.certificate_code && (
-                      <span className="lb-row-code">{item.certificate_code}</span>
-                    )}
+                    <span className="lb-row-meta">{item.assessments} {item.assessments === 1 ? 'assessment' : 'assessments'} · avg {item.avg_percent}% · best {item.best_percent}%</span>
                   </div>
-                  <div className="lb-row-score" style={{ color: medalColors[i] }}>{item.score} pts</div>
+                  <div className="lb-row-score" style={{ color: medalColors[i] }}>{item.points} pts</div>
                 </div>
               ))}
 
@@ -121,37 +120,37 @@ export default function LeaderboardPage() {
               {others.map((item, i) => (
                 <div key={item.id} className="lb-row">
                   <div className="lb-row-rank">
-                    <span className="lb-rank-num">#{i + 4}</span>
+                    <span className="lb-rank-num">#{item.rank ?? i + 4}</span>
                   </div>
                   <div className="lb-row-avatar">
                     {initials(item.user?.name)}
                   </div>
                   <div className="lb-row-info">
                     <span className="lb-row-name">{item.user?.name}</span>
-                    {item.certificate_code && (
-                      <span className="lb-row-code">{item.certificate_code}</span>
-                    )}
+                    <span className="lb-row-meta">{item.assessments} {item.assessments === 1 ? 'assessment' : 'assessments'} · avg {item.avg_percent}% · best {item.best_percent}%</span>
                   </div>
-                  <div className="lb-row-score">{item.score} pts</div>
+                  <div className="lb-row-score">{item.points} pts</div>
                 </div>
               ))}
+
+              {leaders.length === 0 && (
+                <div className="lb-empty">No rankings yet — be the first to complete an assessment.</div>
+              )}
             </div>
 
             {/* My stat sticky */}
             {userStats && (
               <div className="lb-my-stat">
                 <div className="lb-my-stat-inner">
-                  <div className="lb-my-label">Your Best</div>
+                  <div className="lb-my-label">{userStats.rank ? `#${userStats.rank}` : '—'}</div>
                   <div className="lb-row-avatar lb-my-avatar">
                     {initials(userStats.user?.name || 'Me')}
                   </div>
                   <div className="lb-row-info">
-                    <span className="lb-row-name">My Performance</span>
-                    {userStats.certificate_code && (
-                      <span className="lb-row-code">{userStats.certificate_code}</span>
-                    )}
+                    <span className="lb-row-name">You{userStats.rank && userStats.total_participants ? ` · rank ${userStats.rank} of ${userStats.total_participants}` : ''}</span>
+                    <span className="lb-row-meta">{userStats.assessments} {userStats.assessments === 1 ? 'assessment' : 'assessments'} · avg {userStats.avg_percent}% · best {userStats.best_percent}%</span>
                   </div>
-                  <div className="lb-my-score">{userStats.score} pts</div>
+                  <div className="lb-my-score">{userStats.points} pts</div>
                 </div>
               </div>
             )}
@@ -473,6 +472,28 @@ const pageStyle = `
     color: var(--muted);
     text-transform: uppercase;
     letter-spacing: .05em;
+  }
+
+  .lb-row-meta {
+    font-size: 11.5px;
+    color: var(--muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .lb-podium-meta {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: -8px;
+    margin-bottom: 14px;
+  }
+
+  .lb-empty {
+    padding: 44px 28px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 14px;
   }
 
   .lb-row-score {

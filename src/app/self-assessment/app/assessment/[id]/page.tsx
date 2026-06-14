@@ -8,7 +8,7 @@ import ProgressBar from './ProgressBar';
 import QuestionRenderer from './QuestionRenderer';
 import AssessmentSuccess from './AssessmentSuccess';
 
-type Answer = { selected_option_id: number } | { answer_text: string };
+type Answer = { selected_option_id: number } | { answer_text: string; language?: string };
 type Phase = 'loading' | 'ready' | 'active' | 'submitted' | 'locked';
 
 type AssessmentQuestion = { id: number; [key: string]: unknown };

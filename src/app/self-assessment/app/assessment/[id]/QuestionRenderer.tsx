@@ -1,6 +1,16 @@
 import React, { useState, useEffect } from 'react';
+import CodingAnswer from './CodingAnswer';
 
 const OPTION_LABELS = ['A', 'B', 'C', 'D', 'E'];
+
+/* A question counts as answered when an option is selected (MCQ) or non-empty
+   code has been written (coding). */
+const isAnswered = (answer: any) => {
+  if (!answer) return false;
+  if (answer.selected_option_id != null) return true;
+  if (typeof answer.answer_text === 'string' && answer.answer_text.trim() !== '') return true;
+  return false;
+};
 
 export default function QuestionRenderer({
   questions,
@@ -36,6 +46,7 @@ export default function QuestionRenderer({
   if (!currentQuestion) return null;
 
   const selectedOptionId = answers[currentQuestion.id]?.selected_option_id;
+  const isCoding = currentQuestion.question_type === 'coding';
 
   return (
     <>
@@ -238,7 +249,7 @@ export default function QuestionRenderer({
         }
       `}</style>
 
-      <div className="qr-wrap">
+      <div className="qr-wrap" style={{ maxWidth: isCoding ? 1080 : 820 }}>
         {/* Counter row with dot navigation */}
         <div className="qr-counter-row">
           <span className="qr-counter-badge">
@@ -246,12 +257,12 @@ export default function QuestionRenderer({
           </span>
           <div className="qr-dot-nav">
             {questions.map((_: any, i: number) => {
-              const isAnswered = answers[questions[i]?.id]?.selected_option_id != null;
+              const answered = isAnswered(answers[questions[i]?.id]);
               const isCurrent = i === currentIndex;
               return (
                 <button
                   key={i}
-                  className={`qr-dot ${isCurrent ? 'current' : ''} ${isAnswered && !isCurrent ? 'answered' : ''}`}
+                  className={`qr-dot ${isCurrent ? 'current' : ''} ${answered && !isCurrent ? 'answered' : ''}`}
                   onClick={() => setCurrentIndex(i)}
                   title={`Question ${i + 1}`}
                 />
@@ -262,28 +273,39 @@ export default function QuestionRenderer({
 
         {/* Question card */}
         <div className="qr-card">
-          <p className="qr-question-text">{currentQuestion.question_text}</p>
+          <p className="qr-question-text" style={isCoding ? { whiteSpace: 'pre-wrap' } : undefined}>{currentQuestion.question_text}</p>
 
-          <div className="qr-options">
-            {currentQuestion.options.map((o: any, idx: number) => {
-              const isSelected = selectedOptionId === o.id;
-              return (
-                <button
-                  key={o.id}
-                  className={`qr-option ${isSelected ? 'selected' : ''}`}
-                  onClick={() =>
-                    setAnswers((a: any) => ({
-                      ...a,
-                      [currentQuestion.id]: { selected_option_id: o.id },
-                    }))
-                  }
-                >
-                  <span className="qr-option-letter">{OPTION_LABELS[idx] ?? idx + 1}</span>
-                  <span className="qr-option-text">{o.option_text}</span>
-                </button>
-              );
-            })}
-          </div>
+          {isCoding ? (
+            <CodingAnswer
+              key={currentQuestion.id}
+              question={currentQuestion}
+              value={answers[currentQuestion.id]}
+              onChange={(ans: any) =>
+                setAnswers((a: any) => ({ ...a, [currentQuestion.id]: ans }))
+              }
+            />
+          ) : (
+            <div className="qr-options">
+              {currentQuestion.options.map((o: any, idx: number) => {
+                const isSelected = selectedOptionId === o.id;
+                return (
+                  <button
+                    key={o.id}
+                    className={`qr-option ${isSelected ? 'selected' : ''}`}
+                    onClick={() =>
+                      setAnswers((a: any) => ({
+                        ...a,
+                        [currentQuestion.id]: { selected_option_id: o.id },
+                      }))
+                    }
+                  >
+                    <span className="qr-option-letter">{OPTION_LABELS[idx] ?? idx + 1}</span>
+                    <span className="qr-option-text">{o.option_text}</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
 
           <div className="qr-nav">
             <div className="qr-nav-left">
