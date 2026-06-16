@@ -30,6 +30,9 @@ import { useRouter } from 'next/navigation';
 
 type SessionState = 'unknown' | 'guest' | 'authed';
 
+const EASYASSESS_DOWNLOAD_URL =
+  'https://api.easycoders.in/projects/backend/public/downloads/easyassess.apk';
+
 export default function SelfAssessmentLanding() {
   const router = useRouter();
   const [session, setSession] = useState<SessionState>('unknown');
@@ -277,6 +280,18 @@ export default function SelfAssessmentLanding() {
         .sa-btn-outline:hover {
           border-color: rgba(255,255,255,0.7);
           color: #ffffff;
+        }
+        /* "Get the Android app" companion CTA — a gold-tinted ghost button
+           so it reads as secondary to the solid-gold primary CTA. */
+        .sa-btn-app {
+          background: rgba(232,160,32,0.10);
+          color: var(--gold-light);
+          border-color: rgba(232,160,32,0.45);
+        }
+        .sa-btn-app:hover {
+          background: rgba(232,160,32,0.18);
+          border-color: var(--gold);
+          color: var(--gold-light);
         }
         .sa-btn:focus-visible {
           outline: 2px solid var(--gold);
@@ -815,6 +830,17 @@ export default function SelfAssessmentLanding() {
                   I have an account
                 </Link>
               )}
+              <a
+                href={EASYASSESS_DOWNLOAD_URL}
+                className="sa-btn sa-btn-app"
+                download
+                aria-label="Download the EasyAssess Android app"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M12 3v12M7 11l5 5 5-5M5 21h14" />
+                </svg>
+                Get the Android app
+              </a>
             </div>
 
             <p className="sa-trust">
@@ -1046,6 +1072,17 @@ export default function SelfAssessmentLanding() {
                   <polyline points="12 5 19 12 12 19" />
                 </svg>
               </button>
+              <a
+                href={EASYASSESS_DOWNLOAD_URL}
+                className="sa-btn sa-btn-app"
+                download
+                aria-label="Download the EasyAssess Android app"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M12 3v12M7 11l5 5 5-5M5 21h14" />
+                </svg>
+                Get the Android app
+              </a>
             </div>
           </div>
         </section>

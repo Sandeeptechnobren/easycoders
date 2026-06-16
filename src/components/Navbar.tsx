@@ -25,9 +25,12 @@ export default function Navbar() {
   const [navSearch, setNavSearch] = useState("");
   const [isScrolled, setIsScrolled] = useState(false);
   const [showAppNote, setShowAppNote] = useState(false);
+  const [showAssessNote, setShowAssessNote] = useState(false);
 
   const APP_DOWNLOAD_URL =
     "https://api.easycoders.in/projects/backend/public/downloads/easycoders.apk";
+  const EASYASSESS_DOWNLOAD_URL =
+    "https://api.easycoders.in/projects/backend/public/downloads/easyassess.apk";
 
   /** On Android, let the link download the APK; elsewhere show a short note. */
   const downloadApp = (e?: { preventDefault: () => void }) => {
@@ -36,6 +39,18 @@ export default function Navbar() {
     if (!isAndroid) {
       e?.preventDefault();
       setShowAppNote(true);
+      return;
+    }
+    setIsOpen(false);
+  };
+
+  /** Parallel handler for the EasyAssess app download. */
+  const downloadAssessApp = (e?: { preventDefault: () => void }) => {
+    const isAndroid =
+      typeof navigator !== "undefined" && /android/i.test(navigator.userAgent);
+    if (!isAndroid) {
+      e?.preventDefault();
+      setShowAssessNote(true);
       return;
     }
     setIsOpen(false);
@@ -369,6 +384,29 @@ export default function Navbar() {
           color: #0B1B3A !important;
         }
 
+        /* Secondary "Get EasyAssess" pill — ghost style so it reads as a
+           companion to (not a duplicate of) the solid-gold EC app pill. */
+        .nb-link.nb-app-assess {
+          margin-left: 8px;
+          display: inline-flex;
+          align-items: center;
+          gap: 7px;
+          padding: 9px 16px;
+          border-radius: 100px;
+          border: 1.5px solid rgba(232,160,32,0.55);
+          background: rgba(232,160,32,0.08);
+          color: #0B1B3A !important;
+          font-weight: 600;
+          transition: background 0.18s, border-color 0.18s, transform 0.18s;
+        }
+        .nb-link.nb-app-assess::after { display: none; }
+        .nb-link.nb-app-assess:hover {
+          background: rgba(232,160,32,0.16);
+          border-color: #E8A020;
+          transform: translateY(-1px);
+          color: #0B1B3A !important;
+        }
+
         /* Mobile top-bar app icon (shown < 900px via media query) */
         .nb-app-icon {
           display: none;
@@ -397,6 +435,16 @@ export default function Navbar() {
           font-size: 15px;
           text-decoration: none;
           box-shadow: 0 6px 16px rgba(232,160,32,0.30);
+        }
+
+        /* Mobile drawer EasyAssess button — ghost companion to the EC one */
+        .nb-drawer-app.nb-drawer-app-assess {
+          margin-top: -8px;
+          background: rgba(232,160,32,0.10);
+          border: 1.5px solid rgba(232,160,32,0.55);
+          color: #0B1B3A;
+          font-weight: 600;
+          box-shadow: none;
         }
 
         /* "Android only" note popover */
@@ -794,6 +842,16 @@ export default function Navbar() {
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3v12M7 11l5 5 5-5M5 21h14" /></svg>
                 Get the App
               </a>
+
+              <a
+                href={EASYASSESS_DOWNLOAD_URL}
+                className="nb-link nb-app-assess"
+                onClick={downloadAssessApp}
+                title="Download the EasyAssess Android app"
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3v12M7 11l5 5 5-5M5 21h14" /></svg>
+                Get EasyAssess
+              </a>
             </div>
 
             {/* Mobile: quick app-download icon */}
@@ -872,6 +930,15 @@ export default function Navbar() {
           Get the App
         </a>
 
+        <a
+          href={EASYASSESS_DOWNLOAD_URL}
+          className="nb-drawer-app nb-drawer-app-assess"
+          onClick={downloadAssessApp}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3v12M7 11l5 5 5-5M5 21h14" /></svg>
+          Get EasyAssess
+        </a>
+
         <div className="nb-drawer-links">
           {navLinks.map((link) => {
             const isLogout = link.name === "Logout";
@@ -921,6 +988,26 @@ export default function Navbar() {
           </p>
           <a href={APP_DOWNLOAD_URL} className="nb-appnote-btn" download>
             Download anyway (.apk · 83 MB)
+          </a>
+        </div>
+      )}
+
+      {showAssessNote && (
+        <div className="nb-appnote" role="dialog" aria-label="Get EasyAssess">
+          <button
+            className="nb-appnote-x"
+            onClick={() => setShowAssessNote(false)}
+            aria-label="Close"
+          >
+            ✕
+          </button>
+          <div className="nb-appnote-title">📱 EasyAssess is an Android app</div>
+          <p className="nb-appnote-text">
+            Open this page on your Android phone to install it. On a computer you can
+            still download the file and copy it across.
+          </p>
+          <a href={EASYASSESS_DOWNLOAD_URL} className="nb-appnote-btn" download>
+            Download anyway (.apk)
           </a>
         </div>
       )}

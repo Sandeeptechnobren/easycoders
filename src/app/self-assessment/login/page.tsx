@@ -399,6 +399,20 @@ export default function AssessmentLogin() {
             ))}
           </div>
 
+          {/* Get the Android app */}
+          <div style={{ textAlign: 'center', marginTop: 16 }}>
+            <a
+              href="https://api.easycoders.in/projects/backend/public/downloads/easyassess.apk"
+              download
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 600, color: '#7C3AED', textDecoration: 'none' }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M12 3v12M7 11l5 5 5-5M5 21h14" />
+              </svg>
+              Get the Android app
+            </a>
+          </div>
+
         </div>
       </div>
     </div>
