@@ -7,16 +7,11 @@
  * so the same course showed two different photos.
  * ────────────────────────────────────────────────────────────────────────── */
 
-/** Generic coding/learning stock photos used when a course has no `image`. */
-export const COURSE_IMAGES = [
-  'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=900&auto=format&fit=crop&q=70',
-  'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=900&auto=format&fit=crop&q=70',
-  'https://images.unsplash.com/photo-1587620962725-abab7fe55159?w=900&auto=format&fit=crop&q=70',
-  'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=900&auto=format&fit=crop&q=70',
-  'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=900&auto=format&fit=crop&q=70',
-  'https://images.unsplash.com/photo-1531482615713-2afd69097998?w=900&auto=format&fit=crop&q=70',
-  'https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=900&auto=format&fit=crop&q=70',
-];
+/* Course images now fall back to a *branded* navy panel (see brandedCoursePanel
+ * below) instead of generic Unsplash stock photos — those carried no brand
+ * colour, cycled visible duplicates across a grid, and read as a template.
+ * The panel is a self-contained SVG (navy gradient + gold/teal program glyph),
+ * so fallback cards always look designed and never depend on an external CDN. */
 
 /** Loose shape of a course as returned by `/api/courses` and `/api/courses/{id}`. */
 export type ApiCourse = {
@@ -37,16 +32,55 @@ export type ApiCourse = {
   };
 };
 
+/** Up-to-two-letter initials from a course title, for the branded panel. */
+function courseInitials(title: string | undefined): string {
+  const words = (title || 'Easy Coders').trim().split(/\s+/).filter(Boolean);
+  const a = words[0]?.[0] ?? 'E';
+  const b = words[1]?.[0] ?? words[0]?.[1] ?? 'C';
+  return (a + b).toUpperCase();
+}
+
 /**
- * Pick a deterministic stock image for a given course. Using the course `id`
- * (not list-index) means the same course always renders with the same image
- * regardless of where it appears on the site.
+ * A self-contained, on-brand placeholder for courses with no real image.
+ * Renders a navy gradient panel lit by the brand's own gold/teal accent
+ * (alternating per course id) with the program's initials in a serif display
+ * face and a quiet "EASY CODERS" wordmark — so every fallback card looks
+ * deliberately designed rather than like a recycled stock photo.
+ * Returned as a data-URI SVG so it needs no network request and no CDN.
  */
-export function courseImage(c: Pick<ApiCourse, 'id' | 'image'>): string {
+export function brandedCoursePanel(c: Pick<ApiCourse, 'id' | 'title'>): string {
+  const goldKey = Math.abs(Number(c.id) || 0) % 2 === 0;
+  const glow = goldKey ? 'rgba(232,160,32,0.32)' : 'rgba(26,165,187,0.36)';
+  const mark = goldKey ? '#F0AE33' : '#2BB6CC';
+  const ini = courseInitials(c.title);
+  const svg =
+    `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="338" viewBox="0 0 600 338">` +
+    `<defs>` +
+    `<linearGradient id="g" x1="0" y1="0" x2="1" y2="1">` +
+    `<stop offset="0" stop-color="#0B1B3A"/><stop offset="1" stop-color="#16305E"/>` +
+    `</linearGradient>` +
+    `<radialGradient id="r" cx="78%" cy="26%" r="62%">` +
+    `<stop offset="0" stop-color="${glow}"/><stop offset="1" stop-color="rgba(11,27,58,0)"/>` +
+    `</radialGradient>` +
+    `</defs>` +
+    `<rect width="600" height="338" fill="url(#g)"/>` +
+    `<rect width="600" height="338" fill="url(#r)"/>` +
+    `<circle cx="506" cy="262" r="150" fill="none" stroke="${mark}" stroke-opacity="0.18" stroke-width="1.5"/>` +
+    `<circle cx="506" cy="262" r="104" fill="none" stroke="${mark}" stroke-opacity="0.10" stroke-width="1.5"/>` +
+    `<text x="300" y="178" text-anchor="middle" font-family="Georgia,'Playfair Display',serif" font-size="118" font-weight="700" fill="${mark}" fill-opacity="0.95">${ini}</text>` +
+    `<text x="300" y="242" text-anchor="middle" font-family="'DM Sans',system-ui,sans-serif" font-size="16" font-weight="600" letter-spacing="7" fill="#ffffff" fill-opacity="0.6">EASY CODERS</text>` +
+    `</svg>`;
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+}
+
+/**
+ * Resolve the image for a course: its real image if set, otherwise the
+ * branded navy panel. Stable per course id, so the same course always shows
+ * the same artwork wherever it appears on the site.
+ */
+export function courseImage(c: Pick<ApiCourse, 'id' | 'image' | 'title'>): string {
   if (c.image) return c.image;
-  // Modulo on id keeps the choice stable across pages.
-  const idx = Math.abs(Number(c.id) || 0) % COURSE_IMAGES.length;
-  return COURSE_IMAGES[idx];
+  return brandedCoursePanel(c);
 }
 
 /**

@@ -22,7 +22,7 @@ const testimonials: Testimonial[] = [
     name: 'Priya Verma',
     role: 'Computer Science Student',
     initials: 'PV',
-    accent: '#1A56DB',
+    accent: '#1AA5BB',
   },
   {
     quote: 'Clear explanations, hands-on coding, and great mentorship. I went from zero to building full-stack apps in under 6 months.',

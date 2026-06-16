@@ -9,6 +9,9 @@ type Course = {
   title: string;
   rating: string | number;
   views: string | number;
+  /** Short per-course blurb. Falls back to a level-keyed line when absent so
+   *  no two cards repeat the same generic sentence. */
+  desc?: string;
 };
 
 type CourseGridProps = {
@@ -16,10 +19,21 @@ type CourseGridProps = {
   loading?: boolean;
 };
 
+/* Level pills read as a brand progression — teal → navy → gold — instead of
+ * three unrelated pastels (the old Intermediate pill even used an off-brand
+ * indigo). */
 const levelColors: Record<string, { bg: string; color: string }> = {
-  Beginner: { bg: '#EAF7F0', color: '#0F6E56' },
-  Intermediate: { bg: '#EEF4FF', color: '#185FA5' },
-  Advanced: { bg: '#FFF4E5', color: '#854F0B' },
+  Beginner: { bg: '#E2F4F7', color: '#0E7C8C' },
+  Intermediate: { bg: '#E7EDF8', color: '#152D5A' },
+  Advanced: { bg: '#FBEFD6', color: '#9A6411' },
+};
+
+/* Distinct fallback descriptions keyed off level so the grid never shows the
+ * same sentence on every card. */
+const levelBlurb: Record<string, string> = {
+  Beginner: 'Start from zero and build real, portfolio-ready projects with 1:1 mentor support.',
+  Intermediate: 'Level up with industry workflows, deeper projects and job-focused practice.',
+  Advanced: 'Master production-grade, scalable apps and stand out to hiring partners.',
 };
 
 function StarRating({ rating }: { rating: number }) {
@@ -72,17 +86,20 @@ export default function CourseGrid({ filteredCourses, loading = false }: CourseG
 
         .cg-card {
           background: #fff;
-          border: 1px solid #E2E8F0;
+          border: 1px solid #E5E9F2;
           border-radius: 16px;
           overflow: hidden;
           display: flex;
           flex-direction: column;
+          /* Soft resting elevation tinted to brand navy (not gray) so the grid
+             has depth before interaction, not a row of flat outlines. */
+          box-shadow: 0 2px 6px rgba(11,27,58,0.05), 0 10px 26px rgba(11,27,58,0.05);
           transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
         }
 
         .cg-card:hover {
           transform: translateY(-4px);
-          box-shadow: 0 16px 40px rgba(11,27,58,0.1);
+          box-shadow: 0 18px 44px rgba(11,27,58,0.14);
           border-color: #CBD5E1;
         }
 
@@ -90,8 +107,22 @@ export default function CourseGrid({ filteredCourses, loading = false }: CourseG
           position: relative;
           aspect-ratio: 16/9;
           overflow: hidden;
-          background: #F1F5F9;
+          background: #0B1B3A;
         }
+
+        /* Teal→navy scrim that deepens on hover — gives the image brand colour
+           and depth instead of sitting raw. */
+        .cg-image-wrap::after {
+          content: '';
+          position: absolute;
+          inset: 0;
+          z-index: 1;
+          background: linear-gradient(135deg, rgba(26,165,187,0.0) 35%, rgba(11,27,58,0.42) 100%);
+          opacity: 0.55;
+          transition: opacity 0.3s ease;
+          pointer-events: none;
+        }
+        .cg-card:hover .cg-image-wrap::after { opacity: 0.9; }
 
         .cg-image-wrap img {
           width: 100%;
@@ -109,13 +140,15 @@ export default function CourseGrid({ filteredCourses, loading = false }: CourseG
           position: absolute;
           top: 12px;
           left: 12px;
+          z-index: 2;
           font-size: 11px;
-          font-weight: 600;
+          font-weight: 700;
           letter-spacing: 0.05em;
           text-transform: uppercase;
-          padding: 4px 10px;
+          padding: 5px 11px;
           border-radius: 100px;
           font-family: 'DM Sans', sans-serif;
+          box-shadow: 0 2px 8px rgba(11,27,58,0.12);
         }
 
         .cg-body {
@@ -136,17 +169,21 @@ export default function CourseGrid({ filteredCourses, loading = false }: CourseG
         }
 
         .cg-desc {
-          font-size: 13px;
-          color: #4A5568;
+          font-size: 13.5px;
+          color: #5A6680;
           line-height: 1.6;
           margin: 0;
-          font-weight: 300;
+          font-weight: 400;
           font-family: 'DM Sans', sans-serif;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
         }
 
         .cg-divider {
           height: 1px;
-          background: #F1F5F9;
+          background: #EBEFF6;
           margin: 4px 0;
         }
 
@@ -188,18 +225,21 @@ export default function CourseGrid({ filteredCourses, loading = false }: CourseG
           border-radius: 10px;
           padding: 12px 20px;
           font-size: 14px;
-          font-weight: 500;
+          font-weight: 600;
           text-decoration: none;
           margin-top: 6px;
-          transition: background 0.2s, transform 0.15s;
+          transition: background 0.2s, transform 0.15s, box-shadow 0.2s, color 0.2s;
           font-family: 'DM Sans', sans-serif;
           letter-spacing: 0.01em;
         }
 
+        /* Resolve to the brand's gold action colour on hover so the primary
+           course action reads as primary (matches the listing card + nav). */
         .cg-btn:hover {
-          background: #152D5A;
+          background: #E8A020;
+          color: #0B1B3A;
           transform: translateY(-1px);
-          color: #fff;
+          box-shadow: 0 8px 20px rgba(232,160,32,0.28);
         }
 
         .cg-empty {
@@ -303,7 +343,9 @@ export default function CourseGrid({ filteredCourses, loading = false }: CourseG
 
                 <div className="cg-body">
                   <h3 className="cg-title">{course.title}</h3>
-                  <p className="cg-desc">Learn to build secure, scalable, and high-performance real-world applications.</p>
+                  <p className="cg-desc">
+                    {course.desc || levelBlurb[course.level] || 'Hands-on, project-based training with 1:1 mentor support.'}
+                  </p>
 
                   <div className="cg-divider" />
 

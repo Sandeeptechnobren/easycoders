@@ -28,12 +28,13 @@
     inset: 0;
     background: radial-gradient(
             ellipse 800px 400px at 80% 0%,
-            rgba(232, 160, 32, 0.08) 0%,
+            rgba(232, 160, 32, 0.13) 0%,
             transparent 60%
         ),
+        /* brand teal (was an off-brand indigo glow) */
         radial-gradient(
             ellipse 600px 400px at 10% 100%,
-            rgba(26, 86, 219, 0.12) 0%,
+            rgba(26, 165, 187, 0.12) 0%,
             transparent 70%
         );
     pointer-events: none;
@@ -126,8 +127,20 @@
     font-size: 16px;
     font-weight: 700;
     color: #ffffff;
-    margin: 0 0 4px;
+    margin: 0 0 8px;
     letter-spacing: 0.01em;
+}
+
+/* Short gold keyline gives each column structure and a pop of brand colour. */
+.colHeading::after {
+    content: '';
+    display: block;
+    width: 26px;
+    height: 2px;
+    background: #E8A020;
+    border-radius: 2px;
+    margin-top: 8px;
+    opacity: 0.85;
 }
 
 .linkList {
@@ -206,7 +219,8 @@
     position: relative;
     z-index: 1;
     border-top: 1px solid rgba(255, 255, 255, 0.08);
-    background: rgba(0, 0, 0, 0.18);
+    /* navy-tinted, not pure-black alpha (brand neutrals rule) */
+    background: rgba(7, 18, 42, 0.55);
 }
 
 .bottomInner {

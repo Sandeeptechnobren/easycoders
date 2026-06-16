@@ -69,7 +69,7 @@ export default function FAQAccordion() {
         }
 
         .faq-trigger:hover .faq-q {
-          color: #1A56DB;
+          color: #0E7C8C;
         }
 
         .faq-q {
@@ -81,8 +81,9 @@ export default function FAQAccordion() {
           transition: color 0.2s;
         }
 
+        /* Active question takes the brand teal (was a generic indigo). */
         .faq-q.open-q {
-          color: #1A56DB;
+          color: #0E7C8C;
         }
 
         .faq-icon {
@@ -119,9 +120,9 @@ export default function FAQAccordion() {
 
         .faq-answer {
           font-size: 15px;
-          color: #4A5568;
+          color: #41506A;
           line-height: 1.75;
-          font-weight: 300;
+          font-weight: 400;
           padding: 0 4px 22px;
           font-family: 'DM Sans', sans-serif;
         }

@@ -152,6 +152,9 @@ export default function CourseDetail({ course, related }: Props) {
           --gold:        #E8A020;
           --gold-light:  #F5C356;
           --gold-soft:   #FEF6E7;
+          --gold-deep:   #8A5A0B;
+          --teal:        #1AA5BB;
+          --teal-deep:   #0E7C8C;
           --slate:       #4A5568;
           --slate-soft:  #94A3B8;
           --border:      #E5E9F2;
@@ -172,18 +175,37 @@ export default function CourseDetail({ course, related }: Props) {
           margin: 0 auto;
           padding: 0 24px;
         }
-        .cd-back {
+        /* NOTE: next/link <Link> elements do NOT receive styled-jsx's scope
+           hash, so plain '.cd-back { }' never matches the rendered <a> — it
+           falls back to the browser-default blue underline. These link rules
+           must be :global() to apply (same pattern PageHeader uses for its
+           breadcrumb). */
+        :global(.cd-back) {
           display: inline-flex;
           align-items: center;
-          gap: 6px;
-          color: var(--slate);
+          gap: 8px;
+          color: var(--navy);
           text-decoration: none;
-          font-size: 14px;
-          font-weight: 500;
+          font-size: 13px;
+          font-weight: 600;
+          letter-spacing: 0.02em;
           margin-bottom: 24px;
-          transition: color 0.2s ease;
+          padding: 8px 16px 8px 12px;
+          border-radius: 100px;
+          background: var(--white);
+          border: 1px solid var(--border);
+          box-shadow: 0 1px 3px rgba(11, 27, 58, 0.05);
+          transition: color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
         }
-        .cd-back:hover { color: var(--navy); }
+        :global(.cd-back):hover {
+          color: var(--gold-deep);
+          border-color: var(--gold);
+          background: var(--gold-soft);
+          box-shadow: 0 4px 14px rgba(232, 160, 32, 0.18);
+          text-decoration: none;
+        }
+        :global(.cd-back) svg { transition: transform 0.2s ease; }
+        :global(.cd-back):hover svg { transform: translateX(-3px); }
 
         /* ─── Two-column layout ─── */
         .cd-grid {
@@ -202,30 +224,38 @@ export default function CourseDetail({ course, related }: Props) {
           flex-direction: column;
           gap: 28px;
         }
+        /* Confident gold offer flag (navy-on-gold) — the page's energy spark,
+           instead of the old faded-sticker brown-on-cream. */
         .cd-offer-pill {
           display: inline-flex;
           align-items: center;
           gap: 8px;
-          background: var(--gold-soft);
-          color: #92660D;
+          background: var(--gold);
+          color: var(--navy);
           font-size: 12px;
-          font-weight: 700;
+          font-weight: 800;
           letter-spacing: 0.06em;
           text-transform: uppercase;
-          padding: 6px 14px;
+          padding: 7px 15px;
           border-radius: 100px;
           width: fit-content;
+          box-shadow: 0 6px 16px rgba(232,160,32,0.28);
         }
         .cd-offer-pill::before {
           content: '';
           width: 6px; height: 6px;
           border-radius: 50%;
-          background: var(--gold);
+          background: var(--navy);
+          animation: cd-pulse 2.4s ease-in-out infinite;
+        }
+        @keyframes cd-pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.45; } }
+        @media (prefers-reduced-motion: reduce) {
+          .cd-offer-pill::before { animation: none; }
         }
         .cd-desc {
-          font-size: 15px;
-          color: var(--slate);
-          line-height: 1.75;
+          font-size: 16px;
+          color: #3C4860;
+          line-height: 1.8;
           white-space: pre-line;
           margin: 0;
         }
@@ -238,7 +268,7 @@ export default function CourseDetail({ course, related }: Props) {
           display: inline-flex;
           align-items: center;
           gap: 8px;
-          background: var(--white);
+          background: #FBFCFE;
           border: 1px solid var(--border);
           border-radius: 100px;
           padding: 8px 16px;
@@ -246,7 +276,12 @@ export default function CourseDetail({ course, related }: Props) {
           font-weight: 500;
           color: var(--navy);
         }
-        .cd-chip svg { opacity: 0.55; }
+        /* Brand-hued icons at full strength (was uniform gray at 0.55) so the
+           meta row feels intentional, not like filler pills. */
+        .cd-chip svg { opacity: 1; }
+        .cd-chip-dur svg { color: var(--teal-deep); }
+        .cd-chip-lvl svg { color: var(--gold); }
+        .cd-chip-cat svg { color: var(--navy-mid); }
 
         /* ─── Features card ─── */
         .cd-card {
@@ -254,7 +289,9 @@ export default function CourseDetail({ course, related }: Props) {
           border: 1px solid var(--border);
           border-radius: 18px;
           padding: 28px;
-          box-shadow: 0 2px 14px rgba(11, 27, 58, 0.05);
+          /* Layered navy elevation so the value-proof card reads as elevated,
+             not a flat white box on a near-invisible shadow. */
+          box-shadow: 0 1px 2px rgba(11, 27, 58, 0.04), 0 10px 28px rgba(11, 27, 58, 0.09);
         }
         .cd-card-h {
           font-family: 'Playfair Display', Georgia, serif;
@@ -263,6 +300,15 @@ export default function CourseDetail({ course, related }: Props) {
           color: var(--navy);
           margin: 0 0 18px;
           letter-spacing: -0.01em;
+        }
+        /* Gold keyline announces the section without a banned side-stripe. */
+        .cd-card-h::after {
+          content: '';
+          display: block;
+          width: 40px; height: 3px;
+          background: var(--gold);
+          border-radius: 3px;
+          margin-top: 12px;
         }
         .cd-features {
           display: grid;
@@ -276,9 +322,12 @@ export default function CourseDetail({ course, related }: Props) {
           display: flex;
           align-items: flex-start;
           gap: 10px;
-          padding: 12px 14px;
-          background: var(--navy-soft);
-          border: 1px solid var(--border);
+          padding: 13px 15px;
+          /* A faint warm tint distinct from both the white card and the
+             navy-soft page ground, so the tiles sit ON the card rather than
+             punching through to the same-coloured background. */
+          background: #FBF7EE;
+          border: 1px solid #EFE6D2;
           border-radius: 10px;
           font-size: 14px;
           color: var(--navy);
@@ -301,42 +350,72 @@ export default function CourseDetail({ course, related }: Props) {
           margin-top: 8px;
         }
         .cd-related-head {
-          font-size: 13px;
-          color: var(--slate);
-          margin: 0 0 10px;
-          letter-spacing: 0.04em;
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 12px;
+          color: var(--navy);
+          margin: 0 0 12px;
+          letter-spacing: 0.08em;
           text-transform: uppercase;
-          font-weight: 600;
+          font-weight: 700;
+        }
+        .cd-related-head::before {
+          content: '';
+          width: 20px;
+          height: 2px;
+          background: var(--gold);
+          border-radius: 2px;
         }
         .cd-related-list {
           display: grid;
           grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
           gap: 12px;
         }
-        .cd-related-card {
+        /* :global() — these are <Link> elements (see cd-back note above). */
+        :global(.cd-related-card) {
+          position: relative;
           background: var(--white);
           border: 1px solid var(--border);
-          border-radius: 12px;
-          padding: 14px 16px;
+          border-radius: 14px;
+          padding: 16px 18px;
           display: flex;
           flex-direction: column;
-          gap: 6px;
+          gap: 7px;
           text-decoration: none;
           color: inherit;
+          box-shadow: 0 2px 8px rgba(11, 27, 58, 0.05);
           transition: border-color 0.2s ease, transform 0.18s ease, box-shadow 0.2s ease;
         }
-        .cd-related-card:hover {
+        :global(.cd-related-card):hover {
           border-color: var(--gold);
-          transform: translateY(-2px);
-          box-shadow: 0 8px 24px rgba(11, 27, 58, 0.08);
+          transform: translateY(-3px);
+          box-shadow: 0 14px 30px rgba(11, 27, 58, 0.12);
           text-decoration: none;
         }
+        /* Arrow that fades in on hover so the card reads as clickable. */
+        :global(.cd-related-card)::after {
+          content: '→';
+          position: absolute;
+          top: 15px;
+          right: 16px;
+          color: var(--gold-deep);
+          font-weight: 700;
+          opacity: 0;
+          transform: translateX(-4px);
+          transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+        :global(.cd-related-card):hover::after {
+          opacity: 1;
+          transform: translateX(0);
+        }
+        :global(.cd-related-card):hover .cd-related-title { color: var(--gold-deep); }
         .cd-related-tag {
           font-size: 11px;
           font-weight: 700;
-          letter-spacing: 0.05em;
+          letter-spacing: 0.06em;
           text-transform: uppercase;
-          color: var(--gold);
+          color: var(--gold-deep);
         }
         .cd-related-title {
           font-family: 'Playfair Display', Georgia, serif;
@@ -344,10 +423,14 @@ export default function CourseDetail({ course, related }: Props) {
           font-weight: 600;
           color: var(--navy);
           margin: 0;
+          padding-right: 18px;
+          text-decoration: none;
+          transition: color 0.2s ease;
         }
         .cd-related-meta {
           font-size: 12px;
           color: var(--slate);
+          font-weight: 500;
         }
 
         /* ─── Right: sticky enroll card ─── */
@@ -381,20 +464,25 @@ export default function CourseDetail({ course, related }: Props) {
         .cd-img-overlay {
           position: absolute;
           inset: 0;
-          background: linear-gradient(to top, rgba(11,27,58,0.55) 0%, transparent 55%);
+          /* Navy duotone wash so a stock photo reads as part of the navy
+             system, not a stray shot. */
+          background:
+            linear-gradient(to top, rgba(11,27,58,0.6) 0%, transparent 58%),
+            linear-gradient(135deg, rgba(11,27,58,0.32) 0%, rgba(26,165,187,0.12) 60%, transparent 100%);
         }
         .cd-img-cat {
           position: absolute;
           bottom: 12px; left: 14px;
-          background: rgba(255,255,255,0.95);
-          backdrop-filter: blur(8px);
+          /* Solid gold chip — the one overlay element is unmistakably brand. */
+          background: var(--gold);
           color: var(--navy);
           font-size: 11px;
-          font-weight: 700;
-          padding: 4px 10px;
+          font-weight: 800;
+          padding: 5px 11px;
           border-radius: 6px;
           letter-spacing: 0.04em;
           text-transform: uppercase;
+          box-shadow: 0 4px 12px rgba(11,27,58,0.28);
         }
         .cd-enroll-body {
           padding: 22px;
@@ -424,9 +512,11 @@ export default function CourseDetail({ course, related }: Props) {
           color: var(--slate-soft);
           text-decoration: line-through;
         }
+        /* Savings in the brand's value colour (gold), keeping green reserved
+           for the semantic feature ticks. */
         .cd-save-pill {
-          background: var(--success-bg);
-          color: #166534;
+          background: var(--gold-soft);
+          color: var(--gold-deep);
           font-size: 12px;
           font-weight: 700;
           padding: 3px 9px;
@@ -737,7 +827,7 @@ export default function CourseDetail({ course, related }: Props) {
 
               <div className="cd-meta">
                 {course.duration && (
-                  <span className="cd-chip">
+                  <span className="cd-chip cd-chip-dur">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
                     </svg>
@@ -745,7 +835,7 @@ export default function CourseDetail({ course, related }: Props) {
                   </span>
                 )}
                 {course.level && (
-                  <span className="cd-chip">
+                  <span className="cd-chip cd-chip-lvl">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
                       <polyline points="22 4 12 14.01 9 11.01" />
@@ -754,7 +844,7 @@ export default function CourseDetail({ course, related }: Props) {
                   </span>
                 )}
                 {course.category?.name && (
-                  <span className="cd-chip">
+                  <span className="cd-chip cd-chip-cat">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
                       <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />

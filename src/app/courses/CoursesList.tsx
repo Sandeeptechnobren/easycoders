@@ -152,13 +152,18 @@ export default function CoursesList() {
           --gold:        #E8A020;
           --gold-light:  #F5C356;
           --gold-soft:   #FEF6E7;
+          --gold-deep:   #8A5A0B;
+          --teal:        #1AA5BB;
+          --teal-deep:   #0E7C8C;
           --slate:       #4A5568;
           --slate-soft:  #94A3B8;
           --border:      #E5E9F2;
           --white:       #FFFFFF;
         }
         .cl-wrap {
-          background: var(--navy-soft);
+          /* Subtle navy-tinted gradient ground (was a flat pale wash) gives the
+             grid depth and ties it to the navy hero above. */
+          background: linear-gradient(180deg, #EDF1FA 0%, #F4F6FB 42%);
           padding: 64px 0 96px;
           font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
         }
@@ -319,7 +324,7 @@ export default function CoursesList() {
           border: 1px solid var(--border);
           display: flex;
           flex-direction: column;
-          box-shadow: 0 2px 14px rgba(11, 27, 58, 0.05);
+          box-shadow: 0 3px 10px rgba(11, 27, 58, 0.05), 0 12px 30px rgba(11, 27, 58, 0.06);
           transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
           opacity: 0;
           animation: cl-rise 0.45s ease forwards;
@@ -327,7 +332,7 @@ export default function CoursesList() {
         }
         .cl-card:hover {
           transform: translateY(-4px);
-          box-shadow: 0 14px 36px rgba(11, 27, 58, 0.12);
+          box-shadow: 0 18px 44px rgba(11, 27, 58, 0.14);
           border-color: #d4dbe9;
         }
         @keyframes cl-rise {
@@ -360,7 +365,11 @@ export default function CoursesList() {
         .cl-overlay {
           position: absolute;
           inset: 0;
-          background: linear-gradient(to top, rgba(11,27,58,0.45) 0%, transparent 55%);
+          /* Navy bottom-up wash + a faint teal diagonal so the image reads as
+             part of the brand system, not a raw stock shot. */
+          background:
+            linear-gradient(to top, rgba(11,27,58,0.5) 0%, transparent 58%),
+            linear-gradient(135deg, rgba(26,165,187,0.14) 0%, transparent 48%);
           pointer-events: none;
         }
         .cl-offer-pill {
@@ -409,9 +418,9 @@ export default function CoursesList() {
         }
         .cl-desc {
           font-size: 14px;
-          color: var(--slate);
+          color: #41506A;
           line-height: 1.6;
-          font-weight: 300;
+          font-weight: 400;
           margin: 0;
           flex: 1;
         }
@@ -425,9 +434,11 @@ export default function CoursesList() {
         }
         .cl-price {
           font-family: 'Playfair Display', Georgia, serif;
-          font-size: 22px;
+          font-size: 24px;
           font-weight: 700;
-          color: var(--navy);
+          /* The price is the conversion focal point — render it in brand gold
+             so the eye lands on value (was plain navy, lost in the title). */
+          color: var(--gold-deep);
           letter-spacing: -0.01em;
         }
         .cl-price-strike {
@@ -435,12 +446,14 @@ export default function CoursesList() {
           color: var(--slate-soft);
           text-decoration: line-through;
         }
+        /* Savings now reads in the brand's value colour (gold) instead of a
+           stray off-palette green. */
         .cl-price-save {
           margin-left: auto;
           font-size: 12px;
           font-weight: 700;
-          color: #166534;
-          background: #ecfdf5;
+          color: var(--gold-deep);
+          background: var(--gold-soft);
           padding: 3px 9px;
           border-radius: 100px;
         }
@@ -461,10 +474,15 @@ export default function CoursesList() {
           color: var(--slate);
           font-weight: 500;
         }
-        .cl-chip svg { opacity: 0.55; }
+        /* Teal-tinted icons give the meta row a spark of brand colour
+           (was knocked-back gray at 0.55 opacity). */
+        .cl-chip svg { color: var(--teal-deep); opacity: 0.9; }
 
-        /* ─── CTA ─── */
-        .cl-cta {
+        /* ─── CTA ───
+           :global() because <Link> elements don't get styled-jsx's scope hash;
+           a plain '.cl-cta' selector would never match the rendered <a> and the
+           button would fall back to the browser-default blue underline. */
+        :global(.cl-cta) {
           display: block;
           width: 100%;
           padding: 12px 18px;
@@ -476,21 +494,22 @@ export default function CoursesList() {
           text-decoration: none;
           text-align: center;
           margin-top: 6px;
-          transition: background 0.2s ease, transform 0.18s ease;
+          transition: background 0.2s ease, transform 0.18s ease, box-shadow 0.2s ease;
           letter-spacing: 0.01em;
         }
-        .cl-cta:hover {
+        :global(.cl-cta):hover {
           background: var(--gold);
           color: var(--navy);
           transform: translateY(-1px);
+          box-shadow: 0 8px 20px rgba(232, 160, 32, 0.28);
           text-decoration: none;
         }
-        .cl-cta:focus-visible {
+        :global(.cl-cta):focus-visible {
           outline: 2px solid var(--gold);
           outline-offset: 2px;
         }
         @media (prefers-reduced-motion: reduce) {
-          .cl-cta:hover { transform: none; }
+          :global(.cl-cta):hover { transform: none; }
         }
 
         /* ─── Empty / error states ─── */

@@ -48,6 +48,7 @@ type HomeCourse = {
   rating: number;
   views: string;
   image: string;
+  desc?: string;
 };
 
 /* Loose shape of /api/courses responses — backend has no formal schema yet so
@@ -55,6 +56,7 @@ type HomeCourse = {
 type ApiCourse = {
   id?: number | string;
   title?: string;
+  description?: string;
   rating?: number;
   image?: string;
   image_url?: string;
@@ -101,6 +103,7 @@ export default function HomePage() {
           rating: typeof c.rating === 'number' ? c.rating : 4.7,
           views:  '',
           image:  c.image_url || c.image || FALLBACK_COURSES[idx % FALLBACK_COURSES.length].image,
+          desc:   typeof c.description === 'string' && c.description.trim() ? c.description.trim() : undefined,
         })));
       })
       .catch(() => { /* keep fallback */ })
@@ -142,7 +145,11 @@ export default function HomePage() {
           --cream: #FAFAF7;
           --slate: #4A5568;
           --light-blue: #EEF4FF;
-          --accent: #1A56DB;
+          /* Section eyebrows now use the brand GOLD (was a generic indigo
+             #1A56DB that belonged to no part of the EasyCoders identity).
+             --teal is the logo accent, threaded into interactive states. */
+          --accent: #E8A020;
+          --teal: #1AA5BB;
           --border: #E2E8F0;
           --radius: 12px;
           --radius-lg: 20px;
@@ -164,9 +171,11 @@ export default function HomePage() {
           content: '';
           position: absolute;
           inset: 0;
+          /* Lit by the brand's own colours — teal + gold — instead of a stock
+             indigo glow, so the navy reads as a brand stage, not a dark block. */
           background:
-            radial-gradient(ellipse 700px 500px at 80% 50%, rgba(26,86,219,0.18) 0%, transparent 70%),
-            radial-gradient(ellipse 400px 400px at 10% 80%, rgba(232,160,32,0.12) 0%, transparent 60%);
+            radial-gradient(ellipse 700px 500px at 80% 50%, rgba(26,165,187,0.20) 0%, transparent 70%),
+            radial-gradient(ellipse 420px 420px at 10% 80%, rgba(232,160,32,0.16) 0%, transparent 60%);
           pointer-events: none;
         }
         .hero-grid { display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: 48px; }
@@ -185,7 +194,7 @@ export default function HomePage() {
         }
         .hero-title .highlight { color: var(--gold); font-style: italic; }
         .hero-subtitle {
-          font-size: 17px; color: rgba(255,255,255,0.65);
+          font-size: 17px; color: rgba(255,255,255,0.78);
           line-height: 1.75; margin: 22px 0 38px; font-weight: 300; max-width: 460px;
         }
         .hero-subtitle strong { color: rgba(255,255,255,0.9); font-weight: 500; }
@@ -214,7 +223,7 @@ export default function HomePage() {
           font-size: 12px; font-weight: 600; color: var(--gold-light); overflow: hidden;
         }
         .trust-avatars .av:first-child { margin-left: 0; }
-        .trust-text { font-size: 13px; color: rgba(255,255,255,0.55); line-height: 1.5; }
+        .trust-text { font-size: 13px; color: rgba(255,255,255,0.72); line-height: 1.5; }
         .trust-text strong { color: rgba(255,255,255,0.85); font-weight: 500; }
         .hero-visual { position: relative; display: flex; justify-content: center; align-items: center; }
         .hero-img-frame {
@@ -225,9 +234,10 @@ export default function HomePage() {
         }
         .hero-img-frame img { width: 100%; height: 100%; object-fit: cover; object-position: top center; display: block; }
         .hero-card-float {
-          position: absolute; background: rgba(255,255,255,0.97);
+          position: absolute; background: var(--cream);
           border-radius: var(--radius); padding: 14px 18px;
-          box-shadow: 0 20px 40px rgba(0,0,0,0.3); backdrop-filter: blur(8px);
+          box-shadow: 0 20px 44px rgba(11,27,58,0.34); backdrop-filter: blur(8px);
+          border: 1px solid rgba(232,160,32,0.18);
         }
         .card-float-left { left: -24px; bottom: 36px; min-width: 150px; }
         .card-float-right { right: -24px; top: 40px; min-width: 140px; }
@@ -235,12 +245,15 @@ export default function HomePage() {
         .float-val { font-size: 22px; font-weight: 700; color: var(--navy); }
         .float-sub { font-size: 12px; color: var(--slate); margin-top: 2px; }
         .float-dot { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; display: inline-block; margin-right: 5px; }
-        .stats-bar { background: var(--cream); border-bottom: 1px solid var(--border); }
+        /* Gold seam bridges the navy hero into the cream stats band. */
+        .stats-bar { background: var(--cream); border-top: 2px solid var(--gold); border-bottom: 1px solid var(--border); }
         .stats-inner { display: grid; grid-template-columns: repeat(4, 1fr); }
-        .stat-item { padding: 32px 24px; text-align: center; border-right: 1px solid var(--border); }
+        .stat-item { padding: 34px 24px; text-align: center; border-right: 1px solid var(--border); }
         .stat-item:last-child { border-right: none; }
         .stat-value { font-family: 'Playfair Display', Georgia, serif; font-size: 36px; font-weight: 700; color: var(--navy); line-height: 1; margin-bottom: 6px; }
-        .stat-label { font-size: 13px; color: var(--slate); font-weight: 400; letter-spacing: 0.03em; }
+        /* Small gold keyline makes the four figures read as the brand's signature numbers. */
+        .stat-value::after { content: ''; display: block; width: 28px; height: 2px; background: var(--gold); border-radius: 2px; margin: 10px auto 0; opacity: 0.65; }
+        .stat-label { font-size: 13px; color: var(--slate); font-weight: 500; letter-spacing: 0.03em; }
         .section { padding: 90px 0; }
         .section-cream { background: var(--cream); }
         .section-white { background: #fff; }
@@ -252,7 +265,7 @@ export default function HomePage() {
         }
         .section-label::before { content: ''; width: 24px; height: 2px; background: var(--accent); }
         .section-title { font-family: 'Playfair Display', Georgia, serif; font-size: clamp(28px, 4vw, 42px); font-weight: 700; color: var(--navy); line-height: 1.2; margin-bottom: 14px; }
-        .section-sub { font-size: 16px; color: var(--slate); line-height: 1.7; max-width: 520px; font-weight: 300; }
+        .section-sub { font-size: 17px; color: #3C4860; line-height: 1.7; max-width: 520px; font-weight: 400; font-family: 'DM Sans', sans-serif; }
         .section-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 44px; gap: 24px; }
         .filter-tabs { display: flex; gap: 8px; background: #F1F4F9; padding: 5px; border-radius: 100px; flex-wrap: wrap; }
         .filter-tab { padding: 8px 20px; border-radius: 100px; font-size: 14px; font-weight: 500; color: var(--slate); cursor: pointer; border: none; background: none; transition: all 0.2s; white-space: nowrap; }
@@ -262,7 +275,7 @@ export default function HomePage() {
         .testimonials-section .section-label { color: var(--gold-light); }
         .testimonials-section .section-label::before { background: var(--gold); }
         .testimonials-section .section-title { color: #fff; }
-        .testimonials-section .section-sub { color: rgba(255,255,255,0.55); }
+        .testimonials-section .section-sub { color: rgba(255,255,255,0.7); }
         .testimonials-layout { display: grid; grid-template-columns: 1fr 2fr; align-items: center; gap: 80px; }
         .testimonials-cta-btn {
           display: inline-flex; align-items: center; gap: 8px; margin-top: 28px;
@@ -281,7 +294,7 @@ export default function HomePage() {
         .cta-section::after { content: ''; position: absolute; width: 900px; height: 900px; border-radius: 50%; border: 1px solid rgba(232,160,32,0.07); top: 50%; left: 50%; transform: translate(-50%,-50%); pointer-events: none; }
         .cta-tag { font-size: 12px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold); margin-bottom: 18px; }
         .cta-title { font-family: 'Playfair Display', Georgia, serif; font-size: clamp(30px, 4vw, 52px); font-weight: 700; color: #fff; margin-bottom: 18px; line-height: 1.15; position: relative; }
-        .cta-sub { font-size: 17px; color: rgba(255,255,255,0.55); margin-bottom: 40px; font-weight: 300; }
+        .cta-sub { font-size: 17px; color: rgba(255,255,255,0.72); margin-bottom: 40px; font-weight: 300; }
         .cta-buttons { display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; position: relative; }
 
         /* ── REGISTRATION TRIGGER BUTTON ──

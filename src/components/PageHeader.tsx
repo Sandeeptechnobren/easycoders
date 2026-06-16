@@ -62,10 +62,19 @@ export default function PageHeader({
           content: '';
           position: absolute;
           inset: 0;
+          /* Lit by brand gold + teal (was a stock indigo glow) so the hero
+             introduces the palette instead of reading as a flat dark block. */
           background:
-            radial-gradient(ellipse 600px 400px at 80% 30%, rgba(232,160,32,0.10) 0%, transparent 65%),
-            radial-gradient(ellipse 500px 300px at 10% 90%, rgba(26,86,219,0.18) 0%, transparent 70%);
+            radial-gradient(ellipse 600px 400px at 80% 30%, rgba(232,160,32,0.16) 0%, transparent 65%),
+            radial-gradient(ellipse 520px 320px at 10% 90%, rgba(26,165,187,0.16) 0%, transparent 70%);
           pointer-events: none;
+        }
+        .ph-rule {
+          width: 44px;
+          height: 3px;
+          background: #E8A020;
+          border-radius: 3px;
+          margin-bottom: 18px;
         }
         .ph-container {
           position: relative;
@@ -113,7 +122,7 @@ export default function PageHeader({
           margin: 14px 0 0;
           font-size: 17px;
           line-height: 1.65;
-          color: rgba(255,255,255,0.7);
+          color: rgba(255,255,255,0.82);
           font-weight: 300;
           max-width: 640px;
         }
@@ -148,6 +157,7 @@ export default function PageHeader({
           })}
         </nav>
 
+        <div className="ph-rule" aria-hidden="true" />
         <h1 className="ph-title">{title}</h1>
         {description && <p className="ph-desc">{description}</p>}
       </div>
