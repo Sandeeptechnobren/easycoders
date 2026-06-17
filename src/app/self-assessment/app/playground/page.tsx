@@ -9,7 +9,16 @@ import { CODING_LANGS, CODING_LANG_LIST, type CodingLangKey } from '@/lib/coding
  * Code Playground — a free, always-available mini-IDE for EasyAssess students.
  * Write code in any of the five languages, feed it input, run it (⌘/Ctrl+Enter
  * or the Run button) via /EasyAssist/executeCode → CodeRunnerService (Paiza).
- * No question, no grading — just practice.
+ *
+ * Saving is modelled as NOTEBOOKS with three clear actions (replaces the old
+ * single ambiguous "Save" that silently did update-or-create):
+ *   • Save        — saves the notebook you're in (new → name it once, then it's
+ *                   saved; existing → updates it in place).
+ *   • Save as new — always makes a fresh copy under a new name; you switch into it.
+ *   • New         — starts a clean blank notebook (warns if there are unsaved edits).
+ * A notebook bar shows the current notebook + a Saved/Unsaved badge so you always
+ * know what Save will do. Per-language buffers stay lossless — each language keeps
+ * its own code AND its open notebook — so switching language never loses work.
  * ────────────────────────────────────────────────────────────────────────── */
 
 const STARTERS: Record<CodingLangKey, string> = {
@@ -24,9 +33,17 @@ const FILENAME: Record<CodingLangKey, string> = {
   python: 'main.py', javascript: 'main.js', java: 'Main.java', c: 'main.c', cpp: 'main.cpp',
 };
 
-const STORE_KEY = 'pg_code_by_lang_v1';
+const WORKSPACE_KEY = 'pg_workspace_v1';
+const LEGACY_CODE_KEY = 'pg_code_by_lang_v1';
 
+type Nb = { id: number; title: string } | null;
 type RunResult = { display: string; isError: boolean; time: string | null; exitCode: string | null; ok: boolean };
+
+/* Dialog (branded, in-app — replaces window.prompt / window.confirm). */
+type Dialog =
+  | { kind: 'name'; title: string; label: string; confirmText: string; onConfirm: (value: string) => void }
+  | { kind: 'confirm'; title: string; message: string; confirmText: string; danger?: boolean; onConfirm: () => void }
+  | null;
 
 function extractRun(data: any): { display: string; isError: boolean } {
   const run = data?.run ?? {};
@@ -37,26 +54,64 @@ function extractRun(data: any): { display: string; isError: boolean } {
   return { display: combined.length ? combined : 'Program finished with no output.', isError: false };
 }
 
+const emptyOpen = (): Record<CodingLangKey, Nb> => {
+  const o = {} as Record<CodingLangKey, Nb>;
+  (Object.keys(STARTERS) as CodingLangKey[]).forEach(k => (o[k] = null));
+  return o;
+};
+
 export default function PlaygroundPage() {
   const [language, setLanguage] = useState<CodingLangKey>('python');
 
-  // Each language keeps its own buffer; persisted to localStorage.
-  const [codeByLang, setCodeByLang] = useState<Record<CodingLangKey, string>>(() => {
-    const base = { ...STARTERS };
-    if (typeof window !== 'undefined') {
-      try {
-        const saved = JSON.parse(localStorage.getItem(STORE_KEY) || '{}');
-        for (const k of Object.keys(base) as CodingLangKey[]) if (typeof saved[k] === 'string') base[k] = saved[k];
-      } catch { /* ignore */ }
-    }
-    return base;
-  });
+  // Per-language workspace (lossless): the code, the open notebook, and the
+  // "baseline" (= last-saved content) used to tell whether there are edits.
+  const [codeByLang, setCodeByLang] = useState<Record<CodingLangKey, string>>({ ...STARTERS });
+  const [openByLang, setOpenByLang] = useState<Record<CodingLangKey, Nb>>(emptyOpen);
+  const [baselineByLang, setBaselineByLang] = useState<Record<CodingLangKey, string>>({ ...STARTERS });
+  const [hydrated, setHydrated] = useState(false);
+
+  // Restore the saved workspace once on mount (client only → no SSR mismatch).
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(WORKSPACE_KEY);
+      if (raw) {
+        const w = JSON.parse(raw);
+        const cb = { ...STARTERS } as Record<CodingLangKey, string>;
+        const ob = emptyOpen();
+        const bb = { ...STARTERS } as Record<CodingLangKey, string>;
+        for (const k of Object.keys(STARTERS) as CodingLangKey[]) {
+          if (typeof w?.codeByLang?.[k] === 'string') cb[k] = w.codeByLang[k];
+          ob[k] = w?.openByLang?.[k] ?? null;
+          bb[k] = typeof w?.baselineByLang?.[k] === 'string' ? w.baselineByLang[k] : cb[k];
+        }
+        setCodeByLang(cb); setOpenByLang(ob); setBaselineByLang(bb);
+        if (w?.language && w.language in STARTERS) setLanguage(w.language);
+      } else {
+        // Migrate the old code-only store so existing scratch isn't lost.
+        const old = JSON.parse(localStorage.getItem(LEGACY_CODE_KEY) || '{}');
+        const cb = { ...STARTERS } as Record<CodingLangKey, string>;
+        const bb = { ...STARTERS } as Record<CodingLangKey, string>;
+        let any = false;
+        for (const k of Object.keys(STARTERS) as CodingLangKey[]) {
+          if (typeof old?.[k] === 'string') { cb[k] = old[k]; bb[k] = old[k]; any = true; }
+        }
+        if (any) { setCodeByLang(cb); setBaselineByLang(bb); }
+      }
+    } catch { /* ignore */ }
+    setHydrated(true);
+  }, []);
+
+  // Persist the workspace (only after the initial restore, so we never clobber it).
+  useEffect(() => {
+    if (!hydrated) return;
+    try { localStorage.setItem(WORKSPACE_KEY, JSON.stringify({ language, codeByLang, openByLang, baselineByLang })); } catch { /* ignore */ }
+  }, [hydrated, language, codeByLang, openByLang, baselineByLang]);
+
   const code = codeByLang[language];
   const setCode = (v: string) => setCodeByLang(prev => ({ ...prev, [language]: v }));
-
-  useEffect(() => {
-    try { localStorage.setItem(STORE_KEY, JSON.stringify(codeByLang)); } catch { /* ignore */ }
-  }, [codeByLang]);
+  const openNb = openByLang[language];
+  const baseline = baselineByLang[language];
+  const dirty = code !== baseline;
 
   const [stdin, setStdin] = useState<string>('2 3');
   const [running, setRunning] = useState(false);
@@ -82,7 +137,6 @@ export default function PlaygroundPage() {
     else if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
   };
   useEffect(() => {
-    // Sync state when the user leaves native fullscreen via Esc.
     const onFs = () => { if (!document.fullscreenElement) setFullscreen(false); };
     document.addEventListener('fullscreenchange', onFs);
     return () => document.removeEventListener('fullscreenchange', onFs);
@@ -109,7 +163,6 @@ export default function PlaygroundPage() {
     }
   }, [codeByLang, language, stdin]);
 
-  // Keep a stable ref so the Monaco ⌘/Ctrl+Enter command always runs the latest.
   const runRef = useRef(run);
   runRef.current = run;
 
@@ -160,14 +213,41 @@ export default function PlaygroundPage() {
       : { label: `Success${t}`, cls: 'ok' };
   }, [running, result]);
 
-  /* ── Saved codes (server-backed, per-student) ── */
+  /* ── Notebooks (server-backed, per-student) ── */
   type SnipRow = { id: number; title: string; language: string; updated_at: string };
   const [snippets, setSnippets] = useState<SnipRow[]>([]);
   const [snipMeta, setSnipMeta] = useState({ used: 0, max_snippets: 50, max_kb: 100 });
-  const [openSnippet, setOpenSnippet] = useState<{ id: number; title: string } | null>(null);
   const [savedOpen, setSavedOpen] = useState(false);
   const [snipBusy, setSnipBusy] = useState(false);
   const [snipMsg, setSnipMsg] = useState<string | null>(null);
+
+  /* ── Branded dialog state ── */
+  const [dialog, setDialog] = useState<Dialog>(null);
+  const [dialogVal, setDialogVal] = useState('');
+  const dialogInputRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (dialog?.kind === 'name') { const t = setTimeout(() => dialogInputRef.current?.select(), 30); return () => clearTimeout(t); }
+  }, [dialog]);
+  const closeDialog = () => setDialog(null);
+  const submitDialog = () => {
+    if (!dialog) return;
+    if (dialog.kind === 'name') {
+      const v = dialogVal.trim();
+      if (!v) return;
+      setDialog(null);
+      dialog.onConfirm(v);
+    } else {
+      setDialog(null);
+      dialog.onConfirm();
+    }
+  };
+  const askName = (o: { title: string; label: string; initial: string; confirmText: string; onConfirm: (v: string) => void }) => {
+    setDialogVal(o.initial);
+    setDialog({ kind: 'name', title: o.title, label: o.label, confirmText: o.confirmText, onConfirm: o.onConfirm });
+  };
+  const askConfirm = (o: { title: string; message: string; confirmText: string; danger?: boolean; onConfirm: () => void }) => {
+    setDialog({ kind: 'confirm', ...o });
+  };
 
   const authH = () => ({ headers: { Authorization: `Bearer ${localStorage.getItem('assessment_token')}` } });
   const flash = (m: string) => { setSnipMsg(m); setTimeout(() => setSnipMsg(s => (s === m ? null : s)), 2400); };
@@ -182,29 +262,65 @@ export default function PlaygroundPage() {
   }, []);
   useEffect(() => { loadSnippets(); }, [loadSnippets]);
 
-  const saveAsNew = async () => {
-    const title = (window.prompt('Name this code:', `${CODING_LANGS[language].label} snippet`) || '').trim();
-    if (!title) return;
+  const createNotebook = async (title: string) => {
     setSnipBusy(true);
     try {
-      const res = await api.post('/playground/snippets', { title, language, code: codeByLang[language] }, authH());
-      setOpenSnippet({ id: res.data.data.id, title: res.data.data.title });
-      setSavedOpen(false);
-      flash('Saved.');
+      const res = await api.post('/playground/snippets', { title, language, code }, authH());
+      const id = res.data.data.id; const t = res.data.data.title;
+      setOpenByLang(prev => ({ ...prev, [language]: { id, title: t } }));
+      setBaselineByLang(prev => ({ ...prev, [language]: code }));
+      flash(`Saved “${t}”.`);
       loadSnippets();
     } catch (e: any) { flash(e?.response?.data?.message || 'Could not save.'); }
     finally { setSnipBusy(false); }
   };
 
-  const saveCurrent = async () => {
-    if (!openSnippet) return saveAsNew();
-    setSnipBusy(true);
-    try {
-      await api.put(`/playground/snippets/${openSnippet.id}`, { language, code: codeByLang[language] }, authH());
-      flash(`Updated “${openSnippet.title}”.`);
-      loadSnippets();
-    } catch (e: any) { flash(e?.response?.data?.message || 'Could not save.'); }
-    finally { setSnipBusy(false); }
+  // Save: update the open notebook, or name + create a new one.
+  const onSave = async () => {
+    if (openNb) {
+      setSnipBusy(true);
+      try {
+        await api.put(`/playground/snippets/${openNb.id}`, { language, code }, authH());
+        setBaselineByLang(prev => ({ ...prev, [language]: code }));
+        flash(`Saved “${openNb.title}”.`);
+        loadSnippets();
+      } catch (e: any) { flash(e?.response?.data?.message || 'Could not save.'); }
+      finally { setSnipBusy(false); }
+    } else {
+      askName({
+        title: 'Save notebook', label: 'Notebook name',
+        initial: `${CODING_LANGS[language].label} notebook`, confirmText: 'Save',
+        onConfirm: createNotebook,
+      });
+    }
+  };
+
+  // Save as new: always a fresh copy under a new name; you switch into it.
+  const onSaveAsNew = () => {
+    askName({
+      title: 'Save as new notebook', label: 'New notebook name',
+      initial: openNb ? `${openNb.title} copy` : `${CODING_LANGS[language].label} notebook`,
+      confirmText: 'Save copy', onConfirm: createNotebook,
+    });
+  };
+
+  // New: a clean blank notebook (warns if there are unsaved edits).
+  const onNew = () => {
+    const fresh = () => {
+      setCodeByLang(prev => ({ ...prev, [language]: '' }));
+      setOpenByLang(prev => ({ ...prev, [language]: null }));
+      setBaselineByLang(prev => ({ ...prev, [language]: '' }));
+      setResult(null);
+    };
+    if (dirty) {
+      askConfirm({
+        title: 'Start a new notebook?',
+        message: openNb
+          ? `You have unsaved changes in “${openNb.title}”. Starting a new notebook will discard them.`
+          : 'You have unsaved code. Starting a new notebook will discard it.',
+        confirmText: 'Discard & start new', danger: true, onConfirm: fresh,
+      });
+    } else fresh();
   };
 
   const openSaved = async (id: number) => {
@@ -213,33 +329,70 @@ export default function PlaygroundPage() {
       const res = await api.get(`/playground/snippets/${id}`, authH());
       const s = res.data.data;
       const lang: CodingLangKey = (s.language in CODING_LANGS) ? s.language : 'python';
-      setLanguage(lang);
-      setCodeByLang(prev => ({ ...prev, [lang]: s.code ?? '' }));
-      setOpenSnippet({ id: s.id, title: s.title });
-      setSavedOpen(false);
-      flash(`Opened “${s.title}”.`);
-    } catch { flash('Could not open that code.'); }
+      const apply = () => {
+        setLanguage(lang);
+        setCodeByLang(prev => ({ ...prev, [lang]: s.code ?? '' }));
+        setOpenByLang(prev => ({ ...prev, [lang]: { id: s.id, title: s.title } }));
+        setBaselineByLang(prev => ({ ...prev, [lang]: s.code ?? '' }));
+        setSavedOpen(false);
+        flash(`Opened “${s.title}”.`);
+      };
+      const targetDirty = (codeByLang[lang] ?? '') !== (baselineByLang[lang] ?? '');
+      if (targetDirty) {
+        const t = openByLang[lang]?.title;
+        askConfirm({
+          title: 'Open this notebook?',
+          message: t
+            ? `You have unsaved changes in “${t}” (${CODING_LANGS[lang].label}). Opening will discard them.`
+            : `You have unsaved ${CODING_LANGS[lang].label} code. Opening will discard it.`,
+          confirmText: 'Discard & open', danger: true, onConfirm: apply,
+        });
+      } else apply();
+    } catch { flash('Could not open that notebook.'); }
     finally { setSnipBusy(false); }
   };
 
-  const renameSaved = async (id: number, current: string) => {
-    const title = (window.prompt('Rename to:', current) || '').trim();
-    if (!title || title === current) return;
-    try {
-      await api.put(`/playground/snippets/${id}`, { title }, authH());
-      if (openSnippet?.id === id) setOpenSnippet({ id, title });
-      loadSnippets();
-    } catch (e: any) { flash(e?.response?.data?.message || 'Could not rename.'); }
+  const renameSaved = (id: number, current: string) => {
+    askName({
+      title: 'Rename notebook', label: 'Notebook name', initial: current, confirmText: 'Rename',
+      onConfirm: async (title) => {
+        if (title === current) return;
+        try {
+          await api.put(`/playground/snippets/${id}`, { title }, authH());
+          setOpenByLang(prev => {
+            const next = { ...prev };
+            (Object.keys(next) as CodingLangKey[]).forEach(k => { if (next[k]?.id === id) next[k] = { id, title }; });
+            return next;
+          });
+          loadSnippets();
+        } catch (e: any) { flash(e?.response?.data?.message || 'Could not rename.'); }
+      },
+    });
   };
 
-  const deleteSaved = async (id: number, title: string) => {
-    if (!window.confirm(`Delete “${title}”? This can’t be undone.`)) return;
-    try {
-      await api.delete(`/playground/snippets/${id}`, authH());
-      if (openSnippet?.id === id) setOpenSnippet(null);
-      loadSnippets();
-    } catch (e: any) { flash(e?.response?.data?.message || 'Could not delete.'); }
+  const deleteSaved = (id: number, title: string) => {
+    askConfirm({
+      title: 'Delete notebook?', message: `“${title}” will be permanently deleted. This can’t be undone.`,
+      confirmText: 'Delete', danger: true,
+      onConfirm: async () => {
+        try {
+          await api.delete(`/playground/snippets/${id}`, authH());
+          setOpenByLang(prev => {
+            const next = { ...prev };
+            (Object.keys(next) as CodingLangKey[]).forEach(k => { if (next[k]?.id === id) next[k] = null; });
+            return next;
+          });
+          loadSnippets();
+        } catch (e: any) { flash(e?.response?.data?.message || 'Could not delete.'); }
+      },
+    });
   };
+
+  // Notebook-bar state badge.
+  const nbName = openNb ? openNb.title : 'Untitled notebook';
+  const nbState = openNb
+    ? (dirty ? { t: 'Unsaved', cls: 'dirty' } : { t: 'Saved', cls: 'saved' })
+    : (dirty ? { t: 'Unsaved', cls: 'dirty' } : { t: 'New notebook', cls: 'neutral' });
 
   return (
     <div className="pg">
@@ -291,8 +444,26 @@ export default function PlaygroundPage() {
         .pg-status.err  { background:#fee2e2; color:#991b1b; } .pg-status.err::before { background:#dc2626; }
         @keyframes pg-pulse { 0%,100%{opacity:1;} 50%{opacity:.35;} }
 
+        /* Notebook bar (the save/notebook row) */
+        .pg-nbbar { display:flex; align-items:center; gap:12px; flex-wrap:wrap; padding:9px 14px; border-bottom:1px solid #eef0f6; background:#fff; }
+        .pg-nb-id { display:flex; align-items:center; gap:9px; min-width:0; }
+        .pg-nb-ico { color:#7c3aed; flex-shrink:0; display:inline-flex; }
+        .pg-nb-name { font-size:13.5px; font-weight:800; color:#0f172a; max-width:230px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .pg-nb-state { font-size:10.5px; font-weight:800; padding:3px 9px; border-radius:999px; white-space:nowrap; text-transform:uppercase; letter-spacing:.04em; display:inline-flex; align-items:center; gap:5px; }
+        .pg-nb-state::before { content:''; width:6px; height:6px; border-radius:50%; }
+        .pg-nb-state.saved { background:#dcfce7; color:#166534; } .pg-nb-state.saved::before { background:#16a34a; }
+        .pg-nb-state.dirty { background:#fef3c7; color:#92660d; } .pg-nb-state.dirty::before { background:#d97706; }
+        .pg-nb-state.neutral { background:#eef2f7; color:#64748b; } .pg-nb-state.neutral::before { background:#94a3b8; }
+        .pg-nb-actions { margin-left:auto; display:flex; align-items:center; gap:7px; flex-wrap:wrap; }
+        .pg-sv { display:inline-flex; align-items:center; gap:6px; padding:8px 14px; border-radius:9px; border:1.5px solid #4c1d95; background:#4c1d95; color:#fff; font-size:12.5px; font-weight:800; cursor:pointer; transition:all .15s ease; }
+        .pg-sv:hover:not(:disabled) { background:#3b0f78; border-color:#3b0f78; }
+        .pg-sv.ghost { background:#fff; border-color:#e6e8f0; color:#475569; }
+        .pg-sv.ghost:hover:not(:disabled) { border-color:#c4b5fd; color:#6d28d9; background:#faf5ff; }
+        .pg-sv:disabled { opacity:.5; cursor:not-allowed; }
+        @media (max-width:620px){ .pg-nb-actions { width:100%; margin-left:0; } .pg-sv { flex:1; justify-content:center; } }
+
         /* Split body */
-        .pg-body { display:flex; align-items:stretch; height:clamp(440px, calc(100vh - 250px), 720px); }
+        .pg-body { display:flex; align-items:stretch; height:clamp(440px, calc(100vh - 296px), 720px); }
         @media (max-width:900px){ .pg-body { flex-direction:column; height:auto; } }
 
         .pg-pane { display:flex; flex-direction:column; min-width:0; min-height:0; }
@@ -333,10 +504,7 @@ export default function PlaygroundPage() {
         .pg-out.err { color:#fca5a5; }
         .pg-out.empty { color:#64748b; display:flex; align-items:center; justify-content:center; text-align:center; }
 
-        /* Open-snippet chip in the editor header */
-        .pg-open-chip { display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:800; color:#a5b4fc; max-width:170px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-
-        /* Saved-codes drawer */
+        /* Notebooks drawer */
         .pg-drawer-backdrop { position:absolute; inset:0; z-index:30; background:rgba(8,13,25,.45); display:flex; justify-content:flex-end; animation:pg-fade .15s ease; }
         @keyframes pg-fade { from{opacity:0;} to{opacity:1;} }
         .pg-drawer { width:min(380px,92%); background:#fff; height:100%; display:flex; flex-direction:column; box-shadow:-10px 0 40px rgba(8,13,25,.25); animation:pg-slide .2s ease; }
@@ -345,8 +513,6 @@ export default function PlaygroundPage() {
         .pg-drawer-head b { font-size:14px; font-weight:800; color:#0f172a; }
         .pg-drawer-usage { font-size:11px; font-weight:800; color:#6d28d9; background:#ede9fe; border-radius:999px; padding:3px 10px; }
         .pg-drawer-x { margin-left:auto; border:none; background:transparent; cursor:pointer; color:#94a3b8; font-size:18px; line-height:1; }
-        .pg-drawer-actions { padding:12px 16px; border-bottom:1px solid #eef0f6; }
-        .pg-drawer-actions .pg-run { width:100%; justify-content:center; }
         .pg-drawer-list { flex:1; overflow:auto; padding:8px; }
         .pg-drawer-empty { padding:34px 18px; text-align:center; color:#94a3b8; font-size:13px; line-height:1.5; }
         .pg-snip { border:1px solid #eef0f6; border-radius:12px; padding:10px 12px; margin-bottom:8px; transition:border-color .15s; }
@@ -359,6 +525,26 @@ export default function PlaygroundPage() {
         .pg-snip-acts button { border:1px solid #e6e8f0; background:#fff; color:#475569; font-size:11px; font-weight:700; border-radius:7px; padding:4px 10px; cursor:pointer; }
         .pg-snip-acts button:hover { border-color:#c4b5fd; color:#6d28d9; }
         .pg-snip-acts button.del:hover { border-color:#fca5a5; color:#dc2626; background:#fef2f2; }
+
+        /* Branded dialog */
+        .pg-dialog-back { position:absolute; inset:0; z-index:60; background:rgba(8,13,25,.5); display:flex; align-items:center; justify-content:center; padding:18px; animation:pg-fade .15s ease; }
+        .pg-dialog { width:min(390px,100%); background:#fff; border-radius:16px; box-shadow:0 24px 60px rgba(8,13,25,.42); overflow:hidden; animation:pg-pop .2s cubic-bezier(.16,1,.3,1); }
+        @keyframes pg-pop { from{opacity:0;transform:translateY(10px) scale(.98);} to{opacity:1;transform:none;} }
+        .pg-dialog-body { padding:20px 22px 4px; }
+        .pg-dialog-title { font-size:16px; font-weight:800; color:#0f172a; margin:0 0 7px; }
+        .pg-dialog-msg { font-size:13px; color:#64748b; line-height:1.6; margin:0 0 12px; }
+        .pg-dialog-label { display:block; font-size:11px; font-weight:800; color:#6d28d9; text-transform:uppercase; letter-spacing:.05em; margin:6px 0 6px; }
+        .pg-dialog-input { width:100%; box-sizing:border-box; border:1.5px solid #e6e8f0; border-radius:10px; padding:10px 12px; font-size:14px; font-family:inherit; font-weight:600; color:#0f172a; outline:none; transition:border-color .15s, box-shadow .15s; margin-bottom:8px; }
+        .pg-dialog-input:focus { border-color:#a78bfa; box-shadow:0 0 0 3px rgba(124,58,237,.14); }
+        .pg-dialog-foot { display:flex; justify-content:flex-end; gap:9px; padding:14px 22px 18px; }
+        .pg-dialog-btn { padding:9px 16px; border-radius:9px; font-size:13px; font-weight:800; cursor:pointer; border:1.5px solid transparent; transition:all .15s ease; }
+        .pg-dialog-btn.cancel { background:#fff; border-color:#e6e8f0; color:#475569; }
+        .pg-dialog-btn.cancel:hover { border-color:#c4b5fd; color:#6d28d9; }
+        .pg-dialog-btn.go { background:#4c1d95; color:#fff; }
+        .pg-dialog-btn.go:hover:not(:disabled) { background:#3b0f78; }
+        .pg-dialog-btn.go.danger { background:#dc2626; }
+        .pg-dialog-btn.go.danger:hover:not(:disabled) { background:#b91c1c; }
+        .pg-dialog-btn:disabled { opacity:.5; cursor:not-allowed; }
 
         /* Toast */
         .pg-toast { position:absolute; bottom:16px; left:50%; transform:translateX(-50%); z-index:40; background:#0f172a; color:#fff; font-size:12.5px; font-weight:700; padding:9px 16px; border-radius:10px; box-shadow:0 8px 24px rgba(8,13,25,.35); animation:pg-fade .15s ease; }
@@ -377,7 +563,7 @@ export default function PlaygroundPage() {
         <div className="pg-bar">
           <div className="pg-langs">
             {CODING_LANG_LIST.map(l => (
-              <button key={l.key} type="button" className={`pg-lang ${l.key === language ? 'active' : ''}`} onClick={() => { setLanguage(l.key); setOpenSnippet(null); }}>
+              <button key={l.key} type="button" className={`pg-lang ${l.key === language ? 'active' : ''}`} onClick={() => setLanguage(l.key)}>
                 {l.label}
               </button>
             ))}
@@ -386,14 +572,6 @@ export default function PlaygroundPage() {
           <div className="pg-spacer" />
 
           <div className="pg-tools">
-            <button className="pg-chip" onClick={saveCurrent} disabled={snipBusy} title={openSnippet ? `Update “${openSnippet.title}”` : 'Save this code'}>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-              Save
-            </button>
-            <button className="pg-chip" onClick={() => { loadSnippets(); setSavedOpen(true); }} title="Your saved codes">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
-              Saved{snippets.length ? ` · ${snippets.length}` : ''}
-            </button>
             <span className="pg-kbd"><kbd>⌘/Ctrl</kbd>+<kbd>↵</kbd></span>
             <div className="pg-seg" title="Editor font size">
               <span className="pg-seg-ico">Aa</span>
@@ -416,6 +594,28 @@ export default function PlaygroundPage() {
           </div>
         </div>
 
+        {/* Notebook bar — current notebook + the three save actions */}
+        <div className="pg-nbbar">
+          <div className="pg-nb-id">
+            <span className="pg-nb-ico">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 6a2 2 0 0 1 2-2h6l2 2h6a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2z"/><path d="M8 4v15"/></svg>
+            </span>
+            <span className="pg-nb-name" title={nbName}>{nbName}</span>
+            <span className={`pg-nb-state ${nbState.cls}`}>{nbState.t}</span>
+          </div>
+          <div className="pg-nb-actions">
+            <button className="pg-sv" onClick={onSave} disabled={snipBusy || !dirty} title={openNb ? `Update “${openNb.title}”` : 'Save this notebook'}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              Save
+            </button>
+            <button className="pg-sv ghost" onClick={onSaveAsNew} disabled={snipBusy || !code.trim()} title="Save a copy as a new notebook">Save as new</button>
+            <button className="pg-sv ghost" onClick={onNew} title="Start a blank notebook">＋ New</button>
+            <button className="pg-sv ghost" onClick={() => { loadSnippets(); setSavedOpen(true); }} title="Your saved notebooks">
+              My Notebooks{snippets.length ? ` · ${snippets.length}` : ''}
+            </button>
+          </div>
+        </div>
+
         {/* Split body */}
         <div className="pg-body" ref={containerRef}>
           {/* Editor pane */}
@@ -423,7 +623,6 @@ export default function PlaygroundPage() {
             <div className="pg-pane-head">
               <span className="pg-dots"><span style={{ background: '#ff5f56' }} /><span style={{ background: '#ffbd2e' }} /><span style={{ background: '#27c93f' }} /></span>
               <span className="pg-file">{FILENAME[language]}</span>
-              {openSnippet && <span className="pg-open-chip" title={openSnippet.title}>· {openSnippet.title}</span>}
               <span className="pg-langdot">{CODING_LANGS[language].label}</span>
             </div>
             <div className="pg-monaco">
@@ -485,23 +684,20 @@ export default function PlaygroundPage() {
           </div>
         </div>
 
-        {/* Saved-codes drawer */}
+        {/* Notebooks drawer */}
         {savedOpen && (
           <div className="pg-drawer-backdrop" onClick={() => setSavedOpen(false)}>
             <div className="pg-drawer" onClick={e => e.stopPropagation()}>
               <div className="pg-drawer-head">
-                <b>Saved codes</b>
+                <b>My Notebooks</b>
                 <span className="pg-drawer-usage">{snipMeta.used}/{snipMeta.max_snippets}</span>
                 <button className="pg-drawer-x" onClick={() => setSavedOpen(false)} aria-label="Close">✕</button>
               </div>
-              <div className="pg-drawer-actions">
-                <button className="pg-run" disabled={snipBusy} onClick={saveAsNew}>＋ Save current code as new</button>
-              </div>
               <div className="pg-drawer-list">
                 {snippets.length === 0 ? (
-                  <div className="pg-drawer-empty">No saved codes yet.<br />Write some code, then hit <strong>Save</strong> to keep it here.</div>
+                  <div className="pg-drawer-empty">No notebooks yet.<br />Write some code, then hit <strong>Save</strong> to keep it here.</div>
                 ) : snippets.map(s => (
-                  <div key={s.id} className={`pg-snip ${openSnippet?.id === s.id ? 'open' : ''}`}>
+                  <div key={s.id} className={`pg-snip ${openNb?.id === s.id ? 'open' : ''}`}>
                     <div className="pg-snip-main" onClick={() => openSaved(s.id)}>
                       <span className="pg-snip-title">{s.title}</span>
                       <span className="pg-snip-meta">{langLabel(s.language)} · {new Date(s.updated_at).toLocaleDateString()}</span>
@@ -513,6 +709,44 @@ export default function PlaygroundPage() {
                     </div>
                   </div>
                 ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Branded dialog (name / confirm) */}
+        {dialog && (
+          <div className="pg-dialog-back" onClick={closeDialog}>
+            <div className="pg-dialog" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true">
+              <div className="pg-dialog-body">
+                <h3 className="pg-dialog-title">{dialog.title}</h3>
+                {dialog.kind === 'name' ? (
+                  <>
+                    <label className="pg-dialog-label">{dialog.label}</label>
+                    <input
+                      ref={dialogInputRef}
+                      className="pg-dialog-input"
+                      value={dialogVal}
+                      onChange={e => setDialogVal(e.target.value)}
+                      onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); submitDialog(); } else if (e.key === 'Escape') { closeDialog(); } }}
+                      maxLength={80}
+                      autoFocus
+                      spellCheck={false}
+                    />
+                  </>
+                ) : (
+                  <p className="pg-dialog-msg">{dialog.message}</p>
+                )}
+              </div>
+              <div className="pg-dialog-foot">
+                <button className="pg-dialog-btn cancel" onClick={closeDialog}>Cancel</button>
+                <button
+                  className={`pg-dialog-btn go ${dialog.kind === 'confirm' && dialog.danger ? 'danger' : ''}`}
+                  onClick={submitDialog}
+                  disabled={dialog.kind === 'name' && !dialogVal.trim()}
+                >
+                  {dialog.confirmText}
+                </button>
               </div>
             </div>
           </div>
