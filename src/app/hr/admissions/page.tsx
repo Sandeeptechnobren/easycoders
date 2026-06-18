@@ -20,6 +20,12 @@ type Admission = {
   admission_status: string;
   created_at: string;
   installments?: Installment[];
+  installments_sum_paid_amount?: number | string;
+  cancelled_at?: string | null;
+  refund_amount?: number | string | null;
+  refund_mode?: string | null;
+  refund_reason?: string | null;
+  cancelled_by?: number | { id: number; name: string } | null;
 };
 type Installment = {
   id: number;
@@ -75,6 +81,16 @@ export default function AdmissionsPage() {
   const [payingInstall, setPayingInstall] = useState<Installment | null>(null);
   const [payAmount, setPayAmount] = useState('');
   const [payMsg, setPayMsg] = useState('');
+
+  // Cancel admission (+ optional refund)
+  const [showCancel, setShowCancel] = useState(false);
+  const [cancelTarget, setCancelTarget] = useState<Admission | null>(null);
+  const [issueRefund, setIssueRefund] = useState(false);
+  const [refundAmount, setRefundAmount] = useState('');
+  const [refundMode, setRefundMode] = useState('cash');
+  const [refundReason, setRefundReason] = useState('');
+  const [cancelMsg, setCancelMsg] = useState('');
+  const [cancelling, setCancelling] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -180,6 +196,48 @@ export default function AdmissionsPage() {
     } catch (e: any) { setPayMsg(e.message || 'Failed.'); }
   };
 
+  // ── Cancel admission helpers ──
+  const paidOf = (a: Admission | null): number => {
+    if (!a) return 0;
+    if (a.installments?.length) return a.installments.reduce((s, i) => s + Number(i.paid_amount || 0), 0);
+    return Number(a.installments_sum_paid_amount || 0);
+  };
+  const isCancellable = (s: string) => s !== 'cancelled' && s !== 'rejected';
+  const cancellerName = (a: Admission) => (a.cancelled_by && typeof a.cancelled_by === 'object') ? a.cancelled_by.name : '';
+
+  const openCancel = (a: Admission) => {
+    setCancelTarget(a);
+    setIssueRefund(false);
+    setRefundAmount(String(paidOf(a) || ''));
+    setRefundMode('cash');
+    setRefundReason('');
+    setCancelMsg('');
+    setShowCancel(true);
+  };
+
+  const confirmCancel = async () => {
+    if (!cancelTarget) return;
+    const paid = paidOf(cancelTarget);
+    const amt = Number(refundAmount);
+    if (issueRefund && amt > paid) {
+      setCancelMsg(`Refund can't exceed ₹${paid.toLocaleString()} (amount paid).`);
+      return;
+    }
+    setCancelling(true); setCancelMsg('');
+    try {
+      const body: Record<string, unknown> = {};
+      if (issueRefund && amt > 0) { body.refund_amount = amt; body.refund_mode = refundMode; }
+      if (refundReason.trim()) body.refund_reason = refundReason.trim();
+      await fetchWithAuth(`${BASE}/admissions/${cancelTarget.id}/cancel`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      setShowCancel(false); setShowDetail(false); setCancelTarget(null);
+      load();
+    } catch (e: any) { setCancelMsg(e.message || 'Could not cancel the admission.'); }
+    finally { setCancelling(false); }
+  };
+
   return (
     <RoleGuard allowedRoles={[1, 2]}>
       <div className="admin-wrap">
@@ -252,8 +310,11 @@ export default function AdmissionsPage() {
                         <td><span className={`badge ${payColor[a.payment_status] || 'bg-secondary'}`}>{a.payment_status}</span></td>
                         <td><span className={`badge ${statusColor[a.admission_status] || 'bg-secondary'}`}>{a.admission_status}</span></td>
                         <td className="small text-muted">{a.created_at?.slice(0, 10)}</td>
-                        <td>
+                        <td className="text-nowrap">
                           <button className="btn btn-sm btn-outline-primary" onClick={() => openDetail(a)}>View</button>
+                          {isCancellable(a.admission_status) && (
+                            <button className="btn btn-sm btn-outline-danger ms-1" onClick={() => openCancel(a)}>Cancel</button>
+                          )}
                         </td>
                       </tr>
                     ))}
@@ -394,6 +455,27 @@ export default function AdmissionsPage() {
               <div className="modal-body">
                 {payMsg && <div className={`alert ${payMsg.includes('ecorded') ? 'alert-success' : 'alert-danger'} py-2`}>{payMsg}</div>}
 
+                {/* Cancellation / refund summary */}
+                {selected.admission_status === 'cancelled' && (
+                  <div className="alert alert-secondary py-2">
+                    <div className="fw-semibold mb-1">
+                      Cancelled{selected.cancelled_at ? ` on ${String(selected.cancelled_at).slice(0, 10)}` : ''}
+                      {cancellerName(selected) ? ` by ${cancellerName(selected)}` : ''}
+                    </div>
+                    {Number(selected.refund_amount) > 0 ? (
+                      <div className="small">
+                        Refund: <strong>{maskAmount(Number(selected.refund_amount), feesVisible)}</strong>
+                        {selected.refund_mode ? ` · ${selected.refund_mode}` : ''}
+                        {selected.refund_reason ? ` · ${selected.refund_reason}` : ''}
+                      </div>
+                    ) : (
+                      <div className="small text-muted">
+                        No refund issued.{selected.refund_reason ? ` ${selected.refund_reason}` : ''}
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* Student info */}
                 <div className="row g-3 mb-4">
                   <div className="col-md-6">
@@ -467,6 +549,11 @@ export default function AdmissionsPage() {
                 )}
               </div>
               <div className="modal-footer">
+                {isCancellable(selected.admission_status) && (
+                  <button className="btn btn-outline-danger me-auto" onClick={() => openCancel(selected)}>
+                    Cancel admission
+                  </button>
+                )}
                 {selected.admission_status === 'pending' && (
                   <button className="btn btn-success" onClick={() => approveAdmission(selected.id)}>
                     Approve & Create Account
@@ -474,6 +561,75 @@ export default function AdmissionsPage() {
                 )}
                 <button className="btn btn-secondary" onClick={() => { setShowDetail(false); setPayingInstall(null); setPayMsg(''); }}>
                   Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Cancel Admission Modal ── */}
+      {showCancel && cancelTarget && (
+        <div className="modal fade show d-block" style={{ background: 'rgba(0,0,0,.55)', zIndex: 1060 }}>
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Cancel admission #{cancelTarget.id}</h5>
+                <button className="btn-close" onClick={() => setShowCancel(false)} />
+              </div>
+              <div className="modal-body">
+                {cancelMsg && <div className="alert alert-danger py-2">{cancelMsg}</div>}
+                <p className="mb-2">
+                  Cancel the admission for <strong>{cancelTarget.student_name}</strong>
+                  {cancelTarget.course?.name ? <> · {cancelTarget.course.name}</> : null}.
+                </p>
+                <div className="alert alert-warning py-2 small mb-3">
+                  This deactivates the student&apos;s account, drops them from their batch, and waives any unpaid installments. Reversible by reactivating the student.
+                </div>
+                <div className="d-flex justify-content-between small mb-3">
+                  <span className="text-muted">Paid so far</span>
+                  <strong>{maskAmount(paidOf(cancelTarget), feesVisible)}</strong>
+                </div>
+
+                <div className="form-check mb-2">
+                  <input className="form-check-input" type="checkbox" id="issueRefundChk" checked={issueRefund}
+                    onChange={e => setIssueRefund(e.target.checked)} />
+                  <label className="form-check-label fw-semibold" htmlFor="issueRefundChk">Issue a refund</label>
+                </div>
+
+                {issueRefund && (
+                  <div className="row g-2 mb-3">
+                    <div className="col-7">
+                      <label className="form-label small mb-1">Refund amount (₹)</label>
+                      <input type="number" min={0} max={paidOf(cancelTarget)} className="form-control"
+                        value={refundAmount} onChange={e => setRefundAmount(e.target.value)} />
+                      <small className="text-muted">Up to {maskAmount(paidOf(cancelTarget), feesVisible)}</small>
+                    </div>
+                    <div className="col-5">
+                      <label className="form-label small mb-1">Mode</label>
+                      <select className="form-select" value={refundMode} onChange={e => setRefundMode(e.target.value)}>
+                        <option value="cash">Cash</option>
+                        <option value="online">Online</option>
+                        <option value="cheque">Cheque</option>
+                        <option value="bank_transfer">Bank transfer</option>
+                      </select>
+                    </div>
+                  </div>
+                )}
+
+                <label className="form-label small mb-1">Reason {issueRefund ? '' : '(optional)'}</label>
+                <textarea className="form-control" rows={2} value={refundReason}
+                  onChange={e => setRefundReason(e.target.value)}
+                  placeholder="Why is this admission being cancelled?" />
+              </div>
+              <div className="modal-footer">
+                <button className="btn btn-secondary" onClick={() => setShowCancel(false)}>Keep admission</button>
+                <button className="btn btn-danger" disabled={cancelling} onClick={confirmCancel}>
+                  {cancelling
+                    ? 'Cancelling…'
+                    : (issueRefund && Number(refundAmount) > 0
+                        ? `Cancel & refund ${maskAmount(Number(refundAmount), feesVisible)}`
+                        : 'Cancel admission')}
                 </button>
               </div>
             </div>
