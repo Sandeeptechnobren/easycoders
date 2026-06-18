@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import styles from './studentDirectory.module.css';
 import { fetchWithAuth } from '@/lib/api';
 import { useFeeVisibility, maskAmount, FeeToggle } from '@/lib/feeMask';
@@ -26,6 +26,7 @@ type Student = {
   status: number | string;
   enrolment_id?: string | null;
   batch?: string | null;
+  batches?: { id: number; name: string; status?: string | null }[];
   total_fee?: number;
   paid_amount?: number;
   due_amount?: number;
@@ -45,9 +46,11 @@ type Props = {
   detailBase: string;
   /** Show the "+ Admit a Student" action (admin only). */
   showAdmit?: boolean;
+  /** Allow removing a student from a batch (admin/HR with manage_batches). */
+  canManage?: boolean;
 };
 
-export default function StudentDirectory({ crumbs, detailBase, showAdmit = false }: Props) {
+export default function StudentDirectory({ crumbs, detailBase, showAdmit = false, canManage = true }: Props) {
   const [students, setStudents] = useState<Student[]>([]);
   const [loadingStudents, setLoadingStudents] = useState(true);
   const [loadingColleges, setLoadingColleges] = useState(true);
@@ -81,24 +84,38 @@ export default function StudentDirectory({ crumbs, detailBase, showAdmit = false
     loadColleges();
   }, []);
 
-  useEffect(() => {
-    const loadStudents = async () => {
-      try {
-        setLoadingStudents(true);
-        setError('');
-        const url = `${BASE}/admin/students` +
-          (selectedCollegeID ? `?college_id=${encodeURIComponent(selectedCollegeID)}` : '');
-        const json = await fetchWithAuth(url);
-        setStudents(json.data || []);
-      } catch (e: unknown) {
-        setError(e instanceof Error && e.message === 'Unauthorized' ? 'Session expired. Please login again.' : 'Failed to load students');
-        setStudents([]);
-      } finally {
-        setLoadingStudents(false);
-      }
-    };
-    loadStudents();
+  const loadStudents = useCallback(async () => {
+    try {
+      setLoadingStudents(true);
+      setError('');
+      const url = `${BASE}/admin/students` +
+        (selectedCollegeID ? `?college_id=${encodeURIComponent(selectedCollegeID)}` : '');
+      const json = await fetchWithAuth(url);
+      setStudents(json.data || []);
+    } catch (e: unknown) {
+      setError(e instanceof Error && e.message === 'Unauthorized' ? 'Session expired. Please login again.' : 'Failed to load students');
+      setStudents([]);
+    } finally {
+      setLoadingStudents(false);
+    }
   }, [selectedCollegeID]);
+  useEffect(() => { loadStudents(); }, [loadStudents]);
+
+  // Remove a student from one of their batches (key = `${studentId}:${batchId}`).
+  const [removing, setRemoving] = useState<string | null>(null);
+  const removeFromBatch = async (studentId: number | string, batchId: number, batchName: string, studentName: string) => {
+    if (!confirm(`Remove ${studentName} from "${batchName}"? They stay enrolled as a student and keep their other batches.`)) return;
+    const key = `${studentId}:${batchId}`;
+    setRemoving(key);
+    try {
+      await fetchWithAuth(`${BASE}/batches/${batchId}/students/${studentId}`, { method: 'DELETE' });
+      await loadStudents();
+    } catch (e: unknown) {
+      alert(e instanceof Error ? e.message : 'Could not remove the student from the batch.');
+    } finally {
+      setRemoving(null);
+    }
+  };
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -297,7 +314,27 @@ export default function StudentDirectory({ crumbs, detailBase, showAdmit = false
                           <span style={{ fontFamily: 'ui-monospace, Menlo, monospace' }}>{s.enrolment_id || '—'}</span>
                         </td>
                         <td className={styles.tdMuted}>
-                          {s.batch ? <span className={`${styles.pill} ${styles.neutral}`}>{s.batch}</span> : '—'}
+                          {(s.batches && s.batches.length > 0) ? (
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                              {s.batches.map((b) => (
+                                <span key={b.id} className={`${styles.pill} ${styles.neutral}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                                  {b.name}
+                                  {canManage && (
+                                    <button
+                                      type="button"
+                                      title={`Remove from ${b.name}`}
+                                      aria-label={`Remove ${s.name} from ${b.name}`}
+                                      onClick={() => removeFromBatch(s.id, b.id, b.name, s.name)}
+                                      disabled={removing === `${s.id}:${b.id}`}
+                                      style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: '#b91c1c', fontWeight: 800, lineHeight: 1, padding: '0 0 0 2px', fontSize: 14 }}
+                                    >
+                                      {removing === `${s.id}:${b.id}` ? '…' : '×'}
+                                    </button>
+                                  )}
+                                </span>
+                              ))}
+                            </div>
+                          ) : (s.batch ? <span className={`${styles.pill} ${styles.neutral}`}>{s.batch}</span> : '—')}
                         </td>
                         <td className={styles.tdMuted}>
                           {due > 0
@@ -341,7 +378,7 @@ export default function StudentDirectory({ crumbs, detailBase, showAdmit = false
                     </div>
                     <div className={styles.mGrid}>
                       <div><span className={styles.mKey}>Enrolment</span><span className={styles.mVal}>{s.enrolment_id || '—'}</span></div>
-                      <div><span className={styles.mKey}>Batch</span><span className={styles.mVal}>{s.batch || '—'}</span></div>
+                      <div><span className={styles.mKey}>Batch</span><span className={styles.mVal}>{(s.batches && s.batches.length) ? s.batches.map((b) => b.name).join(', ') : (s.batch || '—')}</span></div>
                       <div><span className={styles.mKey}>Fees Due</span><span className={styles.mVal}>{due > 0 ? inr(due) : 'Paid'}</span></div>
                       <div><span className={styles.mKey}>Phone</span><span className={styles.mVal}>{s.phone || '—'}</span></div>
                     </div>
