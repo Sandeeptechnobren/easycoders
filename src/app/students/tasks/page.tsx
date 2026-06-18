@@ -37,6 +37,14 @@ export default function TasksPage() {
     if (cat) setSelectedCategory(cat);
   }, []);
 
+  // Close the question/output popup on Escape.
+  useEffect(() => {
+    if (!preview) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setPreview(null); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [preview]);
+
   if (loadingTasks || loadingCategories) return <Loader />;
 
   const filteredTasks = tasks.filter(task =>
@@ -218,22 +226,47 @@ export default function TasksPage() {
         .tp-empty-title { font-size: 16px; font-weight: 700; color: #1e293b; margin-bottom: 6px; }
         .tp-empty-desc { font-size: 13px; color: #94a3b8; }
 
-        /* Image preview modal (no fixed) */
-        .tp-overlay {
-          position: absolute; inset: 0; background: rgba(15,23,42,0.7);
+        /* Question + expected-output popup (a real viewport-centered modal) */
+        .tp-modal-overlay {
+          position: fixed; inset: 0; z-index: 9999;
+          background: rgba(15,23,42,0.66); backdrop-filter: blur(3px);
           display: flex; align-items: center; justify-content: center;
-          z-index: 50; border-radius: 18px;
+          padding: 20px; animation: tp-fade 0.15s ease;
         }
-        .tp-preview-box {
-          background: #fff; border-radius: 16px; padding: 16px;
-          max-width: 320px; width: 90%; text-align: center;
+        @keyframes tp-fade { from { opacity: 0; } to { opacity: 1; } }
+        .tp-modal {
+          background: #fff; border-radius: 18px; width: 100%; max-width: 640px;
+          max-height: 88vh; display: flex; flex-direction: column; overflow: hidden;
+          box-shadow: 0 30px 70px rgba(15,23,42,0.4);
+          animation: tp-rise 0.22s cubic-bezier(.16,1,.3,1);
         }
-        .tp-preview-box img { width: 100%; border-radius: 10px; margin-bottom: 12px; }
+        @keyframes tp-rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+        @media (prefers-reduced-motion: reduce) { .tp-modal-overlay, .tp-modal { animation: none; } }
+        .tp-modal-head {
+          display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
+          padding: 18px 22px; border-bottom: 1px solid #eef2f7; flex-shrink: 0;
+        }
+        .tp-modal-eyebrow { font-size: 10.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: #7c3aed; margin-bottom: 3px; }
+        .tp-modal-title { font-size: 17px; font-weight: 800; color: #0f172a; line-height: 1.3; }
+        .tp-modal-x { border: none; background: #f1f5f9; color: #64748b; width: 32px; height: 32px; border-radius: 9px; cursor: pointer; font-size: 14px; flex-shrink: 0; line-height: 1; }
+        .tp-modal-x:hover { background: #e2e8f0; color: #0f172a; }
+        .tp-modal-body { padding: 18px 22px; overflow-y: auto; }
+        .tp-modal-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+        .tp-modal-section { margin-bottom: 18px; }
+        .tp-modal-section:last-child { margin-bottom: 0; }
+        .tp-modal-label { font-size: 11px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: #94a3b8; margin-bottom: 8px; }
+        .tp-modal-question { font-size: 14px; color: #334155; line-height: 1.65; white-space: pre-wrap; margin: 0; }
+        .tp-modal-img { width: 100%; border-radius: 12px; border: 1px solid #e2e8f0; display: block; }
+        .tp-modal-iframe { width: 100%; height: 340px; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff; }
+        .tp-modal-pre { background: #0f172a; color: #e2e8f0; padding: 16px; border-radius: 12px; font-size: 13px; line-height: 1.6; overflow-x: auto; white-space: pre-wrap; font-family: ui-monospace,SFMono-Regular,Menlo,monospace; margin: 0; }
+        .tp-modal-note { font-size: 14px; color: #475569; margin: 0; }
+        .tp-modal-foot { padding: 14px 22px; border-top: 1px solid #eef2f7; display: flex; justify-content: flex-end; flex-shrink: 0; }
         .tp-close-btn {
           background: #f1f5f9; border: none; border-radius: 8px;
-          padding: 7px 16px; font-size: 13px; font-weight: 600;
+          padding: 8px 18px; font-size: 13px; font-weight: 700;
           color: #475569; cursor: pointer; font-family: inherit;
         }
+        .tp-close-btn:hover { background: #e2e8f0; color: #0f172a; }
       `}</style>
 
       <div className="tp-wrap">
@@ -304,26 +337,7 @@ export default function TasksPage() {
           </div>
 
           {/* Table card */}
-          <div className="tp-card" style={{ position: 'relative' }}>
-
-            {/* Expected-output preview overlay (image / live preview / text) */}
-            {preview && (
-              <div className="tp-overlay" onClick={() => setPreview(null)}>
-                <div className="tp-preview-box" onClick={e => e.stopPropagation()} style={{ maxWidth: preview.output_type === 'image' ? 360 : 680, width: '92%' }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: '#475569', marginBottom: 10, textAlign: 'left' }}>Expected output · {preview.title}</div>
-                  {preview.output_type === 'image' && preview.expected_output_image && (
-                    <img src={preview.expected_output_image} alt="Expected output" />
-                  )}
-                  {preview.output_type === 'preview' && (
-                    <iframe title="expected output" sandbox="allow-scripts" srcDoc={preview.expected_output || ''} style={{ width: '100%', height: 320, border: '1px solid #e2e8f0', borderRadius: 10, background: '#fff', marginBottom: 12 }} />
-                  )}
-                  {preview.output_type === 'text' && (
-                    <pre style={{ textAlign: 'left', background: '#0f172a', color: '#e2e8f0', padding: 14, borderRadius: 10, fontSize: 13, lineHeight: 1.5, overflowX: 'auto', marginBottom: 12, maxHeight: 360, whiteSpace: 'pre-wrap' }}>{preview.expected_output}</pre>
-                  )}
-                  <button className="tp-close-btn" onClick={() => setPreview(null)}>Close</button>
-                </div>
-              </div>
-            )}
+          <div className="tp-card">
 
             {filteredTasks.length === 0 ? (
               <div className="tp-empty">
@@ -413,6 +427,54 @@ export default function TasksPage() {
 
         </div>
       </div>
+
+      {/* Question + expected-output popup */}
+      {preview && (
+        <div className="tp-modal-overlay" onClick={() => setPreview(null)}>
+          <div className="tp-modal" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true">
+            <div className="tp-modal-head">
+              <div>
+                <div className="tp-modal-eyebrow">Practice task</div>
+                <h3 className="tp-modal-title">{preview.title}</h3>
+              </div>
+              <button className="tp-modal-x" onClick={() => setPreview(null)} aria-label="Close">✕</button>
+            </div>
+
+            <div className="tp-modal-body">
+              {(preview.difficulty || preview.category?.name) && (
+                <div className="tp-modal-chips">
+                  {preview.difficulty && <span className="tp-diff" data-d={preview.difficulty}>{preview.difficulty}</span>}
+                  {preview.category?.name && <span className="tp-cat-badge">{preview.category.name}</span>}
+                </div>
+              )}
+
+              {preview.description && (
+                <div className="tp-modal-section">
+                  <div className="tp-modal-label">Question</div>
+                  <p className="tp-modal-question">{preview.description}</p>
+                </div>
+              )}
+
+              <div className="tp-modal-section">
+                <div className="tp-modal-label">Expected output</div>
+                {preview.output_type === 'image' && preview.expected_output_image ? (
+                  <img className="tp-modal-img" src={preview.expected_output_image} alt="Expected output" />
+                ) : preview.output_type === 'preview' ? (
+                  <iframe title="expected output" sandbox="allow-scripts" srcDoc={preview.expected_output || ''} className="tp-modal-iframe" />
+                ) : preview.output_type === 'text' ? (
+                  <pre className="tp-modal-pre">{preview.expected_output}</pre>
+                ) : (
+                  <p className="tp-modal-note">{preview.expected_output || 'No expected output provided for this task.'}</p>
+                )}
+              </div>
+            </div>
+
+            <div className="tp-modal-foot">
+              <button className="tp-close-btn" onClick={() => setPreview(null)}>Close</button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
