@@ -72,6 +72,14 @@ type StudentDetails = {
   payments?: Payment[];
   marks?: Mark[];
   attendance?: AttendanceRow[];
+  admission?: {
+    id: number;
+    admission_status: string;
+    final_fees?: number;
+    paid?: number;
+    refund_amount?: number | string | null;
+    cancelled_at?: string | null;
+  } | null;
 };
 
 function isActive(s: StudentDetails['status'] | undefined | null): boolean {
@@ -107,6 +115,15 @@ export default function StudentDetailManager({ studentId, canManage, backHref, c
   const [credBusy, setCredBusy] = useState(false);
   const [credReveal, setCredReveal] = useState(false);
   const [credCopied, setCredCopied] = useState(false);
+
+  // Cancel admission (+ optional refund)
+  const [showCancel, setShowCancel] = useState(false);
+  const [issueRefund, setIssueRefund] = useState(false);
+  const [refundAmount, setRefundAmount] = useState('');
+  const [refundMode, setRefundMode] = useState('cash');
+  const [refundReason, setRefundReason] = useState('');
+  const [cancelMsg, setCancelMsg] = useState('');
+  const [cancelling, setCancelling] = useState(false);
 
   const loadStudent = async () => {
     try {
@@ -160,6 +177,14 @@ export default function StudentDetailManager({ studentId, canManage, backHref, c
     if (canManage) loadCredentials();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, canManage]);
+
+  // Close the cancel-admission modal on Escape.
+  useEffect(() => {
+    if (!showCancel) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setShowCancel(false); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [showCancel]);
 
   const fees = student?.fees;
   const totalFee = Number(fees?.total_fee ?? student?.profile?.total_fee ?? 0);
@@ -252,6 +277,38 @@ export default function StudentDetailManager({ studentId, canManage, backHref, c
 
   const active = isActive(student?.status);
 
+  // ── Cancel admission ──
+  const admission = student?.admission ?? null;
+  const admissionCancellable = !!admission && admission.admission_status !== 'cancelled' && admission.admission_status !== 'rejected';
+  const admissionPaid = Number(admission?.paid ?? 0);
+
+  const openCancel = () => {
+    setIssueRefund(false);
+    setRefundAmount(String(admissionPaid || ''));
+    setRefundMode('cash');
+    setRefundReason('');
+    setCancelMsg('');
+    setShowCancel(true);
+  };
+  const confirmCancel = async () => {
+    if (!admission) return;
+    const amt = Number(refundAmount);
+    if (issueRefund && amt > admissionPaid) { setCancelMsg(`Refund can't exceed ${inr(admissionPaid)} (amount paid).`); return; }
+    setCancelling(true); setCancelMsg('');
+    try {
+      const body: Record<string, unknown> = {};
+      if (issueRefund && amt > 0) { body.refund_amount = amt; body.refund_mode = refundMode; }
+      if (refundReason.trim()) body.refund_reason = refundReason.trim();
+      await fetchWithAuth(`${BASE}/admissions/${admission.id}/cancel`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      setShowCancel(false);
+      await loadStudent();
+    } catch (e: unknown) { setCancelMsg(e instanceof Error ? e.message : 'Could not cancel the admission.'); }
+    finally { setCancelling(false); }
+  };
+
   return (
     <div className={styles.wrap}>
 
@@ -338,6 +395,19 @@ export default function StudentDetailManager({ studentId, canManage, backHref, c
                 {(student.profile?.city || student.profile?.state) && <div className={styles.field}><span className={styles.fieldKey}>Location</span><span className={styles.fieldVal}>{[student.profile?.city, student.profile?.state].filter(Boolean).join(', ')}</span></div>}
                 {student.profile?.highest_qualification && <div className={styles.field}><span className={styles.fieldKey}>Qualification</span><span className={styles.fieldVal}>{student.profile.highest_qualification}</span></div>}
               </div>
+
+              {canManage && admission && (
+                <>
+                  <div className={styles.divider} />
+                  {admissionCancellable ? (
+                    <button type="button" className={styles.deleteBtn} onClick={openCancel}>Cancel admission</button>
+                  ) : admission.admission_status === 'cancelled' ? (
+                    <div style={{ fontSize: 12.5, color: '#94A3B8', lineHeight: 1.5 }}>
+                      Admission cancelled{admission.cancelled_at ? ` on ${String(admission.cancelled_at).slice(0, 10)}` : ''}{Number(admission.refund_amount) > 0 ? ` · refund ${inr(Number(admission.refund_amount))}` : ''}.
+                    </div>
+                  ) : null}
+                </>
+              )}
             </div>
 
             {/* Login credentials card — manage only */}
@@ -603,6 +673,58 @@ export default function StudentDetailManager({ studentId, canManage, backHref, c
                   </div>
                 </>
               ) : (!canManage && <p className={styles.emptyText} style={{ marginTop: 4 }}>No marks recorded yet.</p>)}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Cancel admission modal ── */}
+      {showCancel && admission && (
+        <div onClick={() => setShowCancel(false)}
+          style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(7,18,42,0.55)', backdropFilter: 'blur(3px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 18 }}>
+          <div onClick={e => e.stopPropagation()} role="dialog" aria-modal="true"
+            style={{ background: '#fff', borderRadius: 16, width: '100%', maxWidth: 440, boxShadow: '0 30px 70px rgba(7,18,42,0.4)', overflow: 'hidden' }}>
+            <div style={{ padding: '18px 22px', borderBottom: '1px solid #EEF1F7' }}>
+              <div style={{ fontSize: 16, fontWeight: 800, color: '#0B1B3A' }}>Cancel admission</div>
+            </div>
+            <div style={{ padding: '18px 22px' }}>
+              {cancelMsg && <div style={{ background: '#FEF2F2', color: '#991B1B', border: '1px solid #FECACA', borderRadius: 10, padding: '9px 12px', fontSize: 13, marginBottom: 12 }}>{cancelMsg}</div>}
+              <p style={{ fontSize: 13.5, color: '#334155', margin: '0 0 12px', lineHeight: 1.6 }}>
+                Cancel the admission for <strong>{student?.name}</strong>{student?.course ? <> · {student.course}</> : null}. This deactivates the account, drops the batch and waives any unpaid installments. Reversible by reactivating the student.
+              </p>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 16 }}>
+                <span style={{ color: '#64748B' }}>Paid so far</span><strong>{inr(admissionPaid)}</strong>
+              </div>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13.5, fontWeight: 700, color: '#0B1B3A', marginBottom: 12, cursor: 'pointer' }}>
+                <input type="checkbox" checked={issueRefund} onChange={e => setIssueRefund(e.target.checked)} /> Issue a refund
+              </label>
+              {issueRefund && (
+                <div style={{ display: 'flex', gap: 10, marginBottom: 12 }}>
+                  <div style={{ flex: 2 }}>
+                    <label className={styles.formLabel}>Refund amount (₹)</label>
+                    <input className={styles.input} type="number" min={0} max={admissionPaid} value={refundAmount} onChange={e => setRefundAmount(e.target.value)} />
+                  </div>
+                  <div style={{ flex: 1.4 }}>
+                    <label className={styles.formLabel}>Mode</label>
+                    <select className={styles.input} value={refundMode} onChange={e => setRefundMode(e.target.value)}>
+                      <option value="cash">Cash</option>
+                      <option value="online">Online</option>
+                      <option value="cheque">Cheque</option>
+                      <option value="bank_transfer">Bank transfer</option>
+                    </select>
+                  </div>
+                </div>
+              )}
+              <label className={styles.formLabel}>Reason {issueRefund ? '' : '(optional)'}</label>
+              <textarea className={styles.input} rows={2} value={refundReason} onChange={e => setRefundReason(e.target.value)}
+                placeholder="Why is this admission being cancelled?" style={{ resize: 'vertical' }} />
+            </div>
+            <div style={{ padding: '14px 22px', borderTop: '1px solid #EEF1F7', display: 'flex', justifyContent: 'flex-end', gap: 9 }}>
+              <button type="button" className={styles.primaryBtn} onClick={() => setShowCancel(false)}
+                style={{ background: '#fff', color: '#475569', border: '1px solid #E2E8F0' }}>Keep admission</button>
+              <button type="button" className={styles.deleteBtn} disabled={cancelling} onClick={confirmCancel}>
+                {cancelling ? 'Cancelling…' : (issueRefund && Number(refundAmount) > 0 ? `Cancel & refund ${inr(Number(refundAmount))}` : 'Cancel admission')}
+              </button>
             </div>
           </div>
         </div>
