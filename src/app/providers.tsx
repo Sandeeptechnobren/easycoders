@@ -4,7 +4,20 @@ import { usePathname } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import SelfAssessmentBubble from '@/components/SelfAssessmentBubble';
+import AppDownloadDock from '@/components/AppDownloadDock';
 import { AuthProvider } from '@/context/AuthContext';
+
+/* Logged-in portals (and the self-assessment sub-app) don't need the public
+ * app-download dock — show it only on the marketing / public pages. */
+const PORTAL_PREFIXES = [
+  '/admin',
+  '/hr',
+  '/trainer',
+  '/students',
+  '/student-dashboard',
+  '/college',
+  '/self-assessment',
+];
 
 /**
  * Client-side providers + conditional chrome.
@@ -17,6 +30,7 @@ import { AuthProvider } from '@/context/AuthContext';
 export default function Providers({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isSelfAssessment = pathname?.startsWith('/self-assessment') ?? false;
+  const isPublicPage = !PORTAL_PREFIXES.some((p) => pathname?.startsWith(p));
 
   return (
     <AuthProvider>
@@ -24,6 +38,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
       <main className="flex-grow-1">{children}</main>
       {!isSelfAssessment && <Footer />}
       {!isSelfAssessment && <SelfAssessmentBubble />}
+      {isPublicPage && <AppDownloadDock />}
     </AuthProvider>
   );
 }
