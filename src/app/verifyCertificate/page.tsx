@@ -489,8 +489,8 @@ export default function VerifyCertificate() {
                 <span className="vc-detail-val">{result.assessment?.title}</span>
               </div>
               <div className="vc-detail-row">
-                <span className="vc-detail-key">Score</span>
-                <span className="vc-score-val">{result.score}%</span>
+                <span className="vc-detail-key">Result</span>
+                <span className="vc-score-val">Qualified</span>
               </div>
               <div className="vc-detail-row">
                 <span className="vc-detail-key">Email</span>
