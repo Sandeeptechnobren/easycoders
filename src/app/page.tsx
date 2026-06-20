@@ -94,7 +94,24 @@ export default function HomePage() {
       .then(res => {
         if (cancelled) return;
         const raw = (res.data?.data ?? res.data ?? []) as ApiCourse[];
-        const list = Array.isArray(raw) ? raw.slice(0, 8) : [];
+        const rawArr = Array.isArray(raw) ? raw : [];
+        // The same subject is offered under more than one programme (e.g.
+        // "PHP Laravel Development" exists as both an Internship and a Summer
+        // Training course), so /courses returns it more than once. On this
+        // home-page teaser — which shows only title/level/rating, not the
+        // programme or price — that reads as the same course listed twice.
+        // Dedupe by title (case-insensitive) so each subject appears once;
+        // the full /courses catalogue still lists every programme.
+        const seenTitles = new Set<string>();
+        const list = rawArr
+          .filter((c) => {
+            const key = (c.title ?? '').trim().toLowerCase();
+            if (!key) return true;
+            if (seenTitles.has(key)) return false;
+            seenTitles.add(key);
+            return true;
+          })
+          .slice(0, 8);
         if (list.length === 0) return;
         setCourses(list.map((c, idx): HomeCourse => ({
           id:     c.id ?? idx,
