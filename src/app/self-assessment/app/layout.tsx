@@ -130,9 +130,9 @@ export default function AssessmentAppLayout({
 
         /* ── LOGO ── */
         .aa-logo-wrap { padding: 14px 12px 8px; position: relative; z-index: 1; flex-shrink: 0; }
-        .aa-brand-bottom { display: flex; align-items: center; justify-content: center; width: 100%; height: 44px; margin-top: 2px; background: #fff; border-radius: 10px; box-shadow: 0 3px 10px rgba(0,0,0,0.22); overflow: hidden; }
-        .aa-brand-bottom img { height: 28px; width: auto; max-width: calc(100% - 22px); display: block; object-fit: contain; }
-        .aa-sidebar.collapsed .aa-brand-bottom img { height: 26px; max-width: calc(100% - 8px); }
+        .aa-brand-bottom { display: flex; align-items: center; justify-content: center; width: 100%; margin-top: 2px; padding: 8px 10px; background: #fff; border-radius: 10px; box-shadow: 0 3px 10px rgba(0,0,0,0.22); overflow: hidden; }
+        .aa-brand-bottom img { width: 100%; height: auto; display: block; }
+        .aa-sidebar.collapsed .aa-brand-bottom { padding: 7px; }
         .aa-profile { display: flex; align-items: center; gap: 11px; width: 100%; padding: 9px 10px; border-radius: 13px; border: 1px solid rgba(255,255,255,0.09); background: rgba(255,255,255,0.05); cursor: pointer; transition: background .16s, border-color .16s; text-align: left; font-family: inherit; }
         .aa-profile:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.18); }
         .aa-profile-avatar { width: 40px; height: 40px; border-radius: 50%; overflow: hidden; flex-shrink: 0; background: linear-gradient(135deg,#7c3aed,#4f46e5); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 14px; font-weight: 800; }
