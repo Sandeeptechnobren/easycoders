@@ -784,9 +784,9 @@ export default function SelfAssessmentLanding() {
           <nav className="sa-topbar" aria-label="Easy Assess header">
             <Link href="/" className="sa-brand" aria-label="Easy Coders — back to home">
               <Image
-                src="/images/logo.svg"
-                alt="Easy Coders"
-                width={140}
+                src="/images/easyassess-mark.png"
+                alt="Easy Assess"
+                width={46}
                 height={46}
                 className="sa-brand-logo"
                 priority

@@ -93,9 +93,9 @@ export default function AssessmentSignup() {
       <div className="sa-left">
         <div className="sa-left-logo">
           <div className="sa-left-logo-icon">
-            <img src="/images/eclogo.png" alt="Easy Coders" />
+            <img src="/images/easyassess-mark.png" alt="Easy Assess" />
           </div>
-          <span className="sa-left-logo-name">Easy Coders</span>
+          <span className="sa-left-logo-name">Easy Assess</span>
         </div>
 
         <h1 className="sa-left-headline">
