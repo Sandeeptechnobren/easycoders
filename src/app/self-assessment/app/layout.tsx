@@ -130,8 +130,9 @@ export default function AssessmentAppLayout({
 
         /* ── LOGO ── */
         .aa-logo-wrap { padding: 14px 12px 8px; position: relative; z-index: 1; flex-shrink: 0; }
-        .aa-brand-mini { display: inline-flex; background: #fff; border-radius: 9px; padding: 5px 10px; margin-bottom: 12px; box-shadow: 0 3px 10px rgba(0,0,0,0.22); }
-        .aa-brand-mini img { height: 20px; width: auto; display: block; }
+        .aa-brand-bottom { display: flex; justify-content: center; margin-top: 6px; padding-top: 8px; }
+        .aa-brand-bottom img { height: 20px; width: auto; display: block; background: #fff; border-radius: 8px; padding: 6px 11px; box-shadow: 0 3px 10px rgba(0,0,0,0.22); }
+        .aa-sidebar.collapsed .aa-brand-bottom img { height: 24px; padding: 6px; }
         .aa-profile { display: flex; align-items: center; gap: 11px; width: 100%; padding: 9px 10px; border-radius: 13px; border: 1px solid rgba(255,255,255,0.09); background: rgba(255,255,255,0.05); cursor: pointer; transition: background .16s, border-color .16s; text-align: left; font-family: inherit; }
         .aa-profile:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.18); }
         .aa-profile-avatar { width: 40px; height: 40px; border-radius: 50%; overflow: hidden; flex-shrink: 0; background: linear-gradient(135deg,#7c3aed,#4f46e5); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 14px; font-weight: 800; }
@@ -218,13 +219,8 @@ export default function AssessmentAppLayout({
 
         {/* SIDEBAR */}
         <aside className={['aa-sidebar', !isMobile && collapsed ? 'collapsed' : '', isMobile && mobileOpen ? 'mobile-open' : ''].filter(Boolean).join(' ')}>
-          {/* Brand + profile */}
+          {/* Profile */}
           <div className="aa-logo-wrap">
-            {!(!isMobile && collapsed) && (
-              <div className="aa-brand-mini">
-                <img src="/images/easyassess-wordmark.png" alt="EasyAssess" />
-              </div>
-            )}
             <button className="aa-profile" onClick={() => setProfileOpen(true)} title="My profile">
               <span className="aa-profile-avatar">
                 {(profile.avatar_thumb_url || profile.avatar_url)
@@ -267,6 +263,12 @@ export default function AssessmentAppLayout({
               </span>
               <span className="aa-logout-label">Logout</span>
             </button>
+            <div className="aa-brand-bottom">
+              <img
+                src={(!isMobile && collapsed) ? '/images/easyassess-mark.png' : '/images/easyassess-wordmark.png'}
+                alt="EasyAssess"
+              />
+            </div>
           </div>
         </aside>
 
