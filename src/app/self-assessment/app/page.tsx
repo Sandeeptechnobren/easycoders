@@ -1,8 +1,17 @@
 'use client';
 import { useEffect, useState } from 'react';
 import AssessmentCards from './assessment/[id]/AssessmentCards';
+
+const API_BASE = 'https://api.easycoders.in/projects/backend/public/api';
+
+type Stats = {
+  appeared: number; qualified: number; avg_percent: number; best_percent: number;
+  certificates: number; rank: number | null; total_participants: number;
+};
+
 export default function AssessmentDashboard() {
   const [userName, setUserName] = useState('');
+  const [stats, setStats] = useState<Stats | null>(null);
   useEffect(() => {
     const storedName = localStorage.getItem('logged_in_user');
     const storedEmail = localStorage.getItem('assessment_user');
@@ -13,6 +22,14 @@ export default function AssessmentDashboard() {
     } else {
       setUserName('Learner');
     }
+  }, []);
+  useEffect(() => {
+    const token = localStorage.getItem('assessment_token');
+    if (!token) return;
+    fetch(`${API_BASE}/assessment/stats`, { headers: { Authorization: `Bearer ${token}` } })
+      .then((r) => r.json())
+      .then((d) => { if (d?.data) setStats(d.data as Stats); })
+      .catch(() => {});
   }, []);
   const currentHour = new Date().getHours();
   const greeting =
@@ -171,48 +188,57 @@ export default function AssessmentDashboard() {
               <div className="ad-pill">
                 <span className="ad-pill-ico">📋</span>
                 <div>
-                  <div className="ad-pill-val">Active</div>
-                  <div className="ad-pill-lbl">Assessments</div>
+                  <div className="ad-pill-val">{stats ? stats.appeared : '—'}</div>
+                  <div className="ad-pill-lbl">Appeared</div>
                 </div>
               </div>
               <div className="ad-pill">
-                <span className="ad-pill-ico">🏆</span>
+                <span className="ad-pill-ico">✅</span>
                 <div>
-                  <div className="ad-pill-val">Earn</div>
-                  <div className="ad-pill-lbl">Certificate</div>
+                  <div className="ad-pill-val">{stats ? stats.qualified : '—'}</div>
+                  <div className="ad-pill-lbl">Qualified</div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Info strip */}
+          {/* Your performance */}
+          <div className="ad-section-head" style={{ marginBottom: 14 }}>
+            <div className="ad-section-title-row">
+              <div className="ad-section-icon">📊</div>
+              <div>
+                <div className="ad-section-title">Your Performance</div>
+                <div className="ad-section-sub">A snapshot of how you&apos;re doing</div>
+              </div>
+            </div>
+          </div>
           <div className="ad-info-strip">
             <div className="ad-info-card">
-              <span className="ad-info-icon">⏱️</span>
+              <span className="ad-info-icon">📊</span>
               <div>
-                <div className="ad-info-val">Timed</div>
-                <div className="ad-info-lbl">Each assessment is timed</div>
+                <div className="ad-info-val">{stats ? `${stats.avg_percent}%` : '—'}</div>
+                <div className="ad-info-lbl">Average score</div>
               </div>
             </div>
             <div className="ad-info-card">
-              <span className="ad-info-icon">📝</span>
+              <span className="ad-info-icon">🚀</span>
               <div>
-                <div className="ad-info-val">MCQs</div>
-                <div className="ad-info-lbl">Multiple choice format</div>
+                <div className="ad-info-val">{stats ? `${stats.best_percent}%` : '—'}</div>
+                <div className="ad-info-lbl">Best score</div>
               </div>
             </div>
             <div className="ad-info-card">
               <span className="ad-info-icon">🎓</span>
               <div>
-                <div className="ad-info-val">Certificate</div>
-                <div className="ad-info-lbl">On successful completion</div>
+                <div className="ad-info-val">{stats ? stats.certificates : '—'}</div>
+                <div className="ad-info-lbl">Certificates earned</div>
               </div>
             </div>
             <div className="ad-info-card">
-              <span className="ad-info-icon">🔁</span>
+              <span className="ad-info-icon">🏆</span>
               <div>
-                <div className="ad-info-val">Retake</div>
-                <div className="ad-info-lbl">Allowed on failed attempts</div>
+                <div className="ad-info-val">{stats && stats.rank ? `#${stats.rank}` : '—'}</div>
+                <div className="ad-info-lbl">{stats && stats.rank ? `Rank of ${stats.total_participants}` : 'Leaderboard rank'}</div>
               </div>
             </div>
           </div>

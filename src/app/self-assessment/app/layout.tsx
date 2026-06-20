@@ -2,6 +2,9 @@
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
+import ProfileModal, { AssessProfile } from './ProfileModal';
+
+const API_BASE = 'https://api.easycoders.in/projects/backend/public/api';
 
 export default function AssessmentAppLayout({
   children,
@@ -13,12 +16,26 @@ export default function AssessmentAppLayout({
   const [collapsed, setCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [profile, setProfile] = useState<AssessProfile>({});
+  const [profileOpen, setProfileOpen] = useState(false);
 
   /* Auth guard */
   useEffect(() => {
     const user = localStorage.getItem('assessment_user');
     if (!user) router.replace('/self-assessment/login');
   }, [router]);
+
+  /* Load the signed-in taker's profile (name + avatar) for the sidebar. */
+  useEffect(() => {
+    const token = localStorage.getItem('assessment_token');
+    if (!token) return;
+    const storedName = localStorage.getItem('logged_in_user') || '';
+    if (storedName) setProfile((p) => ({ ...p, name: storedName }));
+    fetch(`${API_BASE}/assessment/me`, { headers: { Authorization: `Bearer ${token}` } })
+      .then((r) => r.json())
+      .then((d) => { if (d?.data) setProfile(d.data); })
+      .catch(() => {});
+  }, []);
 
   /* Track mobile breakpoint */
   useEffect(() => {
@@ -112,9 +129,18 @@ export default function AssessmentAppLayout({
         .aa-sidebar::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 220px; background: radial-gradient(ellipse 140% 100% at 50% 0%, rgba(99,102,241,0.18) 0%, transparent 70%); pointer-events: none; z-index: 0; }
 
         /* ── LOGO ── */
-        .aa-logo-wrap { padding: 16px 14px 6px; position: relative; z-index: 1; flex-shrink: 0; }
-        .aa-logo-card { background: #fff; border-radius: 13px; padding: 11px 13px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(0,0,0,0.25); }
-        .aa-sidebar.collapsed .aa-logo-card { padding: 8px; }
+        .aa-logo-wrap { padding: 14px 12px 8px; position: relative; z-index: 1; flex-shrink: 0; }
+        .aa-brand-mini { display: inline-flex; background: #fff; border-radius: 9px; padding: 5px 10px; margin-bottom: 12px; box-shadow: 0 3px 10px rgba(0,0,0,0.22); }
+        .aa-brand-mini img { height: 20px; width: auto; display: block; }
+        .aa-profile { display: flex; align-items: center; gap: 11px; width: 100%; padding: 9px 10px; border-radius: 13px; border: 1px solid rgba(255,255,255,0.09); background: rgba(255,255,255,0.05); cursor: pointer; transition: background .16s, border-color .16s; text-align: left; font-family: inherit; }
+        .aa-profile:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.18); }
+        .aa-profile-avatar { width: 40px; height: 40px; border-radius: 50%; overflow: hidden; flex-shrink: 0; background: linear-gradient(135deg,#7c3aed,#4f46e5); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 14px; font-weight: 800; }
+        .aa-profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .aa-profile-meta { display: flex; flex-direction: column; min-width: 0; }
+        .aa-profile-name { font-size: 13.5px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 130px; }
+        .aa-profile-link { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 1px; }
+        .aa-sidebar.collapsed .aa-logo-wrap { padding: 14px 0 8px; display: flex; justify-content: center; }
+        .aa-sidebar.collapsed .aa-profile { justify-content: center; padding: 6px; width: auto; }
 
         /* ── NAV ── */
         .aa-nav { flex: 1; display: flex; flex-direction: column; gap: 3px; padding: 16px 10px 8px; position: relative; z-index: 1; overflow-y: auto; overflow-x: hidden; }
@@ -192,15 +218,26 @@ export default function AssessmentAppLayout({
 
         {/* SIDEBAR */}
         <aside className={['aa-sidebar', !isMobile && collapsed ? 'collapsed' : '', isMobile && mobileOpen ? 'mobile-open' : ''].filter(Boolean).join(' ')}>
-          {/* Logo */}
+          {/* Brand + profile */}
           <div className="aa-logo-wrap">
-            <div className="aa-logo-card">
-              <img
-                src={(!isMobile && collapsed) ? '/images/easyassess-mark.png' : '/images/easyassess-wordmark.png'}
-                alt="EasyAssess"
-                style={{ height: (!isMobile && collapsed) ? 32 : 40, width: 'auto', maxWidth: '100%', objectFit: 'contain', display: 'block' }}
-              />
-            </div>
+            {!(!isMobile && collapsed) && (
+              <div className="aa-brand-mini">
+                <img src="/images/easyassess-wordmark.png" alt="EasyAssess" />
+              </div>
+            )}
+            <button className="aa-profile" onClick={() => setProfileOpen(true)} title="My profile">
+              <span className="aa-profile-avatar">
+                {(profile.avatar_thumb_url || profile.avatar_url)
+                  ? <img src={profile.avatar_thumb_url || profile.avatar_url || ''} alt={profile.name || 'Me'} />
+                  : <span>{(profile.name || 'Me').split(' ').map(n => n[0]).filter(Boolean).join('').slice(0, 2).toUpperCase() || 'ME'}</span>}
+              </span>
+              {!(!isMobile && collapsed) && (
+                <span className="aa-profile-meta">
+                  <span className="aa-profile-name">{profile.name || 'My account'}</span>
+                  <span className="aa-profile-link">View profile</span>
+                </span>
+              )}
+            </button>
           </div>
 
           {/* Nav */}
@@ -236,6 +273,12 @@ export default function AssessmentAppLayout({
         {/* MAIN */}
         <main className="aa-main">{children}</main>
       </div>
+
+      <ProfileModal
+        open={profileOpen}
+        onClose={() => setProfileOpen(false)}
+        onSaved={(p) => setProfile(p)}
+      />
     </>
   );
 }

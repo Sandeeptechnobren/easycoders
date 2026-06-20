@@ -6,20 +6,36 @@ import Loader from '../../../loader/page';
 export default function LeaderboardPage() {
   const [leaders, setLeaders] = useState([]);
   const [userStats, setUserStats] = useState(null);
+  const [assessments, setAssessments] = useState([]);
+  const [selected, setSelected] = useState('');     // 'overall' or an assessment id (string)
+  const [mode, setMode] = useState('assessment');
   const [loading, setLoading] = useState(true);
+  const [switching, setSwitching] = useState(false);
 
-  useEffect(() => {
+  const fetchBoard = (assessmentId, isInitial) => {
     const token = localStorage.getItem('assessment_token');
-    api.get('/leaderBoard/list', {
-      headers: { Authorization: `Bearer ${token}` }
-    })
+    isInitial ? setLoading(true) : setSwitching(true);
+    const params = assessmentId ? { assessment_id: assessmentId } : {};
+    api.get('/leaderBoard/list', { headers: { Authorization: `Bearer ${token}` }, params })
       .then(res => {
-        setLeaders(res.data.data || []);
-        setUserStats(res.data.user_stats);
+        const d = res.data || {};
+        setLeaders(d.data || []);
+        setUserStats(d.user_stats || null);
+        setMode(d.mode || 'assessment');
+        if (Array.isArray(d.assessments)) setAssessments(d.assessments);
+        setSelected(
+          assessmentId
+            || (d.selected_assessment_id ? String(d.selected_assessment_id) : null)
+            || (d.default_assessment_id ? String(d.default_assessment_id) : 'overall')
+        );
       })
       .catch(err => console.error('Leaderboard error:', err))
-      .finally(() => setLoading(false));
-  }, []);
+      .finally(() => { setLoading(false); setSwitching(false); });
+  };
+
+  useEffect(() => { fetchBoard(undefined, true); }, []);
+
+  const onSelect = (e) => { const v = e.target.value; setSelected(v); fetchBoard(v, false); };
 
   const topThree = leaders.slice(0, 3);
   const others = leaders.slice(3);
@@ -31,6 +47,13 @@ export default function LeaderboardPage() {
   function initials(name) {
     return name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || '?';
   }
+  const scoreText = (item) => mode === 'overall' ? `${item.points} pts` : `${item.best_percent}%`;
+  const metaText = (item) => mode === 'overall'
+    ? `${item.assessments} ${item.assessments === 1 ? 'assessment' : 'assessments'} · avg ${item.avg_percent}% · best ${item.best_percent}%`
+    : 'best score';
+  const avatarNode = (item) => (item?.user?.avatar_thumb_url
+    ? <img src={item.user.avatar_thumb_url} alt={item.user?.name || ''} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+    : <span>{initials(item?.user?.name)}</span>);
 
   if (loading) return <Loader />;
 
@@ -48,7 +71,15 @@ export default function LeaderboardPage() {
               Live Rankings
             </div>
             <h1 className="lb-hero-title">Hall of Fame</h1>
-            <p className="lb-hero-sub">Top performers — ranked by total performance points across all assessments.</p>
+            <p className="lb-hero-sub">{mode === 'overall' ? 'Top performers — ranked across all assessments.' : 'Top performers on the selected assessment.'}</p>
+            <div style={{ marginTop: 18, display: 'inline-flex', alignItems: 'center', gap: 10, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.16)', borderRadius: 12, padding: '8px 12px', flexWrap: 'wrap', justifyContent: 'center' }}>
+              <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: '.07em' }}>Assessment</span>
+              <select value={selected} onChange={onSelect} disabled={switching}
+                style={{ background: '#0f172a', color: '#fff', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 8, padding: '8px 12px', fontSize: 13, fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer', maxWidth: 320, opacity: switching ? 0.6 : 1 }}>
+                <option value="overall">Overall (all assessments)</option>
+                {assessments.map(a => <option key={a.id} value={String(a.id)}>{a.title}</option>)}
+              </select>
+            </div>
           </div>
         </div>
 
@@ -66,14 +97,14 @@ export default function LeaderboardPage() {
                   return (
                     <div key={item.id} className={`lb-podium-item rank-${rank}`}>
                       {isFirst && <div className="lb-crown-icon">👑</div>}
-                      <div className="lb-podium-avatar" style={{ borderColor: medalColors[origIdx] }}>
-                        <span>{initials(item.user?.name)}</span>
+                      <div className="lb-podium-avatar" style={{ borderColor: medalColors[origIdx], overflow: 'hidden' }}>
+                        {avatarNode(item)}
                       </div>
                       <div className="lb-podium-name">{item.user?.name}</div>
                       <div className="lb-podium-score" style={{ color: medalColors[origIdx] }}>
-                        {item.points} pts
+                        {scoreText(item)}
                       </div>
-                      <div className="lb-podium-meta">{item.assessments} {item.assessments === 1 ? 'test' : 'tests'} · avg {item.avg_percent}%</div>
+                      <div className="lb-podium-meta">{mode === 'overall' ? `${item.assessments} ${item.assessments === 1 ? 'test' : 'tests'} · avg ${item.avg_percent}%` : 'best score'}</div>
                       <div className="lb-podium-block" style={{ background: medalColors[origIdx], height: isFirst ? 90 : origIdx === 1 ? 64 : 48 }}>
                         <span className="lb-podium-rank">{medalLabels[origIdx]}</span>
                       </div>
@@ -98,14 +129,14 @@ export default function LeaderboardPage() {
                   <div className="lb-row-rank" style={{ color: medalColors[i] }}>
                     <span className="lb-medal" style={{ background: medalColors[i] }}>{item.rank ?? i + 1}</span>
                   </div>
-                  <div className="lb-row-avatar" style={{ background: medalColors[i] + '22', color: medalColors[i] }}>
-                    {initials(item.user?.name)}
+                  <div className="lb-row-avatar" style={{ background: medalColors[i] + '22', color: medalColors[i], overflow: 'hidden' }}>
+                    {avatarNode(item)}
                   </div>
                   <div className="lb-row-info">
                     <span className="lb-row-name">{item.user?.name}</span>
-                    <span className="lb-row-meta">{item.assessments} {item.assessments === 1 ? 'assessment' : 'assessments'} · avg {item.avg_percent}% · best {item.best_percent}%</span>
+                    <span className="lb-row-meta">{metaText(item)}</span>
                   </div>
-                  <div className="lb-row-score" style={{ color: medalColors[i] }}>{item.points} pts</div>
+                  <div className="lb-row-score" style={{ color: medalColors[i] }}>{scoreText(item)}</div>
                 </div>
               ))}
 
@@ -122,19 +153,19 @@ export default function LeaderboardPage() {
                   <div className="lb-row-rank">
                     <span className="lb-rank-num">#{item.rank ?? i + 4}</span>
                   </div>
-                  <div className="lb-row-avatar">
-                    {initials(item.user?.name)}
+                  <div className="lb-row-avatar" style={{ overflow: 'hidden' }}>
+                    {avatarNode(item)}
                   </div>
                   <div className="lb-row-info">
                     <span className="lb-row-name">{item.user?.name}</span>
-                    <span className="lb-row-meta">{item.assessments} {item.assessments === 1 ? 'assessment' : 'assessments'} · avg {item.avg_percent}% · best {item.best_percent}%</span>
+                    <span className="lb-row-meta">{metaText(item)}</span>
                   </div>
-                  <div className="lb-row-score">{item.points} pts</div>
+                  <div className="lb-row-score">{scoreText(item)}</div>
                 </div>
               ))}
 
               {leaders.length === 0 && (
-                <div className="lb-empty">No rankings yet — be the first to complete an assessment.</div>
+                <div className="lb-empty">No rankings yet — be the first to complete this assessment.</div>
               )}
             </div>
 
@@ -143,14 +174,14 @@ export default function LeaderboardPage() {
               <div className="lb-my-stat">
                 <div className="lb-my-stat-inner">
                   <div className="lb-my-label">{userStats.rank ? `#${userStats.rank}` : '—'}</div>
-                  <div className="lb-row-avatar lb-my-avatar">
-                    {initials(userStats.user?.name || 'Me')}
+                  <div className="lb-row-avatar lb-my-avatar" style={{ overflow: 'hidden' }}>
+                    {avatarNode(userStats)}
                   </div>
                   <div className="lb-row-info">
                     <span className="lb-row-name">You{userStats.rank && userStats.total_participants ? ` · rank ${userStats.rank} of ${userStats.total_participants}` : ''}</span>
-                    <span className="lb-row-meta">{userStats.assessments} {userStats.assessments === 1 ? 'assessment' : 'assessments'} · avg {userStats.avg_percent}% · best {userStats.best_percent}%</span>
+                    <span className="lb-row-meta">{metaText(userStats)}</span>
                   </div>
-                  <div className="lb-my-score">{userStats.points} pts</div>
+                  <div className="lb-my-score">{scoreText(userStats)}</div>
                 </div>
               </div>
             )}
