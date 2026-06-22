@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback, useRef } from 'react';
+import Link from 'next/link';
 import RoleGuard from '@/components/RoleGuard';
 import { fetchWithAuth } from '@/lib/api';
 import { CODING_LANG_LIST } from '@/lib/codingLangs';
@@ -49,10 +50,6 @@ type QForm = {
   languages: string[];
   starter_code: string;
   test_cases: { stdin: string; expected_output: string; is_hidden: boolean; weight: string }[];
-};
-
-const statusColor: Record<string, string> = {
-  draft: 'bg-warning text-dark', published: 'bg-success', archived: 'bg-secondary',
 };
 
 export default function AssessmentsPage() {
@@ -406,54 +403,77 @@ export default function AssessmentsPage() {
           {loading ? (
             <div className="text-center py-5 text-muted">Loading...</div>
           ) : (
-            <div className="row g-3">
-              {assessments.length === 0 ? (
-                <div className="card p-5 text-center text-muted">No assessments yet.</div>
-              ) : assessments.map(a => (
-                <div key={a.id} className="col-md-6 col-xl-4">
-                  <div className="card h-100">
-                    <div className="card-body">
-                      <div className="d-flex justify-content-between align-items-start mb-2">
-                        <h5 className="card-title mb-0">{a.title}</h5>
-                        <span className={`badge ${statusColor[a.status] || 'bg-secondary'}`}>{a.status}</span>
-                      </div>
-                      <div className="d-flex flex-wrap gap-2 mb-3">
-                        <span className={`badge ${a.is_paid ? 'bg-warning text-dark' : 'bg-success'}`}>
-                          {a.is_paid ? `Paid ₹${a.amount}` : 'Free'}
-                        </span>
-                        <span className="badge bg-light text-dark border">{a.questions_count ?? 0} Questions</span>
-                        <span className="badge bg-light text-dark border">Pass: {a.passing_score ?? 40}%</span>
-                        {a.duration_minutes && <span className="badge bg-light text-dark border">{a.duration_minutes} min</span>}
-                      </div>
-                      <div className="small text-muted mb-3">
-                        {a.max_attempts ? <span className="me-2">Max attempts: {a.max_attempts}</span> : null}
-                        {a.retake_wait_hours ? <span>Wait: {a.retake_wait_hours}h</span> : null}
-                        {a.expiry_date ? <div>Expires: {a.expiry_date.slice(0, 10)}</div> : null}
-                      </div>
-                      <div className="form-check form-switch mb-3">
-                        <input className="form-check-input" type="checkbox" role="switch"
-                          id={`pub-${a.id}`} style={{ cursor: 'pointer' }}
-                          checked={a.status === 'published'}
-                          disabled={togglingId === a.id}
-                          onChange={() => toggleStatus(a)} />
-                        <label className="form-check-label small" htmlFor={`pub-${a.id}`} style={{ cursor: 'pointer' }}>
-                          {togglingId === a.id
-                            ? 'Updating…'
-                            : a.status === 'published'
-                              ? 'Active — visible to students'
-                              : 'Inactive — hidden from students'}
-                        </label>
-                      </div>
-                      <div className="d-flex gap-2 flex-wrap">
-                        <button className="btn btn-sm btn-outline-primary" onClick={() => openEdit(a)}>Edit</button>
-                        <button className="btn btn-sm btn-outline-secondary" onClick={() => openQuestions(a)}>Questions</button>
-                        <button className="btn btn-sm btn-outline-danger" onClick={() => deleteAssess(a.id)}>Delete</button>
+            <>
+              <style>{`
+                .ax-card { background:#fff; border:1px solid #e7ecf3; border-radius:16px; height:100%; display:flex; flex-direction:column; overflow:hidden; transition:box-shadow .18s ease, transform .18s ease, border-color .18s ease; }
+                .ax-card:hover { box-shadow:0 12px 30px rgba(11,27,58,0.1); transform:translateY(-2px); border-color:#d6deea; }
+                .ax-accent { height:4px; }
+                .ax-accent.published { background:#16a34a; } .ax-accent.draft { background:#E8A020; } .ax-accent.archived { background:#94a3b8; }
+                .ax-body { padding:18px 18px 16px; display:flex; flex-direction:column; flex:1; }
+                .ax-top { display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:12px; }
+                .ax-title { font-size:16px; font-weight:800; color:#0B1B3A; margin:0; line-height:1.3; }
+                .ax-status { font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; padding:3px 10px; border-radius:100px; white-space:nowrap; }
+                .ax-status.published { background:#dcfce7; color:#15803d; } .ax-status.draft { background:#fef3c7; color:#92590b; } .ax-status.archived { background:#f1f5f9; color:#64748b; }
+                .ax-chips { display:flex; flex-wrap:wrap; gap:7px; margin-bottom:12px; }
+                .ax-chip { font-size:12px; font-weight:600; padding:4px 10px; border-radius:8px; background:#f1f5f9; color:#475569; border:1px solid #e7ecf3; }
+                .ax-chip.paid { background:#fef3c7; color:#92590b; border-color:#fde68a; } .ax-chip.free { background:#dcfce7; color:#15803d; border-color:#bbf7d0; }
+                .ax-meta { font-size:12.5px; color:#94a3b8; display:flex; flex-wrap:wrap; gap:4px 14px; margin-bottom:14px; }
+                .ax-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:auto; }
+                .ax-btn { font-size:13px; font-weight:700; padding:8px 14px; border-radius:9px; cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; gap:5px; border:1px solid transparent; transition:filter .15s ease, background .15s ease; }
+                .ax-edit { background:#eef2ff; color:#4338ca; border-color:#c7d2fe; } .ax-edit:hover { background:#e0e7ff; }
+                .ax-ghost { background:#fff; color:#334155; border-color:#d8dee9; } .ax-ghost:hover { background:#f1f5f9; }
+                .ax-stats { background:#0B1B3A; color:#fff; } .ax-stats:hover { filter:brightness(1.18); color:#fff; }
+                .ax-del { background:#fff; color:#dc2626; border-color:#fecaca; } .ax-del:hover { background:#fef2f2; }
+              `}</style>
+              <div className="row g-3">
+                {assessments.length === 0 ? (
+                  <div className="card p-5 text-center text-muted">No assessments yet.</div>
+                ) : assessments.map(a => (
+                  <div key={a.id} className="col-md-6 col-xl-4">
+                    <div className="ax-card">
+                      <div className={`ax-accent ${a.status}`} />
+                      <div className="ax-body">
+                        <div className="ax-top">
+                          <h5 className="ax-title">{a.title}</h5>
+                          <span className={`ax-status ${a.status}`}>{a.status}</span>
+                        </div>
+                        <div className="ax-chips">
+                          <span className={`ax-chip ${a.is_paid ? 'paid' : 'free'}`}>{a.is_paid ? `Paid ₹${a.amount}` : 'Free'}</span>
+                          <span className="ax-chip">{a.questions_count ?? 0} Questions</span>
+                          <span className="ax-chip">Pass {a.passing_score ?? 40}%</span>
+                          {a.duration_minutes ? <span className="ax-chip">{a.duration_minutes} min</span> : null}
+                        </div>
+                        <div className="ax-meta">
+                          {a.max_attempts ? <span>Max attempts: {a.max_attempts}</span> : null}
+                          {a.retake_wait_hours ? <span>Wait: {a.retake_wait_hours}h</span> : null}
+                          {a.expiry_date ? <span>Expires: {a.expiry_date.slice(0, 10)}</span> : null}
+                        </div>
+                        <div className="form-check form-switch mb-3">
+                          <input className="form-check-input" type="checkbox" role="switch"
+                            id={`pub-${a.id}`} style={{ cursor: 'pointer' }}
+                            checked={a.status === 'published'}
+                            disabled={togglingId === a.id}
+                            onChange={() => toggleStatus(a)} />
+                          <label className="form-check-label small" htmlFor={`pub-${a.id}`} style={{ cursor: 'pointer' }}>
+                            {togglingId === a.id
+                              ? 'Updating…'
+                              : a.status === 'published'
+                                ? 'Active — visible to students'
+                                : 'Inactive — hidden from students'}
+                          </label>
+                        </div>
+                        <div className="ax-actions">
+                          <button className="ax-btn ax-edit" onClick={() => openEdit(a)}>Edit</button>
+                          <button className="ax-btn ax-ghost" onClick={() => openQuestions(a)}>Questions</button>
+                          <Link href={`/admin/assessments/${a.id}/stats`} className="ax-btn ax-stats">Statistics</Link>
+                          <button className="ax-btn ax-del" onClick={() => deleteAssess(a.id)}>Delete</button>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            </>
           )}
         </div>
       </div>
