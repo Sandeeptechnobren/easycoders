@@ -191,11 +191,22 @@ export default function AdminTasksPage() {
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return tasks.filter(t =>
-      (!typeFilter || t.task_type === typeFilter) &&
-      (!catFilter || String(t.category?.id ?? t.category_id ?? '') === catFilter) &&
-      (!q || t.title.toLowerCase().includes(q) || (t.category?.name || '').toLowerCase().includes(q))
-    );
+    return tasks
+      .filter(t =>
+        (!typeFilter || t.task_type === typeFilter) &&
+        (!catFilter || String(t.category?.id ?? t.category_id ?? '') === catFilter) &&
+        (!q || t.title.toLowerCase().includes(q) || (t.category?.name || '').toLowerCase().includes(q))
+      )
+      // Surface tasks that actually have submissions first, so the Submissions
+      // feature is visibly active. Unassigned library templates (zero
+      // submissions) sink to the bottom. Array.sort is stable, so the backend's
+      // curated order is preserved within each group; ties among submitted
+      // tasks fall back to most-active first.
+      .sort((a, b) => {
+        const sa = a.submissions_count ?? 0, sb = b.submissions_count ?? 0;
+        if ((sa > 0) !== (sb > 0)) return sb > 0 ? 1 : -1;
+        return sb - sa;
+      });
   }, [tasks, query, typeFilter, catFilter]);
 
   return (
@@ -244,7 +255,7 @@ export default function AdminTasksPage() {
                 <div key={t.id} className={styles.card}>
                   <div className={styles.cardTop}>
                     <h3 className={styles.title}>{t.title}</h3>
-                    <span className={styles.subCount} title="Submissions">{t.submissions_count ?? 0}</span>
+                    <span className={`${styles.subCount} ${(t.submissions_count ?? 0) === 0 ? styles.subCountZero : ''}`} title="Submissions">{t.submissions_count ?? 0}</span>
                   </div>
                   {t.category?.name && <div className={styles.cat}>{t.category.name}</div>}
                   <div className={styles.desc}>{t.description}</div>
@@ -257,7 +268,7 @@ export default function AdminTasksPage() {
                     <span className={styles.metaKey}>Batches:</span>
                     {(t.batches || []).length
                       ? <span className={styles.batchChips}>{t.batches!.map(b => <span key={b.id} className={styles.batchChip}>{b.name}</span>)}</span>
-                      : <span style={{ color: '#94A3B8' }}>none</span>}
+                      : <span className={styles.unassigned} title="Not assigned to any batch — no students can submit it yet">Unassigned</span>}
                   </div>
                   {due && <div className={`${styles.due} ${isOverdue(t.due_date) ? styles.overdue : ''}`}>Due {due}{isOverdue(t.due_date) ? ' · overdue' : ''}</div>}
                   <div className={styles.actions}>
