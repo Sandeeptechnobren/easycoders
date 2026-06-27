@@ -58,11 +58,9 @@ export default function AssessmentStatsPage() {
   const load = useCallback(async () => {
     setLoading(true); setErr('');
     try {
-      const res = await fetchWithAuth(`${BASE}/assessment/admin/${id}/attempts`);
-      const d = await res.json();
-      if (!res.ok) throw new Error(d?.message || 'Failed to load statistics.');
-      setSummary(d.summary || null);
-      setRoster(Array.isArray(d.data) ? d.data : []);
+      const d = await fetchWithAuth(`${BASE}/assessment/admin/${id}/attempts`);
+      setSummary(d?.summary || null);
+      setRoster(Array.isArray(d?.data) ? d.data : []);
     } catch (e) {
       setErr(e instanceof Error ? e.message : 'Failed to load statistics.');
     } finally { setLoading(false); }
@@ -74,9 +72,8 @@ export default function AssessmentStatsPage() {
     setOpenAttempt(attemptId); setDetail(null); setDetailLoading(true);
     setGradeDraft({}); setGradeNote({}); setReportMsg('');
     try {
-      const res = await fetchWithAuth(`${BASE}/assessment/admin/attempts/${attemptId}/detail`);
-      const d = await res.json();
-      if (res.ok) setDetail(d.data);
+      const d = await fetchWithAuth(`${BASE}/assessment/admin/attempts/${attemptId}/detail`);
+      setDetail(d?.data ?? null);
     } catch { /* ignore */ } finally { setDetailLoading(false); }
   };
 
@@ -94,11 +91,9 @@ export default function AssessmentStatsPage() {
     }
     setSavingGradeId(aid); setGradeNote((m) => ({ ...m, [aid]: '' }));
     try {
-      const res = await fetchWithAuth(`${BASE}/assessment/admin/coding-submissions/${aid}/grade`, {
+      const d = await fetchWithAuth(`${BASE}/assessment/admin/coding-submissions/${aid}/grade`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ marks_awarded: val }),
       });
-      const d = await res.json();
-      if (!res.ok) throw new Error(d?.message || 'Could not save the grade.');
       const newScore = typeof d?.data?.attempt_score === 'number' ? d.data.attempt_score : null;
       setDetail((prev) => {
         if (!prev) return prev;
@@ -123,9 +118,7 @@ export default function AssessmentStatsPage() {
     if (openAttempt === null) return;
     setSendingReport(true); setReportMsg('');
     try {
-      const res = await fetchWithAuth(`${BASE}/assessment/admin/attempts/${openAttempt}/send-report`, { method: 'POST' });
-      const d = await res.json();
-      if (!res.ok) throw new Error(d?.message || 'Could not send the report.');
+      const d = await fetchWithAuth(`${BASE}/assessment/admin/attempts/${openAttempt}/send-report`, { method: 'POST' });
       setReportMsg(d?.message || 'Report sent.');
     } catch (e) {
       setReportMsg(e instanceof Error ? e.message : 'Could not send the report.');
