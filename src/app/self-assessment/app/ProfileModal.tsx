@@ -20,10 +20,16 @@ export type AssessProfile = {
   year?: string;
   avatar_url?: string | null;
   avatar_thumb_url?: string | null;
+  parent_name?: string;
+  parent_phone?: string;
+  parent_email?: string;
+  is_easycoders_student?: boolean;
+  requires_parent_contact?: boolean;
 };
 
 const TEXT_FIELDS: (keyof AssessProfile)[] = [
   'name', 'phone', 'address', 'city', 'state', 'country', 'postal_code', 'gender', 'date_of_birth', 'course', 'year',
+  'parent_name', 'parent_phone', 'parent_email',
 ];
 
 function initialsOf(name?: string) {
@@ -209,6 +215,24 @@ export default function ProfileModal({
               <span>Postal code</span>
               <input value={form.postal_code || ''} onChange={set('postal_code')} placeholder="PIN / ZIP" />
             </label>
+
+            {form.is_easycoders_student && (
+              <>
+                <div className="pm-section pm-col2">Parent / Guardian contact</div>
+                <label className="pm-field">
+                  <span>Parent / guardian name</span>
+                  <input value={form.parent_name || ''} onChange={set('parent_name')} placeholder="Full name" />
+                </label>
+                <label className="pm-field">
+                  <span>Parent / guardian phone</span>
+                  <input value={form.parent_phone || ''} onChange={set('parent_phone')} placeholder="Phone number" />
+                </label>
+                <label className="pm-field pm-col2">
+                  <span>Parent / guardian email</span>
+                  <input value={form.parent_email || ''} onChange={set('parent_email')} placeholder="name@example.com" />
+                </label>
+              </>
+            )}
           </div>
           {loading && <div className="pm-loading">Loading your profile…</div>}
         </div>
@@ -241,6 +265,7 @@ export default function ProfileModal({
         .pm-error { background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; font-size: 13px; padding: 10px 14px; border-radius: 10px; margin-bottom: 16px; }
         .pm-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
         .pm-col2 { grid-column: 1 / -1; }
+        .pm-section { font-size: 11px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; color: #6366f1; margin: 6px 0 -4px; }
         .pm-field { display: flex; flex-direction: column; gap: 6px; }
         .pm-field > span { font-size: 12px; font-weight: 700; color: #475569; }
         .pm-field input, .pm-field select { border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 12px; font-size: 14px; color: #0f172a; font-family: inherit; background: #fff; transition: border-color .15s, box-shadow .15s; }

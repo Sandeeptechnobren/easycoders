@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import ProfileModal, { AssessProfile } from './ProfileModal';
+import ParentContactModal from './ParentContactModal';
 
 const API_BASE = 'https://api.easycoders.in/projects/backend/public/api';
 
@@ -292,6 +293,14 @@ export default function AssessmentAppLayout({
         open={profileOpen}
         onClose={() => setProfileOpen(false)}
         onSaved={(p) => setProfile(p)}
+      />
+
+      {/* Enrolled EasyCoders students must add parent contact before continuing. */}
+      <ParentContactModal
+        open={!!profile.requires_parent_contact}
+        initial={profile}
+        onSaved={(p) => setProfile((prev) => ({ ...prev, ...p, requires_parent_contact: false }))}
+        onLogout={handleLogout}
       />
     </>
   );

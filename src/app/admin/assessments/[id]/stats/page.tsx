@@ -20,7 +20,7 @@ type Summary = {
   qualified: number; avg_percent: number; best_percent: number;
 };
 type DetailQ = {
-  question_id: number; question_text: string; type: string; marks: number;
+  question_id: number; answer_id?: number | null; question_text: string; type: string; marks: number;
   marks_awarded: number | null; is_correct: boolean | null; answered: boolean;
   code?: string | null; language?: string | null; code_grading?: string; run_meta?: Record<string, unknown>;
   options?: { id: number; text: string; is_correct: boolean }[];
@@ -49,6 +49,12 @@ export default function AssessmentStatsPage() {
   const [detail, setDetail] = useState<Detail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
 
+  const [gradeDraft, setGradeDraft] = useState<Record<number, string>>({});
+  const [gradeNote, setGradeNote] = useState<Record<number, string>>({});
+  const [savingGradeId, setSavingGradeId] = useState<number | null>(null);
+  const [sendingReport, setSendingReport] = useState(false);
+  const [reportMsg, setReportMsg] = useState('');
+
   const load = useCallback(async () => {
     setLoading(true); setErr('');
     try {
@@ -66,6 +72,7 @@ export default function AssessmentStatsPage() {
 
   const openDetail = async (attemptId: number) => {
     setOpenAttempt(attemptId); setDetail(null); setDetailLoading(true);
+    setGradeDraft({}); setGradeNote({}); setReportMsg('');
     try {
       const res = await fetchWithAuth(`${BASE}/assessment/admin/attempts/${attemptId}/detail`);
       const d = await res.json();
@@ -73,7 +80,59 @@ export default function AssessmentStatsPage() {
     } catch { /* ignore */ } finally { setDetailLoading(false); }
   };
 
-  const closeDetail = () => { setOpenAttempt(null); setDetail(null); };
+  const closeDetail = () => { setOpenAttempt(null); setDetail(null); setReportMsg(''); };
+
+  // Manually score a coding answer (auto-graded answers can also be overridden).
+  const saveGrade = async (q: DetailQ) => {
+    if (!q.answer_id) return;
+    const aid = q.answer_id, max = q.marks;
+    const raw = gradeDraft[aid] ?? (q.marks_awarded != null ? String(q.marks_awarded) : '');
+    const val = Number(raw);
+    if (raw === '' || Number.isNaN(val) || val < 0 || val > max) {
+      setGradeNote((m) => ({ ...m, [aid]: `Enter marks between 0 and ${max}.` }));
+      return;
+    }
+    setSavingGradeId(aid); setGradeNote((m) => ({ ...m, [aid]: '' }));
+    try {
+      const res = await fetchWithAuth(`${BASE}/assessment/admin/coding-submissions/${aid}/grade`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ marks_awarded: val }),
+      });
+      const d = await res.json();
+      if (!res.ok) throw new Error(d?.message || 'Could not save the grade.');
+      const newScore = typeof d?.data?.attempt_score === 'number' ? d.data.attempt_score : null;
+      setDetail((prev) => {
+        if (!prev) return prev;
+        const score = newScore ?? prev.attempt.score;
+        const percent = prev.attempt.total_marks > 0 ? Math.round((score / prev.attempt.total_marks) * 100) : prev.attempt.percent;
+        return {
+          ...prev,
+          attempt: { ...prev.attempt, score, percent, qualified: prev.attempt.status === 'completed' && percent >= prev.attempt.passing_score },
+          questions: prev.questions.map((qq) => (qq.answer_id === aid ? { ...qq, marks_awarded: val } : qq)),
+        };
+      });
+      setGradeNote((m) => ({ ...m, [aid]: 'Saved ✓' }));
+      load(); // keep the roster scores in sync
+    } catch (e) {
+      setGradeNote((m) => ({ ...m, [aid]: e instanceof Error ? e.message : 'Could not save.' }));
+    } finally {
+      setSavingGradeId(null);
+    }
+  };
+
+  const sendReport = async () => {
+    if (openAttempt === null) return;
+    setSendingReport(true); setReportMsg('');
+    try {
+      const res = await fetchWithAuth(`${BASE}/assessment/admin/attempts/${openAttempt}/send-report`, { method: 'POST' });
+      const d = await res.json();
+      if (!res.ok) throw new Error(d?.message || 'Could not send the report.');
+      setReportMsg(d?.message || 'Report sent.');
+    } catch (e) {
+      setReportMsg(e instanceof Error ? e.message : 'Could not send the report.');
+    } finally {
+      setSendingReport(false);
+    }
+  };
 
   const stat = (label: string, value: React.ReactNode) => (
     <div className="st-metric"><div className="st-metric-val">{value}</div><div className="st-metric-lbl">{label}</div></div>
@@ -191,6 +250,23 @@ export default function AssessmentStatsPage() {
                               {q.code_grading === 'manual' && <span className="st-tag">manual review</span>}
                             </div>
                             <pre className="st-code">{q.code}</pre>
+                            {q.answer_id != null && (
+                              <div className="st-grade">
+                                <span className="st-grade-lbl">{q.code_grading === 'manual' ? 'Assign marks' : 'Override marks'}</span>
+                                <input
+                                  className="st-grade-input" type="number" min={0} max={q.marks} step={1}
+                                  value={gradeDraft[q.answer_id] ?? (q.marks_awarded != null ? String(q.marks_awarded) : '')}
+                                  onChange={(e) => setGradeDraft((m) => ({ ...m, [q.answer_id as number]: e.target.value }))}
+                                />
+                                <span className="st-grade-max">/ {q.marks}</span>
+                                <button className="st-grade-save" onClick={() => saveGrade(q)} disabled={savingGradeId === q.answer_id}>
+                                  {savingGradeId === q.answer_id ? 'Saving…' : 'Save'}
+                                </button>
+                                {gradeNote[q.answer_id] && (
+                                  <span className={`st-grade-note ${gradeNote[q.answer_id] === 'Saved ✓' ? 'ok' : 'err'}`}>{gradeNote[q.answer_id]}</span>
+                                )}
+                              </div>
+                            )}
                           </>
                         ) : <div className="st-noanswer">No code submitted.</div>
                       ) : (
@@ -213,6 +289,20 @@ export default function AssessmentStatsPage() {
                   ))
                 )}
               </div>
+
+              {detail && (
+                <div className="st-modal-foot">
+                  <div className="st-foot-info">
+                    Email this result to the student{detail.student.email ? ` (${detail.student.email})` : ''} and their parent / guardian.
+                  </div>
+                  <div className="st-foot-actions">
+                    {reportMsg && <span className="st-foot-msg">{reportMsg}</span>}
+                    <button className="st-send" onClick={sendReport} disabled={sendingReport}>
+                      {sendingReport ? 'Sending…' : 'Send report to student & parent'}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -276,6 +366,24 @@ const styles = `
   .st-code-bar { display: flex; align-items: center; justify-content: space-between; background: #1e293b; color: #cbd5e1; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; padding: 7px 12px; border-radius: 9px 9px 0 0; }
   .st-tag { background: #f59e0b; color: #1c1206; padding: 1px 8px; border-radius: 6px; font-size: 10.5px; }
   .st-code { background: #0f172a; color: #e2e8f0; font-family: 'Fira Code', Consolas, monospace; font-size: 13px; line-height: 1.55; padding: 14px 16px; border-radius: 0 0 9px 9px; margin: 0; overflow-x: auto; white-space: pre; }
+  .st-grade { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; margin-top: 10px; padding: 11px 13px; background: #f6f8fc; border: 1px solid #e7ecf3; border-radius: 11px; }
+  .st-grade-lbl { font-size: 12.5px; font-weight: 700; color: #334155; }
+  .st-grade-input { width: 74px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 7px 10px; font-size: 14px; font-weight: 700; color: #0B1B3A; font-family: inherit; }
+  .st-grade-input:focus { outline: none; border-color: #818cf8; box-shadow: 0 0 0 3px rgba(99,102,241,0.15); }
+  .st-grade-max { font-size: 13px; color: #64748b; font-weight: 600; }
+  .st-grade-save { border: none; background: #4f46e5; color: #fff; font-weight: 700; font-size: 13px; padding: 8px 16px; border-radius: 9px; cursor: pointer; font-family: inherit; }
+  .st-grade-save:hover { filter: brightness(1.08); }
+  .st-grade-save:disabled { opacity: .6; cursor: not-allowed; }
+  .st-grade-note { font-size: 12.5px; font-weight: 700; }
+  .st-grade-note.ok { color: #15803d; }
+  .st-grade-note.err { color: #b91c1c; }
+  .st-modal-foot { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 16px 24px; border-top: 1px solid #eef2f7; background: #f8fafc; flex-wrap: wrap; }
+  .st-foot-info { font-size: 12.5px; color: #64748b; max-width: 320px; }
+  .st-foot-actions { display: flex; align-items: center; gap: 12px; margin-left: auto; flex-wrap: wrap; justify-content: flex-end; }
+  .st-foot-msg { font-size: 12.5px; font-weight: 700; color: #15803d; }
+  .st-send { border: none; background: linear-gradient(135deg,#0B1B3A,#1A3A6B); color: #fff; font-weight: 700; font-size: 13.5px; padding: 10px 18px; border-radius: 10px; cursor: pointer; font-family: inherit; white-space: nowrap; }
+  .st-send:hover { filter: brightness(1.12); }
+  .st-send:disabled { opacity: .6; cursor: not-allowed; }
   .st-noanswer { font-size: 13px; color: #94a3b8; font-style: italic; padding: 6px 0; }
   .st-opts { display: flex; flex-direction: column; gap: 7px; }
   .st-opt { display: flex; align-items: center; gap: 10px; border: 1px solid #e7ecf3; border-radius: 9px; padding: 9px 12px; font-size: 13.5px; color: #1e293b; }
