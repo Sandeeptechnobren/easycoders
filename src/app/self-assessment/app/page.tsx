@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import AssessmentCards from './assessment/[id]/AssessmentCards';
 
 const API_BASE = 'https://api.easycoders.in/projects/backend/public/api';
@@ -211,6 +212,7 @@ export default function AssessmentDashboard() {
                 <div className="ad-section-sub">A snapshot of how you&apos;re doing</div>
               </div>
             </div>
+            <Link href="/self-assessment/app/results" className="ad-count-badge" style={{ textDecoration: 'none' }}>View all results →</Link>
           </div>
           <div className="ad-info-strip">
             <div className="ad-info-card">
