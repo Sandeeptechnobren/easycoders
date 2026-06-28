@@ -25,6 +25,7 @@ export type AssessProfile = {
   parent_email?: string;
   is_easycoders_student?: boolean;
   requires_parent_contact?: boolean;
+  menus?: string[];
 };
 
 const TEXT_FIELDS: (keyof AssessProfile)[] = [

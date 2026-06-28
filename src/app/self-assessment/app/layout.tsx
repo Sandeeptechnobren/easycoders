@@ -7,6 +7,16 @@ import ParentContactModal from './ParentContactModal';
 
 const API_BASE = 'https://api.easycoders.in/projects/backend/public/api';
 
+/* Sidebar href -> menu key (matches the backend EasyAssessMenus catalogue). */
+const HREF_KEY: Record<string, string> = {
+  '/self-assessment/app': 'assessments',
+  '/self-assessment/app/results': 'results',
+  '/self-assessment/app/playground': 'playground',
+  '/self-assessment/app/sql-playground': 'sql_playground',
+  '/self-assessment/app/leaderBoard': 'leaderboard',
+  '/self-assessment/app/typing-game': 'typing',
+};
+
 export default function AssessmentAppLayout({
   children,
 }: {
@@ -37,6 +47,16 @@ export default function AssessmentAppLayout({
       .then((d) => { if (d?.data) setProfile(d.data); })
       .catch(() => {});
   }, []);
+
+  /* Route guard: a student on a menu their type isn't allowed → back to Assessments. */
+  useEffect(() => {
+    const menus = profile.menus;
+    if (!menus) return; // not loaded yet
+    const key = HREF_KEY[pathname];
+    if (key && !menus.includes(key)) {
+      router.replace('/self-assessment/app');
+    }
+  }, [pathname, profile.menus, router]);
 
   /* Track mobile breakpoint */
   useEffect(() => {
@@ -129,6 +149,12 @@ export default function AssessmentAppLayout({
       ),
     },
   ];
+
+  /* Show only the menus this student's type is allowed (admin-controlled). Until
+     /me loads (profile.menus undefined) show all to avoid an empty-sidebar flash. */
+  const visibleNav = navItems.filter(
+    (it) => !profile.menus || (HREF_KEY[it.href] ? profile.menus.includes(HREF_KEY[it.href]) : true),
+  );
 
   return (
     <>
@@ -263,7 +289,7 @@ export default function AssessmentAppLayout({
           {/* Nav */}
           <nav className="aa-nav">
             <div className="aa-nav-section">Menu</div>
-            {navItems.map(item => (
+            {visibleNav.map(item => (
               <Link key={item.href} href={item.href} className={`aa-nav-item ${isActive(item.href) ? 'active' : ''}`} data-tooltip={item.label}>
                 <span className="aa-nav-icon">{item.icon}</span>
                 <span className="aa-nav-label">{item.label}</span>

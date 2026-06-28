@@ -103,6 +103,15 @@ export default function AssessmentsPage() {
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [csvMsg, setCsvMsg] = useState('');
   const [csvUploading, setCsvUploading] = useState(false);
+
+  // EasyAssess menu access (per student type)
+  const [showMenuModal, setShowMenuModal] = useState(false);
+  const [menuCat, setMenuCat] = useState<{ key: string; label: string; always_on: boolean }[]>([]);
+  const [menuDirect, setMenuDirect] = useState<Record<string, boolean>>({});
+  const [menuEC, setMenuEC] = useState<Record<string, boolean>>({});
+  const [menuLoading, setMenuLoading] = useState(false);
+  const [menuSaving, setMenuSaving] = useState(false);
+  const [menuMsg, setMenuMsg] = useState('');
   const csvRef = useRef<HTMLInputElement>(null);
 
   // Payment mark
@@ -393,6 +402,32 @@ export default function AssessmentsPage() {
     }
   };
 
+  const openMenuAccess = async () => {
+    setShowMenuModal(true); setMenuMsg(''); setMenuLoading(true);
+    try {
+      const body = await fetchWithAuth(`${BASE}/assessment/admin/menu-access`);
+      const data = body?.data ?? {};
+      setMenuCat(data.catalogue || []);
+      setMenuDirect(data.direct || {});
+      setMenuEC(data.easycoders || {});
+    } catch (e: unknown) {
+      setMenuMsg(e instanceof Error ? e.message : 'Failed to load.');
+    } finally { setMenuLoading(false); }
+  };
+
+  const saveMenuAccess = async () => {
+    setMenuSaving(true); setMenuMsg('');
+    try {
+      await fetchWithAuth(`${BASE}/assessment/admin/menu-access`, {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ direct: menuDirect, easycoders: menuEC }),
+      });
+      setMenuMsg('Saved ✓');
+    } catch (e: unknown) {
+      setMenuMsg(e instanceof Error ? e.message : 'Failed to save.');
+    } finally { setMenuSaving(false); }
+  };
+
   return (
     <RoleGuard allowedRoles={[1]}>
       <div className="admin-wrap">
@@ -406,9 +441,60 @@ export default function AssessmentsPage() {
               <button className="btn btn-outline-secondary" onClick={() => { setShowPayModal(true); setPayMsg(''); }}>
                 Mark Payment
               </button>
+              <button className="btn btn-outline-primary" onClick={openMenuAccess}>EasyAssess Access</button>
               <button className="btn btn-primary" onClick={openCreate}>+ New Assessment</button>
             </div>
           </div>
+
+          {/* EasyAssess menu access (per student type) */}
+          {showMenuModal && (
+            <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,.55)', zIndex: 1080, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '40px 16px', overflowY: 'auto' }}
+              onClick={(e) => { if (e.target === e.currentTarget) setShowMenuModal(false); }}>
+              <div className="bg-white rounded-4 shadow" style={{ width: '100%', maxWidth: 580 }}>
+                <div className="d-flex justify-content-between align-items-start p-3 border-bottom">
+                  <div>
+                    <h5 className="fw-bold mb-0">EasyAssess Access</h5>
+                    <small className="text-muted">Choose which EasyAssess menus each student type can see</small>
+                  </div>
+                  <button className="btn-close" onClick={() => setShowMenuModal(false)} />
+                </div>
+                <div className="p-3">
+                  {menuLoading ? <div className="text-muted py-4 text-center">Loading…</div> : (
+                    <>
+                      <table className="table align-middle mb-2">
+                        <thead><tr><th>Menu</th><th className="text-center">Direct students</th><th className="text-center">EasyCoders students</th></tr></thead>
+                        <tbody>
+                          {menuCat.map(m => (
+                            <tr key={m.key}>
+                              <td>{m.label}{m.always_on && <span className="badge bg-light text-muted ms-2 fw-normal">always on</span>}</td>
+                              <td className="text-center">
+                                <input type="checkbox" className="form-check-input" disabled={m.always_on}
+                                  checked={m.always_on ? true : !!menuDirect[m.key]}
+                                  onChange={e => setMenuDirect(c => ({ ...c, [m.key]: e.target.checked }))} />
+                              </td>
+                              <td className="text-center">
+                                <input type="checkbox" className="form-check-input" disabled={m.always_on}
+                                  checked={m.always_on ? true : !!menuEC[m.key]}
+                                  onChange={e => setMenuEC(c => ({ ...c, [m.key]: e.target.checked }))} />
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                      <p className="text-muted small mb-0">
+                        <strong>Direct</strong> = signed up in EasyAssess. <strong>EasyCoders</strong> = enrolled students bridged from the main platform. Assessments stays available to everyone.
+                      </p>
+                    </>
+                  )}
+                  {menuMsg && <div className={`mt-2 small fw-semibold ${menuMsg === 'Saved ✓' ? 'text-success' : 'text-danger'}`}>{menuMsg}</div>}
+                </div>
+                <div className="d-flex justify-content-end gap-2 p-3 border-top">
+                  <button className="btn btn-light" onClick={() => setShowMenuModal(false)} disabled={menuSaving}>Close</button>
+                  <button className="btn btn-primary" onClick={saveMenuAccess} disabled={menuSaving || menuLoading}>{menuSaving ? 'Saving…' : 'Save changes'}</button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Filter */}
           <div className="d-flex gap-3 mb-4">
