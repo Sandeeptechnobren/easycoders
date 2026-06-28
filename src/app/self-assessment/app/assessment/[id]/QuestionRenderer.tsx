@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import CodingAnswer from './CodingAnswer';
+import SqlAnswer from './SqlAnswer';
 
 const OPTION_LABELS = ['A', 'B', 'C', 'D', 'E'];
 
@@ -47,6 +48,8 @@ export default function QuestionRenderer({
 
   const selectedOptionId = answers[currentQuestion.id]?.selected_option_id;
   const isCoding = currentQuestion.question_type === 'coding';
+  const isSql = currentQuestion.question_type === 'sql';
+  const isWide = isCoding || isSql;
 
   return (
     <>
@@ -249,7 +252,7 @@ export default function QuestionRenderer({
         }
       `}</style>
 
-      <div className="qr-wrap" style={{ maxWidth: isCoding ? 1080 : 820 }}>
+      <div className="qr-wrap" style={{ maxWidth: isWide ? 1080 : 820 }}>
         {/* Counter row with dot navigation */}
         <div className="qr-counter-row">
           <span className="qr-counter-badge">
@@ -273,10 +276,19 @@ export default function QuestionRenderer({
 
         {/* Question card */}
         <div className="qr-card">
-          <p className="qr-question-text" style={isCoding ? { whiteSpace: 'pre-wrap' } : undefined}>{currentQuestion.question_text}</p>
+          <p className="qr-question-text" style={isWide ? { whiteSpace: 'pre-wrap' } : undefined}>{currentQuestion.question_text}</p>
 
           {isCoding ? (
             <CodingAnswer
+              key={currentQuestion.id}
+              question={currentQuestion}
+              value={answers[currentQuestion.id]}
+              onChange={(ans: any) =>
+                setAnswers((a: any) => ({ ...a, [currentQuestion.id]: ans }))
+              }
+            />
+          ) : isSql ? (
+            <SqlAnswer
               key={currentQuestion.id}
               question={currentQuestion}
               value={answers[currentQuestion.id]}

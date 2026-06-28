@@ -226,7 +226,7 @@ export default function AssessmentStatsPage() {
                     <div key={q.question_id} className="st-q">
                       <div className="st-q-head">
                         <span className="st-q-num">Q{i + 1}</span>
-                        <span className="st-q-type">{q.type === 'coding' ? 'Coding' : 'MCQ'}</span>
+                        <span className="st-q-type">{q.type === 'coding' ? 'Coding' : q.type === 'sql' ? 'SQL' : 'MCQ'}</span>
                         <span className="st-q-marks">
                           {q.answered
                             ? (q.marks_awarded ?? 0)
@@ -235,7 +235,7 @@ export default function AssessmentStatsPage() {
                       </div>
                       <div className="st-q-text">{q.question_text}</div>
 
-                      {q.type === 'coding' ? (
+                      {(q.type === 'coding' || q.type === 'sql') ? (
                         q.code ? (
                           <>
                             <div className="st-code-bar">

@@ -36,6 +36,9 @@ type Question = {
   languages?: string[];
   code_grading?: 'auto' | 'manual';
   test_cases?: TestCase[];
+  schema_sql?: string;
+  expected_sql?: string;
+  order_matters?: boolean;
 };
 type Option = { id: number; option_text: string; is_correct: boolean };
 
@@ -50,6 +53,9 @@ type QForm = {
   languages: string[];
   starter_code: string;
   test_cases: { stdin: string; expected_output: string; is_hidden: boolean; weight: string }[];
+  schema_sql: string;
+  expected_sql: string;
+  order_matters: boolean;
 };
 
 export default function AssessmentsPage() {
@@ -87,6 +93,9 @@ export default function AssessmentsPage() {
     languages: ['python'],
     starter_code: '',
     test_cases: [{ stdin: '', expected_output: '', is_hidden: false, weight: '1' }],
+    schema_sql: '',
+    expected_sql: '',
+    order_matters: false,
   });
   const [qSaving, setQSaving] = useState(false);
   const [qMsg, setQMsg] = useState('');
@@ -198,6 +207,9 @@ export default function AssessmentsPage() {
     languages: ['python'],
     starter_code: '',
     test_cases: [{ stdin: '', expected_output: '', is_hidden: false, weight: '1' }],
+    schema_sql: '',
+    expected_sql: '',
+    order_matters: false,
   };
   const resetQForm = () => { setQForm(EMPTY_Q); setEditingQuestionId(null); };
 
@@ -236,14 +248,22 @@ export default function AssessmentsPage() {
     if (!managingAssess) return;
     setQSaving(true); setQMsg('');
     const isCoding = qForm.question_type === 'coding';
+    const isSql = qForm.question_type === 'sql';
     const payload: Record<string, unknown> = {
       question_text: qForm.question_text,
       question_type: qForm.question_type,
       marks: Number(qForm.marks),
       difficulty: qForm.difficulty,
       explanation: qForm.explanation,
-      options: isCoding ? undefined : qForm.options.filter(o => o.option_text.trim()),
+      options: (isCoding || isSql) ? undefined : qForm.options.filter(o => o.option_text.trim()),
     };
+    if (isSql) {
+      payload.code_grading = qForm.code_grading;
+      payload.starter_code = qForm.starter_code;
+      payload.schema_sql = qForm.schema_sql;
+      payload.expected_sql = qForm.expected_sql;
+      payload.order_matters = qForm.order_matters;
+    }
     if (isCoding) {
       payload.code_grading = qForm.code_grading;
       payload.languages = qForm.languages.length ? qForm.languages : ['python'];
@@ -305,6 +325,9 @@ export default function AssessmentsPage() {
       languages: (Array.isArray(q.languages) && q.languages.length) ? q.languages : ['python'],
       starter_code: q.starter_code ?? '',
       test_cases: tcs,
+      schema_sql: q.schema_sql ?? '',
+      expected_sql: q.expected_sql ?? '',
+      order_matters: !!q.order_matters,
     });
     setQMsg(''); setQTab('add');
   };
@@ -728,6 +751,7 @@ export default function AssessmentsPage() {
                           <option value="mcq">MCQ (single correct)</option>
                           <option value="multiple_choice">Multiple Choice</option>
                           <option value="coding">Coding</option>
+                          <option value="sql">SQL / DBMS</option>
                         </select>
                       </div>
                       <div className="col-md-4">
@@ -746,7 +770,7 @@ export default function AssessmentsPage() {
                       </div>
                     </div>
 
-                    {qForm.question_type !== 'coding' && (
+                    {qForm.question_type !== 'coding' && qForm.question_type !== 'sql' && (
                       <div className="mb-3">
                         <label className="form-label">Options <small className="text-muted">(check correct answer{qForm.question_type === 'multiple_choice' ? 's' : ''})</small></label>
                         {qForm.options.map((opt, idx) => (
@@ -863,6 +887,48 @@ export default function AssessmentsPage() {
                               </div>
                             ))}
                           </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* ── SQL / DBMS-question authoring ── */}
+                    {qForm.question_type === 'sql' && (
+                      <div className="mb-3 p-3 rounded border bg-light">
+                        <label className="form-label fw-semibold">Grading mode</label>
+                        <div className="d-flex flex-column flex-md-row gap-2 mb-3">
+                          <label className={`flex-fill border rounded p-2 d-flex gap-2 align-items-start ${qForm.code_grading === 'auto' ? 'border-primary bg-white' : ''}`} style={{ cursor: 'pointer' }}>
+                            <input type="radio" className="form-check-input mt-1" name="sql-grading" checked={qForm.code_grading === 'auto'} onChange={() => setQForm(f => ({ ...f, code_grading: 'auto' }))} />
+                            <span><span className="fw-semibold d-block small">Auto-graded</span><span className="text-muted" style={{ fontSize: 12 }}>Compare the student&rsquo;s query result to the expected query&rsquo;s — scored instantly.</span></span>
+                          </label>
+                          <label className={`flex-fill border rounded p-2 d-flex gap-2 align-items-start ${qForm.code_grading === 'manual' ? 'border-primary bg-white' : ''}`} style={{ cursor: 'pointer' }}>
+                            <input type="radio" className="form-check-input mt-1" name="sql-grading" checked={qForm.code_grading === 'manual'} onChange={() => setQForm(f => ({ ...f, code_grading: 'manual' }))} />
+                            <span><span className="fw-semibold d-block small">Open / free-form</span><span className="text-muted" style={{ fontSize: 12 }}>Student writes SQL freely — a trainer reviews and scores it.</span></span>
+                          </label>
+                        </div>
+
+                        <label className="form-label fw-semibold">Setup schema <small className="text-muted fw-normal">(DDL + seed data; shown to the student, run before their query)</small></label>
+                        <textarea className="form-control mb-3" rows={6} style={{ fontFamily: 'ui-monospace, monospace', fontSize: 13 }}
+                          placeholder={"CREATE TABLE employees (id INTEGER, name TEXT, salary INTEGER);\nINSERT INTO employees VALUES (1,'Asha',60000),(2,'Ravi',50000);"}
+                          value={qForm.schema_sql} onChange={e => setQForm(f => ({ ...f, schema_sql: e.target.value }))} />
+
+                        <label className="form-label fw-semibold">Starter query <small className="text-muted fw-normal">(optional — pre-fills the editor)</small></label>
+                        <textarea className="form-control mb-3" rows={2} style={{ fontFamily: 'ui-monospace, monospace', fontSize: 13 }}
+                          placeholder="SELECT ..." value={qForm.starter_code} onChange={e => setQForm(f => ({ ...f, starter_code: e.target.value }))} />
+
+                        {qForm.code_grading === 'auto' && (
+                          <>
+                            <div className="alert alert-secondary small py-2 px-3">
+                              The student&rsquo;s query is graded by running it on the setup schema and comparing its result set to the expected query below. Row order is ignored unless you tick &ldquo;order matters&rdquo;.
+                            </div>
+                            <label className="form-label fw-semibold">Expected query (answer key) <small className="text-muted fw-normal">(not shown to the student)</small></label>
+                            <textarea className="form-control mb-2" rows={3} style={{ fontFamily: 'ui-monospace, monospace', fontSize: 13 }}
+                              placeholder="SELECT name FROM employees WHERE salary > 55000;"
+                              value={qForm.expected_sql} onChange={e => setQForm(f => ({ ...f, expected_sql: e.target.value }))} />
+                            <label className="d-flex gap-2 align-items-center small" style={{ cursor: 'pointer' }}>
+                              <input type="checkbox" className="form-check-input" checked={qForm.order_matters} onChange={e => setQForm(f => ({ ...f, order_matters: e.target.checked }))} />
+                              Row order matters (the question requires an ORDER BY)
+                            </label>
+                          </>
                         )}
                       </div>
                     )}
