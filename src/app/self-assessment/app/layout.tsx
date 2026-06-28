@@ -99,6 +99,17 @@ export default function AssessmentAppLayout({
       ),
     },
     {
+      href: '/self-assessment/app/sql-playground',
+      label: 'SQL Playground',
+      icon: (
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <ellipse cx="12" cy="5" rx="9" ry="3"/>
+          <path d="M3 5v14a9 3 0 0 0 18 0V5"/>
+          <path d="M3 12a9 3 0 0 0 18 0"/>
+        </svg>
+      ),
+    },
+    {
       href: '/self-assessment/app/leaderBoard',
       label: 'Leader Board',
       icon: (
