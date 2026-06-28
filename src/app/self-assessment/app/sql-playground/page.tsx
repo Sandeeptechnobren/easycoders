@@ -59,6 +59,13 @@ export default function SqlPlaygroundPage() {
   const [curSnip, setCurSnip] = useState<{ id: number; title: string } | null>(null);
   const [saveMsg, setSaveMsg] = useState('');
 
+  // Practice challenges
+  const [challenges, setChallenges] = useState<{ key: string; title: string; difficulty: string; sample_db: string; prompt: string }[]>([]);
+  const [chDrawer, setChDrawer] = useState(false);
+  const [activeCh, setActiveCh] = useState<{ key: string; title: string; prompt: string } | null>(null);
+  const [chResult, setChResult] = useState<{ pass: boolean; error?: string } | null>(null);
+  const [checking, setChecking] = useState(false);
+
   const hydrated = useRef(false);
 
   /* hydrate workspace */
@@ -84,6 +91,9 @@ export default function SqlPlaygroundPage() {
   useEffect(() => {
     fetch(`${API_BASE}/EasyAssist/sql-samples`, { headers: authHeaders(false) })
       .then((r) => r.json()).then((d) => { if (Array.isArray(d?.samples)) setSamples(d.samples); })
+      .catch(() => {});
+    fetch(`${API_BASE}/EasyAssist/sql-challenges`, { headers: authHeaders(false) })
+      .then((r) => r.json()).then((d) => { if (Array.isArray(d?.challenges)) setChallenges(d.challenges); })
       .catch(() => {});
     loadSnips();
   }, []);
@@ -163,6 +173,33 @@ export default function SqlPlaygroundPage() {
     loadSnips();
   }, [curSnip, loadSnips]);
 
+  const startChallenge = (c: { key: string; title: string; difficulty: string; sample_db: string; prompt: string }) => {
+    setActiveCh({ key: c.key, title: c.title, prompt: c.prompt });
+    setSampleDb(c.sample_db);
+    setSql(`-- ${c.title}\n-- ${c.prompt}\n\nSELECT `);
+    setChResult(null);
+    setResult(null);
+    setChDrawer(false);
+  };
+
+  const checkChallenge = async () => {
+    if (!activeCh) return;
+    setChecking(true); setChResult(null); setResult(null);
+    try {
+      const res = await fetch(`${API_BASE}/EasyAssist/sql-challenges/${activeCh.key}/check`, {
+        method: 'POST', headers: authHeaders(), body: JSON.stringify({ sql }),
+      });
+      const d = await res.json();
+      setChResult({ pass: !!d?.pass, error: d?.error || undefined });
+      // also show their own result grid
+      setResult({ ok: !d?.error, error: d?.error ?? null, columns: d?.columns ?? [], rows: d?.rows ?? [], row_count: (d?.rows ?? []).length, truncated: false, statements: [], elapsed_ms: 0 });
+    } catch {
+      setChResult({ pass: false, error: 'Could not reach the SQL engine. Please try again.' });
+    } finally {
+      setChecking(false);
+    }
+  };
+
   const activeSample = samples.find((s) => s.key === sampleDb);
   // the result table = the last result-producing statement
   const table = (() => {
@@ -197,6 +234,11 @@ export default function SqlPlaygroundPage() {
           <button className="sp-run" onClick={run} disabled={running}>
             {running ? 'Running…' : '▶ Run'}
           </button>
+          {activeCh && (
+            <button className="sp-run" style={{ background: 'linear-gradient(135deg,#16a34a,#22c55e)' }} onClick={checkChallenge} disabled={checking}>
+              {checking ? 'Checking…' : '✓ Check answer'}
+            </button>
+          )}
         </div>
       </div>
 
@@ -229,6 +271,8 @@ export default function SqlPlaygroundPage() {
         <main className="sp-main">
           <div className="sp-toolbar">
             {!schemaOpen && <button className="sp-tbtn" onClick={() => setSchemaOpen(true)} title="Show schema">Schema</button>}
+            <button className="sp-tbtn" onClick={() => setChDrawer(true)}>Challenges</button>
+            {activeCh && <button className="sp-tbtn" onClick={() => { setActiveCh(null); setChResult(null); }}>Exit challenge</button>}
             <button className="sp-tbtn" onClick={() => setDrawer(true)}>My SQL ({snips.length})</button>
             <button className="sp-tbtn" onClick={() => saveSnippet(false)}>{curSnip ? 'Save' : 'Save…'}</button>
             {curSnip && <button className="sp-tbtn" onClick={() => saveSnippet(true)}>Save as new</button>}
@@ -241,6 +285,21 @@ export default function SqlPlaygroundPage() {
             <button className="sp-tbtn" onClick={() => setDark((d) => !d)}>{dark ? 'Light' : 'Dark'}</button>
             <button className="sp-tbtn" onClick={() => setAiOpen((a) => !a)}>EasyAI</button>
           </div>
+
+          {activeCh && (
+            <div className="sp-challenge">
+              <div className="sp-challenge-tag">Challenge</div>
+              <div className="sp-challenge-title">{activeCh.title}</div>
+              <div className="sp-challenge-prompt">{activeCh.prompt}</div>
+              {chResult && (
+                <div className={`sp-challenge-verdict ${chResult.pass ? 'pass' : 'fail'}`}>
+                  {chResult.pass
+                    ? '✓ Correct — your result matches the expected answer.'
+                    : (chResult.error ? `✗ ${chResult.error}` : '✗ Not quite — your result doesn’t match the expected answer. Try again.')}
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="sp-editor">
             <Editor
@@ -328,6 +387,23 @@ export default function SqlPlaygroundPage() {
           </div>
         </div>
       )}
+
+      {chDrawer && (
+        <div className="sp-drawer-bd" onClick={(e) => { if (e.target === e.currentTarget) setChDrawer(false); }}>
+          <div className="sp-drawer">
+            <div className="sp-drawer-head"><span>Practice challenges</span><button onClick={() => setChDrawer(false)}>✕</button></div>
+            <div className="sp-drawer-body">
+              {challenges.length === 0 ? <div className="sp-placeholder">No challenges available yet.</div>
+                : challenges.map((c) => (
+                  <button key={c.key} className="sp-chitem" onClick={() => startChallenge(c)}>
+                    <span className="sp-chitem-top"><span className="sp-chitem-title">{c.title}</span><span className={`sp-chitem-diff ${c.difficulty}`}>{c.difficulty}</span></span>
+                    <span className="sp-chitem-prompt">{c.prompt}</span>
+                  </button>
+                ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -403,5 +479,21 @@ const styles = `
   .sp-snip-open:hover { background: #eef2ff; color: #4338ca; }
   .sp-snip-del { border: none; background: none; cursor: pointer; padding: 6px 8px; border-radius: 8px; opacity: .6; }
   .sp-snip-del:hover { background: #fef2f2; opacity: 1; }
+  .sp-challenge { margin: 0 0 6px; padding: 12px 14px; border-radius: 12px; background: rgba(34,197,94,.1); border: 1px solid rgba(34,197,94,.3); }
+  .sp-challenge-tag { font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: #16a34a; }
+  .sp-challenge-title { font-size: 15px; font-weight: 800; margin-top: 2px; }
+  .sp-challenge-prompt { font-size: 13px; opacity: .85; margin-top: 3px; line-height: 1.5; }
+  .sp-challenge-verdict { margin-top: 9px; font-size: 13px; font-weight: 700; padding: 8px 11px; border-radius: 9px; }
+  .sp-challenge-verdict.pass { background: #dcfce7; color: #166534; }
+  .sp-challenge-verdict.fail { background: #fee2e2; color: #991b1b; }
+  .sp-chitem { display: flex; flex-direction: column; gap: 4px; width: 100%; text-align: left; border: 1px solid #eef2f7; background: #fff; border-radius: 11px; padding: 11px 13px; margin-bottom: 9px; cursor: pointer; color: #0f172a; font-family: inherit; }
+  .sp-chitem:hover { border-color: #c7d2fe; background: #f5f3ff; }
+  .sp-chitem-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .sp-chitem-title { font-size: 14px; font-weight: 700; }
+  .sp-chitem-diff { font-size: 10px; font-weight: 800; text-transform: uppercase; padding: 2px 8px; border-radius: 100px; }
+  .sp-chitem-diff.easy { background: #dcfce7; color: #166534; }
+  .sp-chitem-diff.medium { background: #fef3c7; color: #92400e; }
+  .sp-chitem-diff.hard { background: #fee2e2; color: #991b1b; }
+  .sp-chitem-prompt { font-size: 12px; color: #64748b; line-height: 1.45; }
   @media (max-width: 760px) { .sp-schema { display: none; } }
 `;
