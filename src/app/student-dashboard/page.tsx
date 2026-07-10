@@ -7,6 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 import api from '@/lib/axios';
 import MyBatchCard from '@/components/MyBatchCard';
 import MyTasksCard from '@/components/MyTasksCard';
+import MyCertificatesCard from '@/components/MyCertificatesCard';
 
 export default function StudentDashboard() {
   const { user } = useAuth();
@@ -343,6 +344,9 @@ export default function StudentDashboard() {
 
           {/* My Tasks (renders only when the student has batch tasks) */}
           <MyTasksCard />
+
+          {/* My Certificates (renders only when the student has completion certificates) */}
+          <MyCertificatesCard />
 
           {/* Main Grid */}
           <div className="sd-grid">

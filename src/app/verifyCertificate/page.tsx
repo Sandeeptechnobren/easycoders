@@ -15,20 +15,30 @@ import React, { useEffect, useState } from 'react';
  *    headline of the result, with the assessment / score / code beneath.
  * ────────────────────────────────────────────────────────────────────────── */
 
+type VerifyData = {
+  type?: 'assessment' | 'course_completion';
+  certificate_code: string;
+  user: { id: number; name: string; email: string };
+  assessment?: { id: number; title: string };
+  score?: number;
+  completed_at?: string;
+  // course-completion certificates
+  course?: string;
+  tech_field?: string;
+  duration?: string;
+  grade?: string;
+};
+
 type VerifyApiResponse = {
   success: boolean;
   message: string;
-  data?: {
-    certificate_code: string;
-    user: { id: number; name: string; email: string };
-    assessment: { id: number; title: string };
-    score: number;
-    completed_at: string;
-  };
+  data?: VerifyData;
 };
 
 const API =
   'https://api.easycoders.in/projects/backend/public/api/certificate/verify';
+const COURSE_API =
+  'https://api.easycoders.in/projects/backend/public/api/course-completion/verify';
 
 export default function VerifyCertificate() {
   const [identifier, setIdentifier] = useState('');
@@ -47,19 +57,41 @@ export default function VerifyCertificate() {
     setOpenModal(false);
 
     try {
+      // 1) Assessment certificates.
       const res = await fetch(
         `${API}?certificate_code=${encodeURIComponent(code)}`,
         { method: 'GET', headers: { Accept: 'application/json' } },
       );
-      const json: VerifyApiResponse = await res.json();
-
-      if (!res.ok || !json?.success || !json.data) {
-        setErrorMsg(json?.message || 'Certificate not found. Please check the ID.');
+      const json: VerifyApiResponse = await res.json().catch(() => ({ success: false, message: '' } as VerifyApiResponse));
+      if (res.ok && json?.success && json.data) {
+        setResult({ ...json.data, type: 'assessment' });
+        setOpenModal(true);
         return;
       }
 
-      setResult(json.data);
-      setOpenModal(true);
+      // 2) Course-completion certificates (offline courses).
+      const res2 = await fetch(
+        `${COURSE_API}?code=${encodeURIComponent(code)}`,
+        { method: 'GET', headers: { Accept: 'application/json' } },
+      );
+      const json2: VerifyApiResponse = await res2.json().catch(() => ({ success: false, message: '' } as VerifyApiResponse));
+      if (res2.ok && json2?.success && json2.data) {
+        const d = json2.data;
+        setResult({
+          type: 'course_completion',
+          certificate_code: d.certificate_code,
+          user: d.user,
+          completed_at: d.completed_at ?? (d as { completed_on?: string }).completed_on,
+          course: d.course,
+          tech_field: d.tech_field,
+          duration: d.duration,
+          grade: d.grade,
+        });
+        setOpenModal(true);
+        return;
+      }
+
+      setErrorMsg(json2?.message || json?.message || 'Certificate not found. Please check the ID.');
     } catch (err) {
       console.error(err);
       setErrorMsg('Server error. Please try again in a moment.');
@@ -484,14 +516,33 @@ export default function VerifyCertificate() {
             </div>
 
             <div className="vc-modal-body">
-              <div className="vc-detail-row">
-                <span className="vc-detail-key">Assessment</span>
-                <span className="vc-detail-val">{result.assessment?.title}</span>
-              </div>
-              <div className="vc-detail-row">
-                <span className="vc-detail-key">Result</span>
-                <span className="vc-score-val">Qualified</span>
-              </div>
+              {result.type === 'course_completion' ? (
+                <>
+                  <div className="vc-detail-row">
+                    <span className="vc-detail-key">Course</span>
+                    <span className="vc-detail-val">{result.course || result.tech_field}</span>
+                  </div>
+                  <div className="vc-detail-row">
+                    <span className="vc-detail-key">Duration</span>
+                    <span className="vc-detail-val">{result.duration}</span>
+                  </div>
+                  <div className="vc-detail-row">
+                    <span className="vc-detail-key">Grade</span>
+                    <span className="vc-score-val">{result.grade}</span>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="vc-detail-row">
+                    <span className="vc-detail-key">Assessment</span>
+                    <span className="vc-detail-val">{result.assessment?.title}</span>
+                  </div>
+                  <div className="vc-detail-row">
+                    <span className="vc-detail-key">Result</span>
+                    <span className="vc-score-val">Qualified</span>
+                  </div>
+                </>
+              )}
               <div className="vc-detail-row">
                 <span className="vc-detail-key">Email</span>
                 <span className="vc-detail-val email">{result.user?.email}</span>

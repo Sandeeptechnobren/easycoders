@@ -58,6 +58,19 @@ type AttendanceRow = {
   status: string;
 };
 
+type Completion = {
+  id: number;
+  tech_field: string;
+  duration_value: number;
+  duration_unit: string;
+  performance_grade: string;
+  completed_on: string;
+  status: string;
+  certificate_code?: string | null;
+  remarks?: string | null;
+  course?: { id: number; title: string } | null;
+};
+
 type StudentDetails = {
   id: number;
   name: string;
@@ -125,6 +138,14 @@ export default function StudentDetailManager({ studentId, canManage, backHref, c
   const [cancelMsg, setCancelMsg] = useState('');
   const [cancelling, setCancelling] = useState(false);
 
+  // Course completion certificates
+  const [completions, setCompletions] = useState<Completion[]>([]);
+  const [showComplete, setShowComplete] = useState(false);
+  const [ccForm, setCcForm] = useState({ tech_field: '', duration_value: '', duration_unit: 'months', performance_grade: '', completed_on: '', remarks: '' });
+  const [ccBusy, setCcBusy] = useState(false);
+  const [ccMsg, setCcMsg] = useState('');
+  const [ccDownloading, setCcDownloading] = useState<number | null>(null);
+
   const loadStudent = async () => {
     try {
       setLoading(true);
@@ -147,6 +168,15 @@ export default function StudentDetailManager({ studentId, canManage, backHref, c
     } catch {
       setCredData(null);
       setCredAvailable(false);
+    }
+  };
+
+  const loadCompletions = async () => {
+    try {
+      const json = await fetchWithAuth(`${BASE}/admin/students/${encodeURIComponent(id)}/course-completions`);
+      setCompletions(Array.isArray(json?.data) ? json.data : []);
+    } catch {
+      setCompletions([]);
     }
   };
 
@@ -174,6 +204,7 @@ export default function StudentDetailManager({ studentId, canManage, backHref, c
   useEffect(() => {
     if (!id) return;
     loadStudent();
+    loadCompletions();
     if (canManage) loadCredentials();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, canManage]);
@@ -185,6 +216,14 @@ export default function StudentDetailManager({ studentId, canManage, backHref, c
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
   }, [showCancel]);
+
+  // Close the mark-complete modal on Escape.
+  useEffect(() => {
+    if (!showComplete) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setShowComplete(false); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [showComplete]);
 
   const fees = student?.fees;
   const totalFee = Number(fees?.total_fee ?? student?.profile?.total_fee ?? 0);
@@ -307,6 +346,74 @@ export default function StudentDetailManager({ studentId, canManage, backHref, c
       await loadStudent();
     } catch (e: unknown) { setCancelMsg(e instanceof Error ? e.message : 'Could not cancel the admission.'); }
     finally { setCancelling(false); }
+  };
+
+  // ── Course completion ──
+  const openComplete = () => {
+    const prefill = student?.course && student.course !== '—' ? student.course : '';
+    setCcForm({ tech_field: prefill, duration_value: '', duration_unit: 'months', performance_grade: '', completed_on: new Date().toISOString().slice(0, 10), remarks: '' });
+    setCcMsg('');
+    setShowComplete(true);
+  };
+  const submitComplete = async () => {
+    if (!student) return;
+    if (!ccForm.tech_field.trim() || !ccForm.duration_value || !ccForm.performance_grade.trim()) {
+      setCcMsg('Tech field, duration and grade are required.');
+      return;
+    }
+    setCcBusy(true); setCcMsg('');
+    try {
+      await fetchWithAuth(`${BASE}/course-completions`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: student.id,
+          tech_field: ccForm.tech_field.trim(),
+          duration_value: Number(ccForm.duration_value),
+          duration_unit: ccForm.duration_unit,
+          performance_grade: ccForm.performance_grade.trim(),
+          completed_on: ccForm.completed_on || null,
+          remarks: ccForm.remarks.trim() || null,
+        }),
+      });
+      setShowComplete(false);
+      await loadCompletions();
+    } catch (e: unknown) {
+      setCcMsg(e instanceof Error ? e.message : 'Could not mark the course complete.');
+    } finally {
+      setCcBusy(false);
+    }
+  };
+  const downloadCertificate = async (cid: number) => {
+    setCcDownloading(cid);
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+      const res = await fetch(`${BASE}/course-completions/${cid}/certificate`, {
+        headers: { Authorization: `Bearer ${token}`, Accept: 'application/pdf' },
+      });
+      if (!res.ok) throw new Error('Could not download the certificate.');
+      const blob = await res.blob();
+      const cd = res.headers.get('Content-Disposition') || '';
+      const m = cd.match(/filename="?([^"]+)"?/);
+      const fname = m ? m[1] : `course-completion-${cid}.pdf`;
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = fname;
+      document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(url);
+    } catch (e: unknown) {
+      alert(e instanceof Error ? e.message : 'Download failed.');
+    } finally {
+      setCcDownloading(null);
+    }
+  };
+  const revokeCompletion = async (cid: number) => {
+    if (!confirm('Revoke this certificate? It will no longer verify as valid.')) return;
+    try {
+      await fetchWithAuth(`${BASE}/course-completions/${cid}`, { method: 'DELETE' });
+      await loadCompletions();
+    } catch (e: unknown) {
+      alert(e instanceof Error ? e.message : 'Could not revoke the certificate.');
+    }
   };
 
   return (
@@ -675,6 +782,60 @@ export default function StudentDetailManager({ studentId, canManage, backHref, c
               ) : (!canManage && <p className={styles.emptyText} style={{ marginTop: 4 }}>No marks recorded yet.</p>)}
             </div>
           </div>
+
+          {/* Row 5: Course completion & certificates */}
+          <div className={styles.card}>
+            <div className={styles.cardHead}>
+              <span className={styles.cardTitle}>Course Completion &amp; Certificates</span>
+              <span className={styles.cardSub}>{canManage ? 'Mark an offline course complete & issue a certificate' : 'Issued certificates'}</span>
+            </div>
+
+            {canManage && (
+              <>
+                <button className={styles.primaryBtn} type="button" onClick={openComplete}>+ Mark course complete</button>
+                <div className={styles.divider} />
+              </>
+            )}
+
+            <div className={styles.tableWrap}>
+              <table className={styles.table}>
+                <thead>
+                  <tr>
+                    <th>Tech field</th><th>Duration</th><th>Grade</th><th>Completed</th><th>Status</th>
+                    <th style={{ textAlign: 'right' }}>Certificate</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {completions.length ? completions.map((c) => (
+                    <tr key={c.id}>
+                      <td className={styles.tdBold}>
+                        {c.tech_field}
+                        {c.course?.title && c.course.title !== c.tech_field ? <div className={styles.tdSub}>{c.course.title}</div> : null}
+                      </td>
+                      <td>{c.duration_value} {c.duration_unit}</td>
+                      <td>{c.performance_grade}</td>
+                      <td className={styles.tdSub}>{String(c.completed_on).slice(0, 10)}</td>
+                      <td>
+                        <span className={`${styles.pill} ${c.status === 'issued' ? styles.pillGreen : styles.pillAmber}`}>{c.status}</span>
+                      </td>
+                      <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+                        {c.status === 'issued' && (
+                          <button className={styles.primaryBtn} type="button" disabled={ccDownloading === c.id} onClick={() => downloadCertificate(c.id)}>
+                            {ccDownloading === c.id ? 'Preparing…' : 'Download'}
+                          </button>
+                        )}
+                        {canManage && c.status === 'issued' && (
+                          <button className={styles.deleteBtn} type="button" style={{ marginLeft: 8 }} onClick={() => revokeCompletion(c.id)}>Revoke</button>
+                        )}
+                      </td>
+                    </tr>
+                  )) : (
+                    <tr><td colSpan={6} className={styles.emptyRow}>No course completions issued yet.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       )}
 
@@ -724,6 +885,65 @@ export default function StudentDetailManager({ studentId, canManage, backHref, c
                 style={{ background: '#fff', color: '#475569', border: '1px solid #E2E8F0' }}>Keep admission</button>
               <button type="button" className={styles.deleteBtn} disabled={cancelling} onClick={confirmCancel}>
                 {cancelling ? 'Cancelling…' : (issueRefund && Number(refundAmount) > 0 ? `Cancel & refund ${inr(Number(refundAmount))}` : 'Cancel admission')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Mark course complete modal ── */}
+      {showComplete && student && (
+        <div onClick={() => setShowComplete(false)}
+          style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(7,18,42,0.55)', backdropFilter: 'blur(3px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 18 }}>
+          <div onClick={e => e.stopPropagation()} role="dialog" aria-modal="true"
+            style={{ background: '#fff', borderRadius: 16, width: '100%', maxWidth: 460, boxShadow: '0 30px 70px rgba(7,18,42,0.4)', overflow: 'hidden' }}>
+            <div style={{ padding: '18px 22px', borderBottom: '1px solid #EEF1F7' }}>
+              <div style={{ fontSize: 16, fontWeight: 800, color: '#0B1B3A' }}>Mark course complete</div>
+              <div style={{ fontSize: 12.5, color: '#64748B', marginTop: 3 }}>Issue a Certificate of Completion for <strong>{student.name}</strong></div>
+            </div>
+            <div style={{ padding: '18px 22px' }}>
+              {ccMsg && <div style={{ background: '#FEF2F2', color: '#991B1B', border: '1px solid #FECACA', borderRadius: 10, padding: '9px 12px', fontSize: 13, marginBottom: 12 }}>{ccMsg}</div>}
+              <div className={styles.formField} style={{ marginBottom: 12 }}>
+                <label className={styles.formLabel}>Course / tech field</label>
+                <input className={styles.input} value={ccForm.tech_field} placeholder="e.g. Full Stack Web Development"
+                  onChange={(e) => setCcForm((p) => ({ ...p, tech_field: e.target.value }))} />
+              </div>
+              <div style={{ display: 'flex', gap: 10, marginBottom: 12 }}>
+                <div style={{ flex: 1.4 }}>
+                  <label className={styles.formLabel}>Duration</label>
+                  <input className={styles.input} type="number" min={1} placeholder="e.g. 3" value={ccForm.duration_value}
+                    onChange={(e) => setCcForm((p) => ({ ...p, duration_value: e.target.value }))} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label className={styles.formLabel}>Unit</label>
+                  <select className={styles.input} value={ccForm.duration_unit}
+                    onChange={(e) => setCcForm((p) => ({ ...p, duration_unit: e.target.value }))}>
+                    <option value="months">Months</option>
+                    <option value="days">Days</option>
+                  </select>
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: 10, marginBottom: 12 }}>
+                <div style={{ flex: 1 }}>
+                  <label className={styles.formLabel}>Performance grade</label>
+                  <input className={styles.input} placeholder="e.g. A+ / Excellent" value={ccForm.performance_grade}
+                    onChange={(e) => setCcForm((p) => ({ ...p, performance_grade: e.target.value }))} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label className={styles.formLabel}>Completed on</label>
+                  <input className={styles.input} type="date" value={ccForm.completed_on}
+                    onChange={(e) => setCcForm((p) => ({ ...p, completed_on: e.target.value }))} />
+                </div>
+              </div>
+              <label className={styles.formLabel}>Remarks (optional)</label>
+              <textarea className={styles.input} rows={2} value={ccForm.remarks}
+                onChange={(e) => setCcForm((p) => ({ ...p, remarks: e.target.value }))} placeholder="Any note for the record" style={{ resize: 'vertical' }} />
+            </div>
+            <div style={{ padding: '14px 22px', borderTop: '1px solid #EEF1F7', display: 'flex', justifyContent: 'flex-end', gap: 9 }}>
+              <button type="button" className={styles.primaryBtn} onClick={() => setShowComplete(false)}
+                style={{ background: '#fff', color: '#475569', border: '1px solid #E2E8F0' }}>Cancel</button>
+              <button type="button" className={styles.primaryBtn} disabled={ccBusy} onClick={submitComplete}>
+                {ccBusy ? 'Issuing…' : 'Mark complete & issue'}
               </button>
             </div>
           </div>
