@@ -60,11 +60,13 @@ type AttendanceRow = {
 
 type Completion = {
   id: number;
-  tech_field: string;
+  program?: string | null;
+  tech_field?: string | null;
   duration_value: number;
   duration_unit: string;
   performance_grade: string;
   completed_on: string;
+  start_date?: string | null;
   status: string;
   certificate_code?: string | null;
   remarks?: string | null;
@@ -141,7 +143,7 @@ export default function StudentDetailManager({ studentId, canManage, backHref, c
   // Course completion certificates
   const [completions, setCompletions] = useState<Completion[]>([]);
   const [showComplete, setShowComplete] = useState(false);
-  const [ccForm, setCcForm] = useState({ tech_field: '', duration_value: '', duration_unit: 'months', performance_grade: '', completed_on: '', remarks: '' });
+  const [ccForm, setCcForm] = useState({ program: '', tech_field: '', duration_value: '', duration_unit: 'months', performance_grade: '', start_date: '', completed_on: '', remarks: '' });
   const [ccBusy, setCcBusy] = useState(false);
   const [ccMsg, setCcMsg] = useState('');
   const [ccDownloading, setCcDownloading] = useState<number | null>(null);
@@ -351,14 +353,14 @@ export default function StudentDetailManager({ studentId, canManage, backHref, c
   // ── Course completion ──
   const openComplete = () => {
     const prefill = student?.course && student.course !== '—' ? student.course : '';
-    setCcForm({ tech_field: prefill, duration_value: '', duration_unit: 'months', performance_grade: '', completed_on: new Date().toISOString().slice(0, 10), remarks: '' });
+    setCcForm({ program: prefill, tech_field: '', duration_value: '', duration_unit: 'months', performance_grade: '', start_date: '', completed_on: new Date().toISOString().slice(0, 10), remarks: '' });
     setCcMsg('');
     setShowComplete(true);
   };
   const submitComplete = async () => {
     if (!student) return;
-    if (!ccForm.tech_field.trim() || !ccForm.duration_value || !ccForm.performance_grade.trim()) {
-      setCcMsg('Tech field, duration and grade are required.');
+    if (!ccForm.duration_value || !ccForm.performance_grade.trim()) {
+      setCcMsg('Duration and grade are required.');
       return;
     }
     setCcBusy(true); setCcMsg('');
@@ -367,10 +369,12 @@ export default function StudentDetailManager({ studentId, canManage, backHref, c
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           user_id: student.id,
-          tech_field: ccForm.tech_field.trim(),
+          program: ccForm.program.trim() || null,
+          tech_field: ccForm.tech_field.trim() || null,
           duration_value: Number(ccForm.duration_value),
           duration_unit: ccForm.duration_unit,
           performance_grade: ccForm.performance_grade.trim(),
+          start_date: ccForm.start_date || null,
           completed_on: ccForm.completed_on || null,
           remarks: ccForm.remarks.trim() || null,
         }),
@@ -801,7 +805,7 @@ export default function StudentDetailManager({ studentId, canManage, backHref, c
               <table className={styles.table}>
                 <thead>
                   <tr>
-                    <th>Tech field</th><th>Duration</th><th>Grade</th><th>Completed</th><th>Status</th>
+                    <th>Program</th><th>Duration</th><th>Grade</th><th>Completed</th><th>Status</th>
                     <th style={{ textAlign: 'right' }}>Certificate</th>
                   </tr>
                 </thead>
@@ -809,8 +813,8 @@ export default function StudentDetailManager({ studentId, canManage, backHref, c
                   {completions.length ? completions.map((c) => (
                     <tr key={c.id}>
                       <td className={styles.tdBold}>
-                        {c.tech_field}
-                        {c.course?.title && c.course.title !== c.tech_field ? <div className={styles.tdSub}>{c.course.title}</div> : null}
+                        {c.program || c.course?.title || c.tech_field || '—'}
+                        {c.tech_field ? <div className={styles.tdSub}>{c.tech_field}</div> : null}
                       </td>
                       <td>{c.duration_value} {c.duration_unit}</td>
                       <td>{c.performance_grade}</td>
@@ -904,12 +908,17 @@ export default function StudentDetailManager({ studentId, canManage, backHref, c
             <div style={{ padding: '18px 22px' }}>
               {ccMsg && <div style={{ background: '#FEF2F2', color: '#991B1B', border: '1px solid #FECACA', borderRadius: 10, padding: '9px 12px', fontSize: 13, marginBottom: 12 }}>{ccMsg}</div>}
               <div className={styles.formField} style={{ marginBottom: 12 }}>
-                <label className={styles.formLabel}>Course / tech field</label>
-                <input className={styles.input} value={ccForm.tech_field} placeholder="e.g. Full Stack Web Development"
+                <label className={styles.formLabel}>Program / Course</label>
+                <input className={styles.input} value={ccForm.program} placeholder="e.g. Summer Training / Full-Stack Internship"
+                  onChange={(e) => setCcForm((p) => ({ ...p, program: e.target.value }))} />
+              </div>
+              <div className={styles.formField} style={{ marginBottom: 12 }}>
+                <label className={styles.formLabel}>Technology (optional)</label>
+                <input className={styles.input} value={ccForm.tech_field} placeholder="e.g. React, Node.js, MySQL"
                   onChange={(e) => setCcForm((p) => ({ ...p, tech_field: e.target.value }))} />
               </div>
               <div style={{ display: 'flex', gap: 10, marginBottom: 12 }}>
-                <div style={{ flex: 1.4 }}>
+                <div style={{ flex: 1.2 }}>
                   <label className={styles.formLabel}>Duration</label>
                   <input className={styles.input} type="number" min={1} placeholder="e.g. 3" value={ccForm.duration_value}
                     onChange={(e) => setCcForm((p) => ({ ...p, duration_value: e.target.value }))} />
@@ -922,15 +931,20 @@ export default function StudentDetailManager({ studentId, canManage, backHref, c
                     <option value="days">Days</option>
                   </select>
                 </div>
+                <div style={{ flex: 1.1 }}>
+                  <label className={styles.formLabel}>Grade</label>
+                  <input className={styles.input} placeholder="e.g. A+" value={ccForm.performance_grade}
+                    onChange={(e) => setCcForm((p) => ({ ...p, performance_grade: e.target.value }))} />
+                </div>
               </div>
               <div style={{ display: 'flex', gap: 10, marginBottom: 12 }}>
                 <div style={{ flex: 1 }}>
-                  <label className={styles.formLabel}>Performance grade</label>
-                  <input className={styles.input} placeholder="e.g. A+ / Excellent" value={ccForm.performance_grade}
-                    onChange={(e) => setCcForm((p) => ({ ...p, performance_grade: e.target.value }))} />
+                  <label className={styles.formLabel}>Start date</label>
+                  <input className={styles.input} type="date" value={ccForm.start_date}
+                    onChange={(e) => setCcForm((p) => ({ ...p, start_date: e.target.value }))} />
                 </div>
                 <div style={{ flex: 1 }}>
-                  <label className={styles.formLabel}>Completed on</label>
+                  <label className={styles.formLabel}>Completion date</label>
                   <input className={styles.input} type="date" value={ccForm.completed_on}
                     onChange={(e) => setCcForm((p) => ({ ...p, completed_on: e.target.value }))} />
                 </div>

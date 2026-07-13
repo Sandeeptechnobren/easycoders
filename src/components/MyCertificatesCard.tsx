@@ -12,7 +12,8 @@ const BASE = 'https://api.easycoders.in/projects/backend/public/api';
 
 type Completion = {
   id: number;
-  tech_field: string;
+  program?: string | null;
+  tech_field?: string | null;
   duration_value: number;
   duration_unit: string;
   performance_grade: string;
@@ -80,7 +81,7 @@ export default function MyCertificatesCard() {
             padding: '12px 14px', border: '1px solid #eef2f7', borderRadius: 12, background: '#f8fafc',
           }}>
             <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: '#1e293b' }}>{c.course?.title || c.tech_field}</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: '#1e293b' }}>{c.program || c.course?.title || c.tech_field}</div>
               <div style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>
                 {c.duration_value} {c.duration_unit} · Grade {c.performance_grade} · {fmt(c.completed_on)}
               </div>
