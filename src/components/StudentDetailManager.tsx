@@ -147,6 +147,7 @@ export default function StudentDetailManager({ studentId, canManage, backHref, c
   const [ccBusy, setCcBusy] = useState(false);
   const [ccMsg, setCcMsg] = useState('');
   const [ccDownloading, setCcDownloading] = useState<number | null>(null);
+  const [ccProgramOther, setCcProgramOther] = useState(false);
 
   const loadStudent = async () => {
     try {
@@ -353,7 +354,8 @@ export default function StudentDetailManager({ studentId, canManage, backHref, c
   // ── Course completion ──
   const openComplete = () => {
     const prefill = student?.course && student.course !== '—' ? student.course : '';
-    setCcForm({ program: prefill, tech_field: '', duration_value: '', duration_unit: 'months', performance_grade: '', start_date: '', completed_on: new Date().toISOString().slice(0, 10), remarks: '' });
+    setCcForm({ program: 'Summer Training', tech_field: prefill, duration_value: '', duration_unit: 'days', performance_grade: '', start_date: '', completed_on: new Date().toISOString().slice(0, 10), remarks: '' });
+    setCcProgramOther(false);
     setCcMsg('');
     setShowComplete(true);
   };
@@ -908,9 +910,25 @@ export default function StudentDetailManager({ studentId, canManage, backHref, c
             <div style={{ padding: '18px 22px' }}>
               {ccMsg && <div style={{ background: '#FEF2F2', color: '#991B1B', border: '1px solid #FECACA', borderRadius: 10, padding: '9px 12px', fontSize: 13, marginBottom: 12 }}>{ccMsg}</div>}
               <div className={styles.formField} style={{ marginBottom: 12 }}>
-                <label className={styles.formLabel}>Program / Course</label>
-                <input className={styles.input} value={ccForm.program} placeholder="e.g. Summer Training / Full-Stack Internship"
-                  onChange={(e) => setCcForm((p) => ({ ...p, program: e.target.value }))} />
+                <label className={styles.formLabel}>Program type</label>
+                <select className={styles.input} value={ccProgramOther ? '__other__' : ccForm.program}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    if (v === '__other__') { setCcProgramOther(true); setCcForm((p) => ({ ...p, program: '' })); }
+                    else { setCcProgramOther(false); setCcForm((p) => ({ ...p, program: v })); }
+                  }}>
+                  <option value="Summer Training">Summer Training</option>
+                  <option value="Internship">Internship</option>
+                  <option value="Industrial Training">Industrial Training</option>
+                  <option value="Winter Training">Winter Training</option>
+                  <option value="Training">Training</option>
+                  <option value="">— None —</option>
+                  <option value="__other__">Other…</option>
+                </select>
+                {ccProgramOther && (
+                  <input className={styles.input} style={{ marginTop: 8 }} value={ccForm.program} placeholder="Enter program / training name"
+                    onChange={(e) => setCcForm((p) => ({ ...p, program: e.target.value }))} />
+                )}
               </div>
               <div className={styles.formField} style={{ marginBottom: 12 }}>
                 <label className={styles.formLabel}>Technology (optional)</label>
