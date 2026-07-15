@@ -17,6 +17,13 @@ import { useFeeVisibility, maskAmount, FeeToggle } from '@/lib/feeMask';
 
 const BASE = 'https://api.easycoders.in/projects/backend/public/api';
 
+/** Build a certificate download filename: "<Student Name>_<Course>_<Year>.pdf". */
+function certFileName(name?: string | null, course?: string | null, dateStr?: string | null): string {
+  const clean = (s: string) => s.replace(/[\\/:*?"<>|]+/g, '').replace(/\s+/g, ' ').trim();
+  const year = dateStr ? new Date(dateStr).getFullYear() : new Date().getFullYear();
+  return `${clean(name || '') || 'Student'}_${clean(course || '') || 'Course'}_${year}.pdf`;
+}
+
 type Crumb = { label: string; href?: string };
 
 type Profile = {
@@ -60,6 +67,7 @@ type AttendanceRow = {
 
 type Completion = {
   id: number;
+  student_name?: string | null;
   program?: string | null;
   tech_field?: string | null;
   duration_value: number;
@@ -398,9 +406,9 @@ export default function StudentDetailManager({ studentId, canManage, backHref, c
       });
       if (!res.ok) throw new Error('Could not download the certificate.');
       const blob = await res.blob();
-      const cd = res.headers.get('Content-Disposition') || '';
-      const m = cd.match(/filename="?([^"]+)"?/);
-      const fname = m ? m[1] : `course-completion-${cid}.pdf`;
+      const c = completions.find((x) => x.id === cid);
+      const course = c?.program || c?.course?.title || c?.tech_field || '';
+      const fname = certFileName(c?.student_name || student?.name, course, c?.completed_on);
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url; a.download = fname;

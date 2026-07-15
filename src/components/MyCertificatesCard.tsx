@@ -10,8 +10,16 @@ import { fetchWithAuth } from '@/lib/api';
 
 const BASE = 'https://api.easycoders.in/projects/backend/public/api';
 
+/** Build a certificate download filename: "<Student Name>_<Course>_<Year>.pdf". */
+function certFileName(name?: string | null, course?: string | null, dateStr?: string | null): string {
+  const clean = (s: string) => s.replace(/[\\/:*?"<>|]+/g, '').replace(/\s+/g, ' ').trim();
+  const year = dateStr ? new Date(dateStr).getFullYear() : new Date().getFullYear();
+  return `${clean(name || '') || 'Student'}_${clean(course || '') || 'Course'}_${year}.pdf`;
+}
+
 type Completion = {
   id: number;
+  student_name?: string | null;
   program?: string | null;
   tech_field?: string | null;
   duration_value: number;
@@ -35,18 +43,17 @@ export default function MyCertificatesCard() {
       .finally(() => setLoaded(true));
   }, []);
 
-  const download = async (id: number) => {
-    setBusy(id);
+  const download = async (c: Completion) => {
+    setBusy(c.id);
     try {
       const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-      const res = await fetch(`${BASE}/course-completions/${id}/certificate`, {
+      const res = await fetch(`${BASE}/course-completions/${c.id}/certificate`, {
         headers: { Authorization: `Bearer ${token}`, Accept: 'application/pdf' },
       });
       if (!res.ok) throw new Error('download failed');
       const blob = await res.blob();
-      const cd = res.headers.get('Content-Disposition') || '';
-      const m = cd.match(/filename="?([^"]+)"?/);
-      const fname = m ? m[1] : `course-completion-${id}.pdf`;
+      const course = c.program || c.course?.title || c.tech_field || '';
+      const fname = certFileName(c.student_name, course, c.completed_on);
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url; a.download = fname;
@@ -86,7 +93,7 @@ export default function MyCertificatesCard() {
                 {c.duration_value} {c.duration_unit} · Grade {c.performance_grade} · {fmt(c.completed_on)}
               </div>
             </div>
-            <button type="button" onClick={() => download(c.id)} disabled={busy === c.id}
+            <button type="button" onClick={() => download(c)} disabled={busy === c.id}
               style={{
                 background: '#2563eb', color: '#fff', border: 'none', borderRadius: 10,
                 padding: '9px 16px', fontSize: 13, fontWeight: 600, cursor: busy === c.id ? 'wait' : 'pointer', whiteSpace: 'nowrap',
