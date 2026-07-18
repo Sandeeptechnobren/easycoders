@@ -321,6 +321,20 @@
 .notInterested { background: #fcebeb; color: #791f1f; border: 1px solid #f7c1c1; }
 .neutral       { background: #e6f1fb; color: #0c447c; border: 1px solid #b5d4f4; }
 
+/* Course-type tag (Internship / Summer Training / …) — amber, echoing the
+   brand accent and staying distinct from the blue batch + green/red status pills. */
+.typePill {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  background: #fdf3e1;
+  color: #8a5410;
+  border: 1px solid #f1d7a6;
+}
+
 /* Action button */
 .actionBtn {
   display: inline-block;

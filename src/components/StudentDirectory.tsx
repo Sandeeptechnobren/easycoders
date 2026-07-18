@@ -31,6 +31,10 @@ type Student = {
   paid_amount?: number;
   due_amount?: number;
   enrollment_status?: string | null;
+  course_id?: number | null;
+  course_title?: string | null;
+  course_type?: string | null;
+  enrollment_year?: number | null;
   created_at?: string;
 };
 
@@ -58,6 +62,8 @@ export default function StudentDirectory({ crumbs, detailBase, showAdmit = false
 
   const [query, setQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'All' | 'Active' | 'Inactive'>('All');
+  const [yearFilter, setYearFilter] = useState<string>('All');
+  const [typeFilter, setTypeFilter] = useState<string>('All');
   const [error, setError] = useState('');
   const [selectedCollegeID, setSelectedCollegeID] = useState<string>('');
   const [colleges, setColleges] = useState<College[]>([]);
@@ -117,6 +123,19 @@ export default function StudentDirectory({ crumbs, detailBase, showAdmit = false
     }
   };
 
+  // Filter options derived from the loaded roster (kept in sync with the data,
+  // so an empty category or year never shows up as a dead dropdown entry).
+  const yearOptions = useMemo(
+    () => Array.from(new Set(students.map((s) => s.enrollment_year).filter((y): y is number => !!y)))
+      .sort((a, b) => b - a),
+    [students],
+  );
+  const typeOptions = useMemo(
+    () => Array.from(new Set(students.map((s) => s.course_type).filter((t): t is string => !!t)))
+      .sort((a, b) => a.localeCompare(b)),
+    [students],
+  );
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return students.filter((s) => {
@@ -128,9 +147,11 @@ export default function StudentDirectory({ crumbs, detailBase, showAdmit = false
         statusFilter === 'All' ||
         (statusFilter === 'Active' && active) ||
         (statusFilter === 'Inactive' && !active);
-      return matchQuery && matchStatus;
+      const matchYear = yearFilter === 'All' || String(s.enrollment_year ?? '') === yearFilter;
+      const matchType = typeFilter === 'All' || (s.course_type ?? '') === typeFilter;
+      return matchQuery && matchStatus && matchYear && matchType;
     });
-  }, [students, query, statusFilter]);
+  }, [students, query, statusFilter, yearFilter, typeFilter]);
 
   const kpis = useMemo(() => {
     const total = students.length;
@@ -215,6 +236,28 @@ export default function StudentDirectory({ crumbs, detailBase, showAdmit = false
 
         <select
           className={styles.filterSelect}
+          value={typeFilter}
+          onChange={(e) => setTypeFilter(e.target.value)}
+        >
+          <option value="All">All Course Types</option>
+          {typeOptions.map((t) => (
+            <option key={t} value={t}>{t}</option>
+          ))}
+        </select>
+
+        <select
+          className={styles.filterSelect}
+          value={yearFilter}
+          onChange={(e) => setYearFilter(e.target.value)}
+        >
+          <option value="All">All Years</option>
+          {yearOptions.map((y) => (
+            <option key={y} value={String(y)}>{y}</option>
+          ))}
+        </select>
+
+        <select
+          className={styles.filterSelect}
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value as 'All' | 'Active' | 'Inactive')}
         >
@@ -223,13 +266,15 @@ export default function StudentDirectory({ crumbs, detailBase, showAdmit = false
           <option value="Inactive">Inactive</option>
         </select>
 
-        {(selectedCollegeID || statusFilter !== 'All') && (
+        {(selectedCollegeID || statusFilter !== 'All' || typeFilter !== 'All' || yearFilter !== 'All') && (
           <button
             className={styles.clearBtn}
             type="button"
             onClick={() => {
               setSelectedCollegeID('');
               setStatusFilter('All');
+              setTypeFilter('All');
+              setYearFilter('All');
               localStorage.removeItem('college_id');
             }}
           >
@@ -277,6 +322,8 @@ export default function StudentDirectory({ crumbs, detailBase, showAdmit = false
                     {colleges.find(c => String(c.id) === selectedCollegeID)?.college_name ?? 'College'}
                   </span>
                 )}
+                {typeFilter !== 'All' && <span className={styles.activeTag}>{typeFilter}</span>}
+                {yearFilter !== 'All' && <span className={styles.activeTag}>{yearFilter}</span>}
                 {statusFilter !== 'All' && <span className={styles.activeTag}>{statusFilter}</span>}
               </span>
             </div>
@@ -288,6 +335,7 @@ export default function StudentDirectory({ crumbs, detailBase, showAdmit = false
                   <tr>
                     <th>Student</th>
                     <th>Enrolment ID</th>
+                    <th>Type</th>
                     <th>Batch</th>
                     <th>Fees Due</th>
                     <th>Status</th>
@@ -312,6 +360,11 @@ export default function StudentDirectory({ crumbs, detailBase, showAdmit = false
                         </td>
                         <td className={styles.tdMuted}>
                           <span style={{ fontFamily: 'ui-monospace, Menlo, monospace' }}>{s.enrolment_id || '—'}</span>
+                        </td>
+                        <td className={styles.tdMuted}>
+                          {s.course_type
+                            ? <span className={styles.typePill} title={s.course_title || undefined}>{s.course_type}</span>
+                            : '—'}
                         </td>
                         <td className={styles.tdMuted}>
                           {(s.batches && s.batches.length > 0) ? (
@@ -378,6 +431,7 @@ export default function StudentDirectory({ crumbs, detailBase, showAdmit = false
                     </div>
                     <div className={styles.mGrid}>
                       <div><span className={styles.mKey}>Enrolment</span><span className={styles.mVal}>{s.enrolment_id || '—'}</span></div>
+                      <div><span className={styles.mKey}>Type</span><span className={styles.mVal}>{s.course_type || '—'}</span></div>
                       <div><span className={styles.mKey}>Batch</span><span className={styles.mVal}>{(s.batches && s.batches.length) ? s.batches.map((b) => b.name).join(', ') : (s.batch || '—')}</span></div>
                       <div><span className={styles.mKey}>Fees Due</span><span className={styles.mVal}>{due > 0 ? inr(due) : 'Paid'}</span></div>
                       <div><span className={styles.mKey}>Phone</span><span className={styles.mVal}>{s.phone || '—'}</span></div>
