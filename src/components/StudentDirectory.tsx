@@ -35,6 +35,7 @@ type Student = {
   course_title?: string | null;
   course_type?: string | null;
   enrollment_year?: number | null;
+  course_completed?: boolean;
   created_at?: string;
 };
 
@@ -362,9 +363,12 @@ export default function StudentDirectory({ crumbs, detailBase, showAdmit = false
                           <span style={{ fontFamily: 'ui-monospace, Menlo, monospace' }}>{s.enrolment_id || '—'}</span>
                         </td>
                         <td className={styles.tdMuted}>
-                          {s.course_type
-                            ? <span className={styles.typePill} title={s.course_title || undefined}>{s.course_type}</span>
-                            : '—'}
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'flex-start' }}>
+                            {s.course_type
+                              ? <span className={styles.typePill} title={s.course_title || undefined}>{s.course_type}</span>
+                              : <span>—</span>}
+                            {s.course_completed && <span className={styles.doneChip}>✓ Course completed</span>}
+                          </div>
                         </td>
                         <td className={styles.tdMuted}>
                           {(s.batches && s.batches.length > 0) ? (
@@ -431,7 +435,7 @@ export default function StudentDirectory({ crumbs, detailBase, showAdmit = false
                     </div>
                     <div className={styles.mGrid}>
                       <div><span className={styles.mKey}>Enrolment</span><span className={styles.mVal}>{s.enrolment_id || '—'}</span></div>
-                      <div><span className={styles.mKey}>Type</span><span className={styles.mVal}>{s.course_type || '—'}</span></div>
+                      <div><span className={styles.mKey}>Type</span><span className={styles.mVal}>{s.course_type || '—'}{s.course_completed && <span className={styles.doneChip} style={{ marginLeft: 6 }}>✓ Completed</span>}</span></div>
                       <div><span className={styles.mKey}>Batch</span><span className={styles.mVal}>{(s.batches && s.batches.length) ? s.batches.map((b) => b.name).join(', ') : (s.batch || '—')}</span></div>
                       <div><span className={styles.mKey}>Fees Due</span><span className={styles.mVal}>{due > 0 ? inr(due) : 'Paid'}</span></div>
                       <div><span className={styles.mKey}>Phone</span><span className={styles.mVal}>{s.phone || '—'}</span></div>

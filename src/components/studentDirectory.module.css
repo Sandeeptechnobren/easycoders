@@ -321,6 +321,22 @@
 .notInterested { background: #fcebeb; color: #791f1f; border: 1px solid #f7c1c1; }
 .neutral       { background: #e6f1fb; color: #0c447c; border: 1px solid #b5d4f4; }
 
+/* "Course completed" chip — green, shown when the student has an issued
+   course-completion certificate (batch marked complete). */
+.doneChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 10.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  background: #eaf3de;
+  color: #27500a;
+  border: 1px solid #c0dd97;
+}
+
 /* Course-type tag (Internship / Summer Training / …) — amber, echoing the
    brand accent and staying distinct from the blue batch + green/red status pills. */
 .typePill {

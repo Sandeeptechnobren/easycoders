@@ -41,6 +41,7 @@ export default function BatchRosterPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [completing, setCompleting] = useState(false);
   const [addQuery, setAddQuery] = useState('');
 
   const loadBatch = useCallback(async () => {
@@ -94,6 +95,33 @@ export default function BatchRosterPage() {
     } catch (e: unknown) { alert(e instanceof Error ? e.message : 'Could not update enrolment.'); } finally { setBusy(false); }
   };
 
+  // Mark the whole batch complete: completes every active enrolment and generates
+  // a course-completion certificate for each (grade blank, edited per student later).
+  const completeBatch = async () => {
+    if (!batch) return;
+    const n = students.filter(s => (s.pivot?.status || 'active') === 'active').length;
+    const ok = confirm(
+      `Mark "${batch.name}" as Completed?\n\n` +
+      `This marks ${n} active student${n !== 1 ? 's' : ''} as completed and generates a course-completion certificate for each ` +
+      `(grade left blank — set it on each student's profile before sharing).\n\nContinue?`
+    );
+    if (!ok) return;
+    setCompleting(true);
+    try {
+      const res = await fetchWithAuth(`${BASE}/batches/${id}/complete`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}),
+      });
+      const d = (res?.data ?? {}) as { certificates_created?: number; skipped_existing?: number };
+      await loadBatch();
+      alert(
+        `Batch marked complete. ${d.certificates_created ?? 0} certificate${(d.certificates_created ?? 0) !== 1 ? 's' : ''} created` +
+        (d.skipped_existing ? `, ${d.skipped_existing} already had one` : '') + '.'
+      );
+    } catch (e: unknown) {
+      alert(e instanceof Error ? e.message : 'Could not complete the batch.');
+    } finally { setCompleting(false); }
+  };
+
   const removeStudent = async (sid: number) => {
     if (!confirm('Remove this student from the batch?')) return;
     setBusy(true);
@@ -137,7 +165,18 @@ export default function BatchRosterPage() {
                     <span className={styles.derivedHint}>ⓘ by dates: <strong style={{ margin: '0 3px' }}>{batch.derived_status}</strong></span>
                   )}
                 </div>
-                <Link className={styles.backLink} href="/admin/batches">← All batches</Link>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                  {batch.status !== 'completed' && batch.status !== 'cancelled' && (
+                    <button
+                      className={`${styles.btn} ${styles.btnGold} ${styles.btnSm}`}
+                      disabled={completing || busy}
+                      onClick={completeBatch}
+                    >
+                      {completing ? 'Completing…' : '✓ Mark batch as Completed'}
+                    </button>
+                  )}
+                  <Link className={styles.backLink} href="/admin/batches">← All batches</Link>
+                </div>
               </div>
               <div className={styles.detailGrid}>
                 <div className={styles.dField}><div className={styles.dKey}>Course</div><div className={styles.dVal}>{courseLabel(batch.course) || '—'}</div></div>
