@@ -174,8 +174,11 @@ export default function AdminCertificatesPage() {
           .aDanger:hover { border-color: #E0A3A3; background: #FDF4F4; }
           .scroll { overflow-x: auto; }
 
-          .overlay { position: fixed; inset: 0; background: rgba(11,27,58,.5); display: flex; align-items: flex-start; justify-content: center; padding: 40px 16px; z-index: 1000; overflow-y: auto; }
-          .modal { background: #fff; border-radius: 18px; width: 100%; max-width: 620px; box-shadow: 0 24px 60px rgba(11,27,58,.28); }
+          /* NB: do NOT name these .modal / .modal-* — Bootstrap (loaded globally via
+             CDN in layout.tsx) sets .modal{display:none;z-index:1055}, which would
+             hide the card. Use collision-free names. */
+          .certOverlay { position: fixed; inset: 0; background: rgba(11,27,58,.5); display: flex; align-items: flex-start; justify-content: center; padding: 40px 16px; z-index: 2000; overflow-y: auto; }
+          .certCard { background: #fff; border-radius: 18px; width: 100%; max-width: 620px; box-shadow: 0 24px 60px rgba(11,27,58,.28); }
           .mHead { padding: 22px 24px 0; }
           .mTitle { font-family: 'Playfair Display', Georgia, serif; font-size: 20px; font-weight: 700; color: #0B1B3A; margin: 0; }
           .mSub { font-size: 13px; color: #94A3B8; margin: 4px 0 0; }
@@ -249,8 +252,8 @@ export default function AdminCertificatesPage() {
         </AdminPanel>
 
         {showForm && (
-          <div className="overlay" onClick={() => setShowForm(false)}>
-            <div className="modal" onClick={(e) => e.stopPropagation()}>
+          <div className="certOverlay" onClick={() => setShowForm(false)}>
+            <div className="certCard" onClick={(e) => e.stopPropagation()}>
               <div className="mHead">
                 <h2 className="mTitle">Generate a certificate</h2>
                 <p className="mSub">Fill in the recipient&rsquo;s details. The certificate downloads immediately and is saved below.</p>
