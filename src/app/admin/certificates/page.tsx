@@ -122,8 +122,8 @@ export default function AdminCertificatesPage() {
       });
       const created = r?.data as Cert | undefined;
       setShowForm(false); setForm(emptyForm);
-      await load();
-      if (created?.id) await download(created);   // hand the PDF straight to the user
+      if (created?.id) await download(created);   // assigns the code + hands the PDF to the user
+      await load();                               // refresh AFTER download so the row shows its code
     } catch (e: unknown) {
       setFormMsg(e instanceof Error ? e.message : 'Could not generate the certificate.');
     } finally { setBusy(false); }
