@@ -68,6 +68,18 @@ export default function EasyCodersAdminHome() {
           />
 
           <AdminCard
+            href="/admin/certificates"
+            title="Certificates"
+            description="Generate an official Certificate of Completion for anyone — enter the name, technology and details — then download, re-download or revoke it. Verifiable via QR code."
+            icon={
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="8" r="5" />
+                <path d="M8.5 12.5L7 22l5-3 5 3-1.5-9.5" />
+              </svg>
+            }
+          />
+
+          <AdminCard
             href="/admin/enrollmentRequests"
             title="Enrollment Requests"
             description="Review enrollment requests submitted via the public registration popup and convert them to admissions."
