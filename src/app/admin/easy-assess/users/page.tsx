@@ -50,11 +50,33 @@ type College = { id: number | string; college_name: string };
 
 type LoadState = 'loading' | 'ready' | 'error';
 
+type DatePreset = 'today' | 'custom' | 'all';
+
+/** Local-day boundary helpers (kept consistent with the toLocaleDateString Joined column). */
+const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0).getTime();
+const endOfDay   = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999).getTime();
+
+/** Resolve the active [startMs, endMs] window for a preset (inclusive). */
+function dateWindow(preset: DatePreset, from: string, to: string): [number, number] {
+  if (preset === 'all') return [-Infinity, Infinity];
+  if (preset === 'today') {
+    const now = new Date();
+    return [startOfDay(now), endOfDay(now)];
+  }
+  // custom — either bound may be open
+  const start = from ? startOfDay(new Date(`${from}T00:00:00`)) : -Infinity;
+  const end   = to   ? endOfDay(new Date(`${to}T00:00:00`))     : Infinity;
+  return [start, end];
+}
+
 export default function AssessmentUsersAdmin() {
   const [users, setUsers]               = useState<AUser[]>([]);
   const [colleges, setColleges]         = useState<College[]>([]);
   const [collegeId, setCollegeId]       = useState<string>('');
   const [search, setSearch]             = useState('');
+  const [datePreset, setDatePreset]     = useState<DatePreset>('today');
+  const [customFrom, setCustomFrom]     = useState<string>('');
+  const [customTo, setCustomTo]         = useState<string>('');
   const [state, setState]               = useState<LoadState>('loading');
   const [errorMsg, setErrorMsg]         = useState('');
 
@@ -94,18 +116,34 @@ export default function AssessmentUsersAdmin() {
     return () => { cancelled = true; };
   }, [collegeId]);
 
-  /* ─── Client-side search filter ─── */
+  /* ─── Date filter (drives the stat cards + the list) ─── */
+  const dateFiltered = useMemo(() => {
+    const [start, end] = dateWindow(datePreset, customFrom, customTo);
+    if (start === -Infinity && end === Infinity) return users;
+    return users.filter(u => {
+      if (!u.created_at) return false;
+      const t = new Date(u.created_at).getTime();
+      return !Number.isNaN(t) && t >= start && t <= end;
+    });
+  }, [users, datePreset, customFrom, customTo]);
+
+  /* ─── Search + newest-first sort on top of the date filter ─── */
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return users;
-    return users.filter(u =>
-      (u.name  || '').toLowerCase().includes(q) ||
-      (u.email || '').toLowerCase().includes(q) ||
-      (u.phone || '').toLowerCase().includes(q)
-    );
-  }, [users, search]);
+    const base = q
+      ? dateFiltered.filter(u =>
+          (u.name  || '').toLowerCase().includes(q) ||
+          (u.email || '').toLowerCase().includes(q) ||
+          (u.phone || '').toLowerCase().includes(q))
+      : dateFiltered;
+    return [...base].sort((a, b) => {
+      const ta = a.created_at ? new Date(a.created_at).getTime() : 0;
+      const tb = b.created_at ? new Date(b.created_at).getTime() : 0;
+      return tb - ta; // newest first
+    });
+  }, [dateFiltered, search]);
 
-  const stats = useMemo(() => computeInterestStats(users), [users]);
+  const stats = useMemo(() => computeInterestStats(dateFiltered), [dateFiltered]);
 
   return (
     <RoleGuard allowedRoles={[1]}>
@@ -255,7 +293,7 @@ export default function AssessmentUsersAdmin() {
 
         <AdminPanel
           title="Registered users"
-          subtitle={state === 'ready' ? `${filtered.length} of ${users.length} matching` : undefined}
+          subtitle={state === 'ready' ? `${filtered.length} of ${dateFiltered.length} matching` : undefined}
           toolbar={
             <div className="toolbar">
               <select
@@ -268,6 +306,36 @@ export default function AssessmentUsersAdmin() {
                   <option key={String(c.id)} value={String(c.id)}>{c.college_name}</option>
                 ))}
               </select>
+              <select
+                value={datePreset}
+                onChange={e => setDatePreset(e.target.value as DatePreset)}
+                aria-label="Filter by join date"
+              >
+                <option value="today">Today</option>
+                <option value="custom">Custom range</option>
+                <option value="all">All time</option>
+              </select>
+              {datePreset === 'custom' && (
+                <>
+                  <input
+                    type="date"
+                    value={customFrom}
+                    max={customTo || undefined}
+                    onChange={e => setCustomFrom(e.target.value)}
+                    aria-label="From date"
+                    style={{ minWidth: 0 }}
+                  />
+                  <span style={{ color: '#94A3B8', fontSize: 13 }}>to</span>
+                  <input
+                    type="date"
+                    value={customTo}
+                    min={customFrom || undefined}
+                    onChange={e => setCustomTo(e.target.value)}
+                    aria-label="To date"
+                    style={{ minWidth: 0 }}
+                  />
+                </>
+              )}
               <input
                 type="search"
                 placeholder="Search name / email / phone…"
@@ -281,7 +349,12 @@ export default function AssessmentUsersAdmin() {
           {state === 'loading' && <AdminState kind="loading" message="Loading assessment users…" />}
           {state === 'error'   && <AdminState kind="error" message={errorMsg || 'Failed to load.'} />}
           {state === 'ready' && filtered.length === 0 && (
-            <AdminState kind="empty" message={search ? `No users match "${search}".` : 'No users found for the selected college.'} />
+            <AdminState kind="empty" message={
+              search ? `No users match "${search}".`
+              : datePreset === 'today' ? 'No users joined today.'
+              : datePreset === 'custom' ? 'No users joined in the selected date range.'
+              : 'No users found for the selected college.'
+            } />
           )}
 
           {state === 'ready' && filtered.length > 0 && (
