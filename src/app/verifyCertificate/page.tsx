@@ -16,7 +16,7 @@ import React, { useEffect, useState } from 'react';
  * ────────────────────────────────────────────────────────────────────────── */
 
 type VerifyData = {
-  type?: 'assessment' | 'course_completion';
+  type?: 'assessment' | 'course_completion' | 'elite_alumni_card';
   certificate_code: string;
   user: { id: number; name: string; email: string };
   assessment?: { id: number; title: string };
@@ -27,6 +27,10 @@ type VerifyData = {
   tech_field?: string;
   duration?: string;
   grade?: string;
+  // elite alumni cards
+  membership_label?: string;
+  benefits?: string[];
+  member_since?: string;
 };
 
 type VerifyApiResponse = {
@@ -39,6 +43,8 @@ const API =
   'https://api.easycoders.in/projects/backend/public/api/certificate/verify';
 const COURSE_API =
   'https://api.easycoders.in/projects/backend/public/api/course-completion/verify';
+const ELITE_API =
+  'https://api.easycoders.in/projects/backend/public/api/elite-card/verify';
 
 export default function VerifyCertificate() {
   const [identifier, setIdentifier] = useState('');
@@ -91,7 +97,29 @@ export default function VerifyCertificate() {
         return;
       }
 
-      setErrorMsg(json2?.message || json?.message || 'Certificate not found. Please check the ID.');
+      // 3) Elite Alumni Cards.
+      const res3 = await fetch(
+        `${ELITE_API}?code=${encodeURIComponent(code)}`,
+        { method: 'GET', headers: { Accept: 'application/json' } },
+      );
+      const json3: VerifyApiResponse & { data?: { card_number?: string; holder?: string; membership_label?: string; benefits?: string[]; member_since?: string; issued_on?: string } } =
+        await res3.json().catch(() => ({ success: false, message: '' } as VerifyApiResponse));
+      if (res3.ok && json3?.success && json3.data) {
+        const d = json3.data;
+        setResult({
+          type: 'elite_alumni_card',
+          certificate_code: d.card_number ?? code,
+          user: { id: 0, name: d.holder ?? '', email: '' },
+          completed_at: d.issued_on,
+          membership_label: d.membership_label,
+          benefits: d.benefits,
+          member_since: d.member_since,
+        });
+        setOpenModal(true);
+        return;
+      }
+
+      setErrorMsg(json3?.message || json2?.message || json?.message || 'Certificate not found. Please check the ID.');
     } catch (err) {
       console.error(err);
       setErrorMsg('Server error. Please try again in a moment.');
@@ -502,8 +530,8 @@ export default function VerifyCertificate() {
               <div className="vc-seal">
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="m9 12 2 2 4-4" /><circle cx="12" cy="12" r="9" /></svg>
               </div>
-              <div className="vc-modal-title">Certificate Verified</div>
-              <div className="vc-modal-sub">This certificate is authentic and issued by Easy Coders.</div>
+              <div className="vc-modal-title">{result.type === 'elite_alumni_card' ? 'Elite Alumni Card Verified' : 'Certificate Verified'}</div>
+              <div className="vc-modal-sub">{result.type === 'elite_alumni_card' ? 'This Elite Alumni Card is authentic and issued by Easy Coders.' : 'This certificate is authentic and issued by Easy Coders.'}</div>
             </div>
 
             {/* Headline: who it was issued to + when */}
@@ -531,6 +559,27 @@ export default function VerifyCertificate() {
                     <span className="vc-score-val">{result.grade}</span>
                   </div>
                 </>
+              ) : result.type === 'elite_alumni_card' ? (
+                <>
+                  {result.membership_label && (
+                    <div className="vc-detail-row">
+                      <span className="vc-detail-key">Membership</span>
+                      <span className="vc-detail-val">{result.membership_label}</span>
+                    </div>
+                  )}
+                  {result.member_since && (
+                    <div className="vc-detail-row">
+                      <span className="vc-detail-key">Member since</span>
+                      <span className="vc-detail-val">{result.member_since}</span>
+                    </div>
+                  )}
+                  {Array.isArray(result.benefits) && result.benefits.length > 0 && (
+                    <div className="vc-detail-row" style={{ alignItems: 'flex-start' }}>
+                      <span className="vc-detail-key">Benefits</span>
+                      <span className="vc-detail-val" style={{ maxWidth: 300 }}>{result.benefits.join(' · ')}</span>
+                    </div>
+                  )}
+                </>
               ) : (
                 <>
                   <div className="vc-detail-row">
@@ -543,12 +592,14 @@ export default function VerifyCertificate() {
                   </div>
                 </>
               )}
+              {result.user?.email && (
+                <div className="vc-detail-row">
+                  <span className="vc-detail-key">Email</span>
+                  <span className="vc-detail-val email">{result.user.email}</span>
+                </div>
+              )}
               <div className="vc-detail-row">
-                <span className="vc-detail-key">Email</span>
-                <span className="vc-detail-val email">{result.user?.email}</span>
-              </div>
-              <div className="vc-detail-row">
-                <span className="vc-detail-key">Certificate ID</span>
+                <span className="vc-detail-key">{result.type === 'elite_alumni_card' ? 'Card Number' : 'Certificate ID'}</span>
                 <span className="vc-code-chip">{result.certificate_code}</span>
               </div>
             </div>
