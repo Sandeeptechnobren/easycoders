@@ -530,8 +530,8 @@ export default function VerifyCertificate() {
               <div className="vc-seal">
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="m9 12 2 2 4-4" /><circle cx="12" cy="12" r="9" /></svg>
               </div>
-              <div className="vc-modal-title">{result.type === 'elite_alumni_card' ? 'Elite Alumni Card Verified' : 'Certificate Verified'}</div>
-              <div className="vc-modal-sub">{result.type === 'elite_alumni_card' ? 'This Elite Alumni Card is authentic and issued by Easy Coders.' : 'This certificate is authentic and issued by Easy Coders.'}</div>
+              <div className="vc-modal-title">{result.type === 'elite_alumni_card' ? 'Platinum Card Verified' : 'Certificate Verified'}</div>
+              <div className="vc-modal-sub">{result.type === 'elite_alumni_card' ? 'This Platinum Internship Privilege Card is authentic and issued by Easy Coders.' : 'This certificate is authentic and issued by Easy Coders.'}</div>
             </div>
 
             {/* Headline: who it was issued to + when */}
