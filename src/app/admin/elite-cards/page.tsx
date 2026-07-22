@@ -32,7 +32,7 @@ const fmt = (d?: string | null) =>
 
 const emptyForm = {
   holder_name: '',
-  membership_label: 'Exclusive for EasyCoder Summer Training Students',
+  membership_label: '',
   email: '',
   phone: '',
   issued_on: new Date().toISOString().slice(0, 10),
@@ -131,13 +131,13 @@ export default function AdminEliteCardsPage() {
   return (
     <RoleGuard allowedRoles={[1]}>
       <AdminSection
-        eyebrow="Easy Coders · Platinum"
-        title="Platinum Privilege Cards"
-        description="Issue a premium, verifiable Platinum Internship Privilege Card to your Summer Training students and alumni — enter the holder's details, generate the card, and download it. Cards are saved here and can be re-downloaded or revoked."
+        eyebrow="Easy Coders · Elite Alumni"
+        title="Elite Alumni Cards"
+        description="Issue a premium, verifiable Elite Alumni Card to your first-batch students and alumni — enter the holder's details, generate the card, and download it. Cards are saved here and can be re-downloaded or revoked."
         breadcrumbs={[
           { label: 'Admin', href: '/admin' },
           { label: 'Easy Coders', href: '/admin/easy-coders' },
-          { label: 'Platinum Cards' },
+          { label: 'Elite Alumni Cards' },
         ]}
       >
         <style jsx>{`
@@ -187,7 +187,7 @@ export default function AdminEliteCardsPage() {
 
         <AdminPanel
           title="Issued cards"
-          subtitle={loading ? 'Loading…' : `${items.length} Platinum Card${items.length !== 1 ? 's' : ''}`}
+          subtitle={loading ? 'Loading…' : `${items.length} Elite Alumni Card${items.length !== 1 ? 's' : ''}`}
           toolbar={<button className="toolBtn" type="button" onClick={() => { setForm(emptyForm); setFormMsg(''); setShowForm(true); }}>+ Generate Card</button>}
         >
           {loading ? (
@@ -237,7 +237,7 @@ export default function AdminEliteCardsPage() {
           <div className="eOverlay" onClick={() => setShowForm(false)}>
             <div className="eCard" onClick={(e) => e.stopPropagation()}>
               <div className="mHead">
-                <h2 className="mTitle">Generate a Platinum Privilege Card</h2>
+                <h2 className="mTitle">Generate an Elite Alumni Card</h2>
                 <p className="mSub">Fill in the holder&rsquo;s details. The card downloads immediately and is saved below.</p>
               </div>
               <div className="mBody">
@@ -246,11 +246,11 @@ export default function AdminEliteCardsPage() {
                   <input className="inp" value={form.holder_name} onChange={(e) => setForm(p => ({ ...p, holder_name: e.target.value }))} placeholder="e.g. Riya Sharma" />
                 </div>
                 <div className="full">
-                  <label className="lbl">Tagline (printed under the title)</label>
-                  <input className="inp" value={form.membership_label} onChange={(e) => setForm(p => ({ ...p, membership_label: e.target.value }))} placeholder="Exclusive for EasyCoder Summer Training Students" />
+                  <label className="lbl">Membership / cohort label</label>
+                  <input className="inp" value={form.membership_label} onChange={(e) => setForm(p => ({ ...p, membership_label: e.target.value }))} placeholder="e.g. First Batch — Alpha EC · 2026" />
                 </div>
                 <div className="full">
-                  <label className="lbl">Benefits (shown when the card is verified)</label>
+                  <label className="lbl">Benefits (printed on the card)</label>
                   {DEFAULT_BENEFITS.map(b => (
                     <label key={b} className="benefit">
                       <input type="checkbox" checked={!!form.benefits[b]} onChange={() => toggleBenefit(b)} />

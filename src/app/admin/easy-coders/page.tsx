@@ -81,8 +81,8 @@ export default function EasyCodersAdminHome() {
 
           <AdminCard
             href="/admin/elite-cards"
-            title="Platinum Privilege Cards"
-            description="Issue premium, verifiable Platinum Internship Privilege Cards to your Summer Training students — lifetime membership, downloadable and QR-verifiable. Download or revoke anytime."
+            title="Elite Alumni Cards"
+            description="Issue premium, verifiable Elite Alumni Cards to first-batch students and alumni — with lifetime perks, discounts and priority placement. Download or revoke anytime."
             icon={
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="2" y="5" width="20" height="14" rx="2" />
