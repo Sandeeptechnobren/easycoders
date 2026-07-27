@@ -522,7 +522,7 @@ export default function HomePage() {
       </section>
 
       {/* ── Gallery teaser (renders only when photos are published) ── */}
-      <GalleryTeaser />
+      {/* <GalleryTeaser /> */}
 
       {/* ── FAQ ── */}
       <section className="faq-section">

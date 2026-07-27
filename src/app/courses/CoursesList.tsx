@@ -756,11 +756,11 @@ export default function CoursesList() {
                     {/* Price */}
                     {price && (
                       <div className="cl-price-row">
-                        <span className="cl-price">{price}</span>
-                        {showStrike && <span className="cl-price-strike">{original}</span>}
-                        {savingsPct !== null && (
+                        {/* <span className="cl-price">{price}</span> */}
+                        {/* {showStrike && <span className="cl-price-strike">{original}</span>} */}
+                        {/* {savingsPct !== null && (
                           <span className="cl-price-save">Save {savingsPct}%</span>
-                        )}
+                        )} */}
                       </div>
                     )}
 
