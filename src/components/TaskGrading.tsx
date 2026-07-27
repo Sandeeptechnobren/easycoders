@@ -8,7 +8,7 @@ import styles from './TaskGrading.module.css';
  *   pick a BATCH → pick a STUDENT in it → see + mark that student's TASKS.
  * The page that renders this wraps it in the appropriate <RoleGuard>. */
 
-const BASE = 'https://api.easycoders.in/projects/backend/public/api';
+const BASE = 'https://api.easycoders.in/api';
 
 function asArray<T>(x: unknown): T[] {
   if (Array.isArray(x)) return x as T[];

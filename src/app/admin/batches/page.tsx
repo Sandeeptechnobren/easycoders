@@ -7,7 +7,7 @@ import { fetchWithAuth } from '@/lib/api';
 import { AdminSection } from '@/components/admin/AdminSection';
 import styles from './batches.module.css';
 
-const BASE = 'https://api.easycoders.in/projects/backend/public/api';
+const BASE = 'https://api.easycoders.in/api';
 
 /** Unwrap bare array / {data:[]} / Laravel paginator {data:{data:[]}}. */
 function asArray<T>(x: unknown): T[] {

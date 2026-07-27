@@ -8,7 +8,7 @@ export const searchStudents = async (query: string) => {
   if (!query) return [];
 
   const res = await fetchWithAuth(
-    `https://api.easycoders.in/projects/backend/public/api/commanAPIs/users?role=student&search=${encodeURIComponent(query)}`
+    `https://api.easycoders.in/api/commanAPIs/users?role=student&search=${encodeURIComponent(query)}`
   );
 
   return res?.data || [];
@@ -17,7 +17,7 @@ export const searchStudents = async (query: string) => {
 // 👤 GET STUDENT DETAILS
 export const getStudentDetails = async (id: number) => {
   const res = await fetchWithAuth(
-    `https://api.easycoders.in/projects/backend/public/api/commanAPIs/getStudentList/${id}`
+    `https://api.easycoders.in/api/commanAPIs/getStudentList/${id}`
   );
 
   return res?.data;
@@ -30,7 +30,7 @@ export const addPayment = async (payload: {
   payment_mode: string;
 }) => {
   return await fetchWithAuth(
-    `https://api.easycoders.in/projects/backend/public/api/payments/update-payment`,
+    `https://api.easycoders.in/api/payments/update-payment`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

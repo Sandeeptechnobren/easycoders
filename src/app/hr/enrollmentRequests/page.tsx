@@ -48,7 +48,7 @@ export default function DirectAdmissionPage() {
     try {
       setCourseLoading(true);
       const res = await fetchWithAuth(
-        'https://api.easycoders.in/projects/backend/public/api/courses'
+        'https://api.easycoders.in/api/courses'
       );
       setCourses(res || []);
     } catch {
@@ -62,7 +62,7 @@ export default function DirectAdmissionPage() {
     try {
       setCollegeLoading(true);
       const res = await fetchWithAuth(
-        'https://api.easycoders.in/projects/backend/public/api/collegeList'
+        'https://api.easycoders.in/api/collegeList'
       );
       setColleges(res.data || []);
     } catch {
@@ -103,7 +103,7 @@ export default function DirectAdmissionPage() {
           directForm.payment_mode === 'CASH' ? null : directForm.reference_id,
       };
       const json = await fetchWithAuth(
-        'https://api.easycoders.in/projects/backend/public/api/directAdmission',
+        'https://api.easycoders.in/api/directAdmission',
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

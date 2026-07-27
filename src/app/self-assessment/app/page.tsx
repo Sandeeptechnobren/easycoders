@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import AssessmentCards from './assessment/[id]/AssessmentCards';
 
-const API_BASE = 'https://api.easycoders.in/projects/backend/public/api';
+const API_BASE = 'https://api.easycoders.in/api';
 
 type Stats = {
   appeared: number; qualified: number; avg_percent: number; best_percent: number;

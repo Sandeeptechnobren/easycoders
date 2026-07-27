@@ -8,7 +8,7 @@ import styles from './courses.module.css';
 
 /* /admin/courses — manage course offerings (the public-facing catalogue). */
 
-const BASE = 'https://api.easycoders.in/projects/backend/public/api';
+const BASE = 'https://api.easycoders.in/api';
 
 function asArray<T>(x: unknown): T[] {
   if (Array.isArray(x)) return x as T[];

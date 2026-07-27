@@ -68,6 +68,12 @@ const ORG_JSONLD = {
 export default function Footer() {
   const year = new Date().getFullYear();
 
+  const scrollToTop = () => {
+    const reduce = typeof window !== 'undefined'
+      && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
+  };
+
   return (
     <footer className={styles.footer} role="contentinfo">
       {/* Schema.org JSON-LD for the organization */}
@@ -147,13 +153,17 @@ export default function Footer() {
         <nav className={styles.linkCol} aria-label="Our programs">
           <h2 className={styles.colHeading}>Programs</h2>
           <ul className={styles.linkList}>
-            <li><Link href="/courses">Summer Training</Link></li>
-            <li><Link href="/courses">Internship</Link></li>
-            <li><Link href="/courses">Job-Oriented Training</Link></li>
-            <li><Link href="/courses">MERN Development</Link></li>
-            <li><Link href="/courses">PHP / Laravel</Link></li>
-            <li><Link href="/courses">Python / Django</Link></li>
-            <li><Link href="/courses">Android Development</Link></li>
+            {/* Category links deep-link to the matching tab on /courses; the
+                tech tracks deep-link to a pre-filtered search. Both are wired
+                to real query params CoursesList reads (?category / ?search) —
+                previously every item pointed at the bare /courses page. */}
+            <li><Link href="/courses?category=summer-training">Summer Training</Link></li>
+            <li><Link href="/courses?category=internship">Internship</Link></li>
+            <li><Link href="/courses?category=internship">Job-Oriented Training</Link></li>
+            <li><Link href="/courses?search=MERN">MERN Development</Link></li>
+            <li><Link href="/courses?search=PHP">PHP / Laravel</Link></li>
+            <li><Link href="/courses?search=Python">Python / Django</Link></li>
+            <li><Link href="/courses?search=Android">Android Development</Link></li>
           </ul>
         </nav>
 
@@ -190,10 +200,19 @@ export default function Footer() {
           <small className={styles.copy}>
             © {year} <strong>Easy Coders</strong> · A unit of Technobren Infotech Pvt. Ltd. · All rights reserved.
           </small>
-          <small className={styles.madeIn}>
-            <span className={styles.madeDot} aria-hidden="true" />
-            Made with care in Jaunpur, India
-          </small>
+          <div className={styles.bottomRight}>
+            <small className={styles.madeIn}>
+              <span className={styles.madeDot} aria-hidden="true" />
+              Made with care in Jaunpur, India
+            </small>
+            <button type="button" className={styles.toTop} onClick={scrollToTop} aria-label="Back to top">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <line x1="12" y1="19" x2="12" y2="5" />
+                <polyline points="5 12 12 5 19 12" />
+              </svg>
+              Back to top
+            </button>
+          </div>
         </div>
       </div>
     </footer>

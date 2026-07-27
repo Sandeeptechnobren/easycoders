@@ -29,7 +29,7 @@ type Assessment = {
   locked?: boolean;
 };
 
-const API_BASE = 'https://api.easycoders.in/projects/backend/public/api';
+const API_BASE = 'https://api.easycoders.in/api';
 
 /* Format a remaining-time gap (ms) as a compact countdown. */
 function fmtRemaining(ms: number): string {

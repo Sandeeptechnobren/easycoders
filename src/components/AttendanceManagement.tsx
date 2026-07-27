@@ -18,7 +18,7 @@ import { fetchWithAuth } from '@/lib/api';
  * trick used on /admin and /self-assessment).
  * ────────────────────────────────────────────────────────────────────────── */
 
-const BASE = 'https://api.easycoders.in/projects/backend/public/api';
+const BASE = 'https://api.easycoders.in/api';
 
 type AttendanceRecord = {
   id: number;

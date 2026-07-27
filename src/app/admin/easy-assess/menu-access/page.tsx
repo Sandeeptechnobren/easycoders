@@ -16,7 +16,7 @@ import { AdminSection, AdminPanel, AdminState } from '@/components/admin/AdminSe
  *   PUT /api/assessment/admin/menu-access { direct, easycoders }
  * ────────────────────────────────────────────────────────────────────────── */
 
-const BASE = 'https://api.easycoders.in/projects/backend/public/api';
+const BASE = 'https://api.easycoders.in/api';
 type LoadState = 'loading' | 'ready' | 'error';
 type MenuItem = { key: string; label: string; always_on: boolean };
 

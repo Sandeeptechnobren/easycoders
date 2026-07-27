@@ -479,27 +479,39 @@ export default function ContactUsInner() {
           margin: 8px 0 0;
           font-weight: 300;
         }
-        .ct-btn-gold {
+        /* .ct-btn-gold sits on a next/link <a>, which does NOT get the styled-jsx
+           scope class — so it must be :global(), scoped under .ct-bottom-cta for
+           specificity, with !important + literal hex to beat the CDN Bootstrap
+           link styling (otherwise the button renders as a blue underlined link). */
+        .ct-bottom-cta :global(.ct-btn-gold) {
           display: inline-flex;
           align-items: center;
           gap: 8px;
-          background: var(--gold);
-          color: var(--navy);
+          background: #E8A020 !important;
+          color: #0B1B3A !important;
           padding: 14px 28px;
           border-radius: 12px;
           font-size: 15px;
           font-weight: 700;
-          text-decoration: none;
-          transition: background 0.2s ease, transform 0.18s ease;
+          text-decoration: none !important;
+          cursor: pointer;
+          white-space: nowrap;
+          transition: background 0.2s ease, transform 0.18s ease, box-shadow 0.2s ease;
         }
-        .ct-btn-gold:hover {
-          background: var(--gold-light);
+        .ct-bottom-cta :global(.ct-btn-gold):hover {
+          background: #F5C356 !important;
           transform: translateY(-2px);
-          color: var(--navy);
-          text-decoration: none;
+          color: #0B1B3A !important;
+          box-shadow: 0 14px 30px rgba(232,160,32,0.32);
+        }
+        :global(.ct-btn-arrow) { display: inline-block; transition: transform 0.22s cubic-bezier(0.22,1,0.36,1); }
+        .ct-bottom-cta :global(.ct-btn-gold):hover :global(.ct-btn-arrow) { transform: translateX(4px); }
+        @media (max-width: 520px) {
+          .ct-bottom-cta :global(.ct-btn-gold) { width: 100%; justify-content: center; }
         }
         @media (prefers-reduced-motion: reduce) {
-          .ct-btn-gold:hover { transform: none; }
+          .ct-bottom-cta :global(.ct-btn-gold):hover { transform: none; }
+          .ct-bottom-cta :global(.ct-btn-gold):hover :global(.ct-btn-arrow) { transform: none; }
         }
 
         /* ─── THANKS MODAL ─── */
@@ -853,7 +865,7 @@ export default function ContactUsInner() {
               </p>
             </div>
             <Link href="/courses" className="ct-btn-gold">
-              Explore courses →
+              Explore courses <span className="ct-btn-arrow" aria-hidden="true">→</span>
             </Link>
           </div>
         </section>

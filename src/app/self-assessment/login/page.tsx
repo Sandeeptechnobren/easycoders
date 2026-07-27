@@ -14,7 +14,7 @@ export default function AssessmentLogin() {
   const [loading, setLoading]   = useState(false);
 
   // ── Forgot-password flow ──
-  const BASE = 'https://api.easycoders.in/projects/backend/public/api';
+  const BASE = 'https://api.easycoders.in/api';
   const [mode, setMode] = useState<'login' | 'fp-email' | 'fp-otp' | 'fp-reset' | 'fp-done'>('login');
   const [info, setInfo] = useState('');
   const [fpEmail, setFpEmail] = useState('');
@@ -98,7 +98,7 @@ export default function AssessmentLogin() {
     setLoading(true);
     try {
       const res = await api.post(
-        'https://api.easycoders.in/projects/backend/public/api/assessment/login',
+        'https://api.easycoders.in/api/assessment/login',
         { email, password }
       );
       const assessment_token = res.data?.token || res.data?.data?.token;

@@ -15,7 +15,7 @@ import { useFeeVisibility, maskAmount, FeeToggle } from '@/lib/feeMask';
  * get full management; trainers get a read-only view.
  * ────────────────────────────────────────────────────────────────────────── */
 
-const BASE = 'https://api.easycoders.in/projects/backend/public/api';
+const BASE = 'https://api.easycoders.in/api';
 
 /** Build a certificate download filename: "<Student Name>_<Course>_<Year>.pdf". */
 function certFileName(name?: string | null, course?: string | null, dateStr?: string | null): string {
@@ -193,12 +193,22 @@ export default function StudentDetailManager({ studentId, canManage, backHref, c
 
   const regeneratePassword = async () => {
     if (!confirm('Issue a new temporary password for this student? They will be asked to change it on next login.')) return;
+    const emailIt = confirm('Also EMAIL the new temporary password to the student now?\n\nOK = email it to them · Cancel = don’t email (you’ll share it manually).');
     try {
       setCredBusy(true);
-      const json = await fetchWithAuth(`${BASE}/admin/students/${encodeURIComponent(id)}/regenerate-password`, { method: 'POST' });
+      const json = await fetchWithAuth(`${BASE}/admin/students/${encodeURIComponent(id)}/regenerate-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ send_credentials_email: emailIt }),
+      });
       setCredData(json?.data || null);
       setCredAvailable(true);
       setCredReveal(true);
+      if (emailIt) {
+        alert(json?.data?.email_sent
+          ? 'New password issued and emailed to the student.'
+          : 'New password issued, but the email could not be sent — please share it manually.');
+      }
     } catch (e: unknown) {
       alert(e instanceof Error ? e.message : 'Could not regenerate the password.');
     } finally {

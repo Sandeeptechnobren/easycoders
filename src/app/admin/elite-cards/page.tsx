@@ -9,7 +9,7 @@ import { AdminSection, AdminPanel, AdminState } from '@/components/admin/AdminSe
    membership cards for first-batch students / alumni). Individual/manual issuance,
    reusing the certificate engine: saved, QR-verifiable, re-downloadable, revocable. */
 
-const BASE = 'https://api.easycoders.in/projects/backend/public/api';
+const BASE = 'https://api.easycoders.in/api';
 
 const DEFAULT_BENEFITS = [
   'Lifetime access to course resources',

@@ -107,11 +107,21 @@
 
 .socialBtn:hover,
 .socialBtn:focus-visible {
-    background: rgba(232, 160, 32, 0.12);
-    border-color: rgba(232, 160, 32, 0.55);
+    background: rgba(232, 160, 32, 0.14);
+    border-color: rgba(232, 160, 32, 0.6);
     color: #F5C356;
-    transform: translateY(-2px);
+    transform: translateY(-3px);
+    box-shadow: 0 10px 22px rgba(232, 160, 32, 0.22);
     outline: none;
+}
+
+.socialBtn svg {
+    transition: transform 0.2s ease;
+}
+
+.socialBtn:hover svg,
+.socialBtn:focus-visible svg {
+    transform: scale(1.12);
 }
 
 /* ───── Link columns ───── */
@@ -131,7 +141,8 @@
     letter-spacing: 0.01em;
 }
 
-/* Short gold keyline gives each column structure and a pop of brand colour. */
+/* Short gold keyline gives each column structure and a pop of brand colour.
+   It stretches a little when the column is hovered — a subtle live touch. */
 .colHeading::after {
     content: '';
     display: block;
@@ -141,6 +152,12 @@
     border-radius: 2px;
     margin-top: 8px;
     opacity: 0.85;
+    transition: width 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.linkCol:hover .colHeading::after,
+.contactCol:hover .colHeading::after {
+    width: 46px;
 }
 
 .linkList {
@@ -153,18 +170,42 @@
 }
 
 .linkList a {
+    position: relative;
+    width: fit-content;
     color: rgba(255, 255, 255, 0.65);
     text-decoration: none;
     font-size: 14px;
-    transition: color 0.2s ease, padding-left 0.2s ease;
     display: inline-block;
+    transition: color 0.2s ease, transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Gold chevron slides in from the left on hover while the label shifts right,
+   signalling the link actually goes somewhere (no reflow — transforms only). */
+.linkList a::before {
+    content: '›';
+    position: absolute;
+    left: -14px;
+    top: 50%;
+    color: #E8A020;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 0;
+    opacity: 0;
+    transform: translateY(-50%) translateX(-4px);
+    transition: opacity 0.2s ease, transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .linkList a:hover,
 .linkList a:focus-visible {
     color: #F5C356;
-    padding-left: 4px;
+    transform: translateX(14px);
     outline: none;
+}
+
+.linkList a:hover::before,
+.linkList a:focus-visible::before {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0);
 }
 
 /* ───── Contact / address column ───── */
@@ -212,6 +253,12 @@
 .contactLink svg {
     opacity: 0.8;
     flex-shrink: 0;
+    transition: transform 0.2s ease;
+}
+
+.contactLink:hover svg,
+.contactLink:focus-visible svg {
+    transform: translateX(2px) scale(1.05);
 }
 
 /* ───── Bottom bar ───── */
@@ -259,6 +306,57 @@
     border-radius: 50%;
     background: #E8A020;
     display: inline-block;
+    box-shadow: 0 0 0 0 rgba(232, 160, 32, 0.5);
+    animation: madePulse 2.6s ease-out infinite;
+}
+
+@keyframes madePulse {
+    0%   { box-shadow: 0 0 0 0 rgba(232, 160, 32, 0.45); }
+    70%  { box-shadow: 0 0 0 7px rgba(232, 160, 32, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(232, 160, 32, 0); }
+}
+
+/* Right side of the bottom bar: made-in note + back-to-top control */
+.bottomRight {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    flex-wrap: wrap;
+}
+
+.toTop {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    color: rgba(255, 255, 255, 0.75);
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 7px 14px;
+    border-radius: 100px;
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease,
+        transform 0.18s ease;
+}
+
+.toTop:hover,
+.toTop:focus-visible {
+    background: rgba(232, 160, 32, 0.14);
+    border-color: rgba(232, 160, 32, 0.55);
+    color: #F5C356;
+    transform: translateY(-2px);
+    outline: none;
+}
+
+.toTop svg {
+    transition: transform 0.2s ease;
+}
+
+.toTop:hover svg,
+.toTop:focus-visible svg {
+    transform: translateY(-3px);
 }
 
 /* ───── Responsive ───── */
@@ -291,5 +389,35 @@
         align-items: flex-start;
         text-align: left;
         padding: 16px 22px;
+    }
+}
+
+/* Honour reduced-motion: keep the colour/opacity cues, drop the movement. */
+@media (prefers-reduced-motion: reduce) {
+    .linkList a,
+    .linkList a::before,
+    .socialBtn,
+    .socialBtn svg,
+    .contactLink svg,
+    .colHeading::after,
+    .toTop,
+    .toTop svg {
+        transition: color 0.2s ease, background 0.2s ease,
+            border-color 0.2s ease, opacity 0.2s ease;
+        transform: none !important;
+    }
+
+    .linkList a:hover,
+    .linkList a:focus-visible {
+        transform: none;
+    }
+
+    .linkList a:hover::before,
+    .linkList a:focus-visible::before {
+        transform: translateY(-50%);
+    }
+
+    .madeDot {
+        animation: none;
     }
 }

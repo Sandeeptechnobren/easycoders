@@ -17,7 +17,7 @@ import styles from './enrollmentRequests.module.css';
  * returns credentials — or REJECTS with a reason.
  * ────────────────────────────────────────────────────────────────────────── */
 
-const BASE = 'https://api.easycoders.in/projects/backend/public/api';
+const BASE = 'https://api.easycoders.in/api';
 
 function asArray<T>(x: unknown): T[] {
   if (Array.isArray(x)) return x as T[];
@@ -63,6 +63,8 @@ export default function EnrollmentRequestsPage() {
   const [busy, setBusy] = useState(false);
   const [modalErr, setModalErr] = useState('');
   const [cred, setCred] = useState<Cred | null>(null);
+  const [emailReq, setEmailReq] = useState(false);
+  const [emailSentResult, setEmailSentResult] = useState<boolean | null>(null);
   const [copied, setCopied] = useState(false);
   const [rejecting, setRejecting] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
@@ -104,7 +106,7 @@ export default function EnrollmentRequestsPage() {
 
   const openReview = (r: ReqRow) => {
     setSelected(r);
-    setModalErr(''); setCred(null); setRejecting(false); setRejectReason('');
+    setModalErr(''); setCred(null); setRejecting(false); setRejectReason(''); setEmailReq(false); setEmailSentResult(null);
     setForm({ total_fee: '', first_payment_amount: '', first_payment_date: today(), next_due_date: '', batch_id: '' });
   };
   const closeModal = () => { setSelected(null); setCred(null); };
@@ -122,9 +124,11 @@ export default function EnrollmentRequestsPage() {
           first_payment_date: form.first_payment_date || today(),
           next_due_date: form.next_due_date || null,
           batch_id: form.batch_id ? Number(form.batch_id) : null,
+          send_credentials_email: emailReq,
         }),
       });
       setCred(json?.data?.credentials ?? null);
+      setEmailSentResult(json?.data?.email_sent ?? null);
       await load();
     } catch (e: unknown) { setModalErr(e instanceof Error ? e.message : 'Approval failed.'); } finally { setBusy(false); }
   };
@@ -282,7 +286,9 @@ export default function EnrollmentRequestsPage() {
                   <div className={styles.cred}><span className={styles.credLbl}>Enrolment ID</span><span className={styles.credVal}>{cred.enrollment_id}</span></div>
                   <div className={styles.cred}><span className={styles.credLbl}>Email</span><span className={styles.credVal}>{cred.email}</span></div>
                   <div className={styles.cred}><span className={styles.credLbl}>Temporary password</span><span className={`${styles.credVal} ${styles.pw}`}>{cred.password}</span></div>
-                  <p style={{ fontSize: 12, color: '#94A3B8', marginTop: 12, lineHeight: 1.5 }}>The temporary password works until the student changes it (re-fetchable from their profile for 7 days). No email is sent automatically.</p>
+                  {emailSentResult === true && <p style={{ fontSize: 12.5, color: '#166534', fontWeight: 600, marginTop: 10 }}>✓ Login details were emailed to {cred.email}.</p>}
+                  {emailSentResult === false && <p style={{ fontSize: 12.5, color: '#92660D', fontWeight: 600, marginTop: 10 }}>⚠ Couldn&rsquo;t send the email — share the credentials manually.</p>}
+                  <p style={{ fontSize: 12, color: '#94A3B8', marginTop: 12, lineHeight: 1.5 }}>The temporary password works until the student changes it (re-fetchable from their profile for 7 days).</p>
                 </>
               ) : (
                 <>
@@ -337,6 +343,14 @@ export default function EnrollmentRequestsPage() {
                           </select>
                         </div>
                       </div>
+                      <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer', padding: '10px 12px', border: '1px solid #E5E9F2', borderRadius: 10, marginTop: 12, background: emailReq ? '#FEF6E7' : '#fff' }}>
+                        <input type="checkbox" checked={emailReq} onChange={e => setEmailReq(e.target.checked)}
+                          style={{ marginTop: 2, width: 16, height: 16, accentColor: '#E8A020', flexShrink: 0 }} />
+                        <span>
+                          <span style={{ fontWeight: 600, fontSize: 13, color: '#0B1B3A', display: 'block' }}>Email login details to the student</span>
+                          <span style={{ fontSize: 12, color: '#64748B' }}>Sends the enrolment ID + temporary password to {selected.email}. Off by default.</span>
+                        </span>
+                      </label>
                       <p style={{ fontSize: 12, color: '#94A3B8', marginTop: 12, lineHeight: 1.5 }}>
                         Approving creates the student login (a temporary password is generated){form.first_payment_amount ? `, records ₹${form.first_payment_amount} as their first payment` : ''}.
                       </p>

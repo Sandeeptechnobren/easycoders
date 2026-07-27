@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Editor from '@monaco-editor/react';
 
-const API_BASE = 'https://api.easycoders.in/projects/backend/public/api';
+const API_BASE = 'https://api.easycoders.in/api';
 const WS_KEY = 'sql_workspace_v1';
 
 type SampleDb = { key: string; label: string; description: string; tables: Record<string, string[]> };

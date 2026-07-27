@@ -8,7 +8,7 @@ import { fetchWithAuth } from '@/lib/api';
    with a per-certificate download. Renders nothing if the student has none.
    Self-contained (own fetch + styles), mirroring MyBatchCard/MyTasksCard. */
 
-const BASE = 'https://api.easycoders.in/projects/backend/public/api';
+const BASE = 'https://api.easycoders.in/api';
 
 /** Build a certificate download filename: "<Student Name>_<Course>_<Year>.pdf". */
 function certFileName(name?: string | null, course?: string | null, dateStr?: string | null): string {

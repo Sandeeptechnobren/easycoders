@@ -15,7 +15,7 @@ import { AdminSection, AdminPanel, AdminState } from '@/components/admin/AdminSe
  *   PUT  /api/playground/settings { max_snippets, max_kb }
  * ────────────────────────────────────────────────────────────────────────── */
 
-const BASE = 'https://api.easycoders.in/projects/backend/public/api';
+const BASE = 'https://api.easycoders.in/api';
 type LoadState = 'loading' | 'ready' | 'error';
 
 export default function PlaygroundLimitsAdmin() {

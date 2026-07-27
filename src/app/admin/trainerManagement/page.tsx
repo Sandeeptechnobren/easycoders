@@ -15,7 +15,7 @@ import styles from './trainerManagement.module.css';
  * stay in sync. Admin-only (every endpoint requires manage_trainers).
  * ────────────────────────────────────────────────────────────────────────── */
 
-const BASE = 'https://api.easycoders.in/projects/backend/public/api';
+const BASE = 'https://api.easycoders.in/api';
 
 function asArray<T>(x: unknown): T[] {
   if (Array.isArray(x)) return x as T[];

@@ -8,7 +8,7 @@ import { fetchWithAuth } from '@/lib/api';
    cohort, trainer(s), schedule and their enrolment status. Renders nothing
    if the student isn't in a batch. Self-contained (own fetch + styles). */
 
-const BASE = 'https://api.easycoders.in/projects/backend/public/api';
+const BASE = 'https://api.easycoders.in/api';
 
 type Trainer = { id: number; name: string };
 type MyBatch = {

@@ -14,7 +14,7 @@ import { useFeeVisibility, maskAmount, FeeToggle } from '@/lib/feeMask';
  * interest/lead status live under Easy Assess → Assessment Users now.)
  * ────────────────────────────────────────────────────────────────────────── */
 
-const BASE = 'https://api.easycoders.in/projects/backend/public/api';
+const BASE = 'https://api.easycoders.in/api';
 
 type Crumb = { label: string; href?: string };
 

@@ -6,7 +6,7 @@ import RoleGuard from '@/components/RoleGuard';
 import { fetchWithAuth } from '@/lib/api';
 import { CODING_LANG_LIST } from '@/lib/codingLangs';
 
-const BASE = 'https://api.easycoders.in/projects/backend/public/api';
+const BASE = 'https://api.easycoders.in/api';
 
 type Assessment = {
   id: number;

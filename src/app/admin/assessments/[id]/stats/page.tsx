@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import RoleGuard from '@/components/RoleGuard';
 import { fetchWithAuth } from '@/lib/api';
 
-const BASE = 'https://api.easycoders.in/projects/backend/public/api';
+const BASE = 'https://api.easycoders.in/api';
 
 type RosterRow = {
   attempt_id: number;

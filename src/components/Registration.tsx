@@ -10,56 +10,68 @@ interface RegistrationProps {
   onClose?: () => void;
 }
 
+interface CourseFeature {
+  id: number | string;
+  feature: string;
+}
+
 interface ApiCourse {
   id: number | string;
   title: string;
-  category?: { name?: string };
+  description?: string | null;
+  duration?: string | null;
+  level?: string | null;
+  offer?: string | null;
+  discounted_price?: string | null;
+  original_price?: string | null;
+  category?: { name?: string; features?: CourseFeature[] };
 }
 
 /* ──────────────────────────────────────────────────────────────────────────
  * Registration popup.
  *
- * Re-skinned May 2026:
- *   - Navy + gold brand palette throughout (was indigo/purple gradient
- *     soup that violated the project design rules).
- *   - Replaced the scrolling marquee with a clean static eyebrow + headline.
- *   - Added a NEW "Summer batches starting soon" rail with images so the
- *     popup feels like a real campaign instead of a generic form. The
- *     batches data is a static constant — edit BATCHES below to refresh
- *     dates, seats and tracks each season.
- *   - Form/payment logic, API call, and dismissal localStorage logic
- *     are unchanged — only the visual layer was rewritten.
- *   - Real SVG icons in place of emojis where possible.
+ * Job-Oriented rework (Jul 2026):
+ *   - Initial view now showcases the LIVE "Internship" category courses as
+ *     job-oriented training programs (the category ships a "Job Oriented
+ *     Training" feature). Programs are pulled from the same /courses call the
+ *     form dropdown already uses — no static list to keep in sync.
+ *   - Each program card leads with the target JOB ROLE (outcome) + the
+ *     duration/level (schedule). No stock photos: the API has no per-course
+ *     images, so cards use a branded navy→blue gradient header with the tech
+ *     tag + the real offer — consistent and robust to any course list.
+ *   - Clicking a card opens the form PRE-SELECTED to that program.
+ *   - Form/payment logic, API call, and dismissal localStorage logic are
+ *     unchanged — only the initial view + styling were reworked.
+ *
+ * Earlier (May 2026): navy+gold re-skin replacing the old purple-gradient UI.
  * ────────────────────────────────────────────────────────────────────────── */
 
-/* Static content — edit each season. Images are pulled from /public/images/
- * (already in the repo) so no CDN dependency. */
-const BATCHES = [
-  {
-    id: 'wd',
-    title: 'Full-Stack Web Development',
-    image: '/images/coding.jpg',
-    startDate: 'Starts 1 June 2026',
-    duration: '45 days · live online + offline',
-    seatsLeft: 8,
-  },
-  {
-    id: 'ad',
-    title: 'Android Development',
-    image: '/images/appdev.jpg',
-    startDate: 'Starts 10 June 2026',
-    duration: '45 days · live + project demo',
-    seatsLeft: 12,
-  },
-  {
-    id: 'py',
-    title: 'Python & AI Foundations',
-    image: '/images/clouddev.jpg',
-    startDate: 'Starts 20 June 2026',
-    duration: '45 days · mentor-led',
-    seatsLeft: 5,
-  },
-] as const;
+/* Which category counts as "job-oriented". Case-insensitive substring match so
+ * it keeps working if the category is renamed slightly (e.g. "Internships"). */
+const JOB_CATEGORY_MATCH = 'intern';
+
+/* Title → target job role. "PHP Laravel Development" → "PHP Laravel Developer",
+ * "UI/UX Design" → "UI/UX Designer"; otherwise fall back to the title itself. */
+const roleFromTitle = (title: string): string => {
+  const t = (title || '').trim();
+  if (/development$/i.test(t)) return t.replace(/\s*development$/i, ' Developer');
+  if (/design$/i.test(t))      return t.replace(/\s*design$/i, ' Designer');
+  if (/engineering$/i.test(t)) return t.replace(/\s*engineering$/i, ' Engineer');
+  return t;
+};
+
+/* Short tech label for the card header: drop the trailing "Development" etc. */
+const techTag = (title: string): string =>
+  (title || '').replace(/\s*(development|design|engineering|foundations?)$/i, '').trim() || (title || '').trim();
+
+/* "beginner" → "Beginner". */
+const titleCase = (s?: string | null): string =>
+  s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
+
+/* "a" / "an" by the following word's leading sound (good enough for our tracks:
+ * "an Android Developer", "a Python Developer", "a MERN Developer"). */
+const articleFor = (word: string): string =>
+  /^[aeiou]/i.test((word || '').trim()) ? 'an' : 'a';
 
 export default function Registration({ onClose }: RegistrationProps) {
   const [courses, setCourses]               = useState<ApiCourse[]>([]);
@@ -178,6 +190,25 @@ export default function Registration({ onClose }: RegistrationProps) {
 
   const prevStep = () => setStep(prev => (prev === 3 ? 2 : 1));
 
+  /* Open the form, optionally pre-selecting the program the user clicked. */
+  const startWithProgram = (id?: string | number) => {
+    if (id !== undefined && id !== null) setSelectedCourse(String(id));
+    setOpenForm(true);
+  };
+
+  /* Job-oriented programs = the Internship-category courses. Fall back to all
+   * courses if the category can't be matched, so the popup is never empty. */
+  const jobPrograms = courses.filter(c =>
+    String(c.category?.name ?? '').toLowerCase().includes(JOB_CATEGORY_MATCH),
+  );
+  const displayPrograms = jobPrograms.length ? jobPrograms : courses;
+  const coursesLoading = courses.length === 0;
+  /* Real category features to reassure (shared across the internship courses). */
+  const programFeatures =
+    (displayPrograms.find(c => c.category?.features?.length)?.category?.features ?? [])
+      .map(f => f.feature)
+      .slice(0, 4);
+
   const handleRegistrationSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const err1 = validateStep(1); if (err1) return alert(err1);
@@ -229,50 +260,80 @@ export default function Registration({ onClose }: RegistrationProps) {
             </div>
           ) : !openForm ? (
             <>
-              {/* ── INITIAL VIEW: summer-training batches only ── */}
+              {/* ── INITIAL VIEW: job-oriented training programs ── */}
               <div className="batchesHead">
                 <div>
                   <span className="batchesEyebrow">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-                      <circle cx="12" cy="12" r="10" />
-                      <polyline points="12 6 12 12 16 14" />
+                      <path d="M20 7h-4V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2Z" />
+                      <path d="M8 7V5h8v2" />
                     </svg>
-                    Summer Training 2026 · Starting soon
+                    Job-Oriented Training · Now enrolling
                   </span>
                   <h2 id="reg-title" className="batchesTitle">
-                    Pick the batch <em>you want to join</em>
+                    Train for the <em>job you want</em>
                   </h2>
                 </div>
-                <p className="batchesNote">Limited seats — we&apos;ll confirm your spot after the registration form.</p>
+                <p className="batchesNote">Hands-on internship programs built to make you job-ready — we&apos;ll confirm your spot after the registration form.</p>
               </div>
 
-              <div className="batches">
-                {BATCHES.map(b => (
-                  <article key={b.id} className="batch">
-                    <div className="batchImg">
-                      <Image
-                        src={b.image}
-                        alt={b.title}
-                        width={320}
-                        height={180}
-                        sizes="(max-width: 720px) 100vw, 33vw"
-                      />
-                      <span className="batchSeats">{b.seatsLeft} seats left</span>
-                    </div>
-                    <div className="batchBody">
-                      <h3 className="batchTitle">{b.title}</h3>
-                      <div className="batchMeta">
-                        <span className="batchDate">{b.startDate}</span>
-                        <span className="batchDur">{b.duration}</span>
-                      </div>
-                    </div>
-                  </article>
-                ))}
+              {/* Real category features — reassurance strip */}
+              {programFeatures.length > 0 && (
+                <div className="featRow">
+                  {programFeatures.map(f => (
+                    <span key={f} className="featChip">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                      {f}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              <div className="progGrid">
+                {coursesLoading
+                  ? [0, 1, 2, 3].map(i => <div key={i} className="progSkel" aria-hidden="true" />)
+                  : displayPrograms.map(p => {
+                      const role  = roleFromTitle(p.title);
+                      const level = titleCase(p.level);
+                      return (
+                        <button
+                          key={p.id}
+                          type="button"
+                          className="prog"
+                          onClick={() => startWithProgram(p.id)}
+                          aria-label={`Register for ${p.title}`}
+                        >
+                          <div className="progHead">
+                            {p.offer && <span className="progOffer">{p.offer}</span>}
+                            <span className="progTag">{techTag(p.title)}</span>
+                            <span className="progKicker">Job-Oriented</span>
+                          </div>
+                          <div className="progBody">
+                            <h3 className="progTitle">{p.title}</h3>
+                            {role && (
+                              <span className="progRole">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                                  <line x1="5" y1="12" x2="19" y2="12" />
+                                  <polyline points="12 5 19 12 12 19" />
+                                </svg>
+                                Become {articleFor(role)} {role}
+                              </span>
+                            )}
+                            <span className="progMeta">
+                              {[p.duration, level ? `${level}-friendly` : null].filter(Boolean).join(' · ')}
+                            </span>
+                            <span className="progGo">Register <span aria-hidden="true">→</span></span>
+                          </div>
+                        </button>
+                      );
+                    })}
               </div>
 
               {/* Two strong CTAs */}
               <div className="actions">
-                <button type="button" className="cta" onClick={() => setOpenForm(true)}>
+                <button type="button" className="cta" onClick={() => startWithProgram()}>
                   Register now
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                     <line x1="5" y1="12" x2="19" y2="12" />
@@ -599,81 +660,188 @@ export default function Registration({ onClose }: RegistrationProps) {
         @media (max-width: 720px) {
           .batchesNote { text-align: left; max-width: none; }
         }
-        .batches {
+        /* Real-feature reassurance chips (pulled from the category features) */
+        .featRow {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+          margin: 2px 0 18px;
+        }
+        .featChip {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          font-size: 11.5px;
+          font-weight: 500;
+          color: #334155;
+          background: #F4F6FB;
+          border: 1px solid #E5E9F2;
+          padding: 5px 11px;
+          border-radius: 100px;
+        }
+        .featChip svg { color: #B97A0F; flex-shrink: 0; }
+
+        /* Program cards — auto-fit so 3 / 4 / 5 programs all lay out cleanly */
+        .progGrid {
           display: grid;
-          grid-template-columns: repeat(3, 1fr);
+          grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
           gap: 14px;
-          margin-bottom: 22px;
+          margin-bottom: 20px;
         }
         @media (max-width: 720px) {
-          .batches { grid-template-columns: 1fr; }
+          .progGrid { grid-template-columns: repeat(2, 1fr); }
         }
-        .batch {
+        @media (max-width: 460px) {
+          .progGrid { grid-template-columns: 1fr; }
+        }
+
+        .prog {
+          text-align: left;
           background: #ffffff;
           border: 1px solid #E5E9F2;
           border-radius: 16px;
           overflow: hidden;
-          display: flex; flex-direction: column;
+          display: flex;
+          flex-direction: column;
+          padding: 0;
+          cursor: pointer;
+          font-family: inherit;
           transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
         }
-        .batch:hover {
+        .prog:hover {
           transform: translateY(-3px);
           border-color: #E8A020;
-          box-shadow: 0 14px 32px rgba(11, 27, 58, 0.10);
+          box-shadow: 0 14px 32px rgba(11, 27, 58, 0.12);
         }
+        .prog:focus-visible { outline: 2px solid #0B1B3A; outline-offset: 2px; }
         @media (prefers-reduced-motion: reduce) {
-          .batch { transition: none; }
-          .batch:hover { transform: none; }
+          .prog { transition: none; }
+          .prog:hover { transform: none; }
         }
-        .batchImg {
+
+        /* Branded gradient header (the API ships no per-course images) */
+        .progHead {
           position: relative;
-          aspect-ratio: 16 / 9;
-          background: #F4F6FB;
+          min-height: 96px;
+          padding: 14px;
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          justify-content: flex-end;
+          gap: 4px;
+          background:
+            radial-gradient(120% 120% at 12% 8%, rgba(232, 160, 32, 0.22), transparent 55%),
+            linear-gradient(135deg, #0B1B3A 0%, #16305F 58%, #0B1B3A 100%);
           overflow: hidden;
         }
-        .batchImg :global(img) {
-          width: 100%; height: 100%;
-          object-fit: cover;
-          display: block;
-        }
-        .batchSeats {
+        .progHead::after {
+          content: '</>';
           position: absolute;
-          top: 10px; right: 10px;
-          background: rgba(11, 27, 58, 0.92);
-          color: #F5C356;
-          font-size: 10px;
+          right: 8px; bottom: 0;
+          font-family: ui-monospace, 'SFMono-Regular', Menlo, monospace;
+          font-size: 40px;
           font-weight: 700;
-          letter-spacing: 0.06em;
+          letter-spacing: -3px;
+          color: rgba(245, 195, 86, 0.10);
+          pointer-events: none;
+        }
+        .progTag {
+          position: relative;
+          z-index: 1;
+          font-family: 'Playfair Display', Georgia, serif;
+          font-size: 19px;
+          font-weight: 700;
+          line-height: 1.15;
+          color: #ffffff;
+          letter-spacing: -0.01em;
+        }
+        .progKicker {
+          position: relative;
+          z-index: 1;
+          font-size: 9.5px;
+          font-weight: 700;
+          letter-spacing: 0.12em;
           text-transform: uppercase;
-          padding: 4px 10px;
+          color: #F5C356;
+        }
+        .progOffer {
+          position: absolute;
+          top: 9px; right: 9px;
+          z-index: 2;
+          max-width: calc(100% - 18px);
+          background: #E8A020;
+          color: #0B1B3A;
+          font-size: 9px;
+          font-weight: 800;
+          letter-spacing: 0.04em;
+          text-transform: uppercase;
+          padding: 4px 9px;
           border-radius: 100px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
-        .batchBody {
+        .progBody {
           padding: 12px 14px 14px;
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+          flex: 1;
         }
-        .batchTitle {
+        .progTitle {
           font-family: 'Playfair Display', Georgia, serif;
           font-size: 15px;
           font-weight: 600;
           color: #0B1B3A;
-          margin: 0 0 6px;
+          margin: 0;
           letter-spacing: -0.01em;
           line-height: 1.3;
         }
-        .batchMeta {
-          display: flex;
-          flex-direction: column;
-          gap: 2px;
-        }
-        .batchDate {
-          font-size: 12px;
-          font-weight: 600;
+        .progRole {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          font-size: 12.5px;
+          font-weight: 700;
           color: #B97A0F;
+          line-height: 1.3;
         }
-        .batchDur {
-          font-size: 11px;
+        .progRole svg { flex-shrink: 0; }
+        .progMeta {
+          font-size: 12px;
           color: #4A5568;
           font-weight: 400;
+        }
+        .progGo {
+          margin-top: 2px;
+          font-size: 12px;
+          font-weight: 700;
+          color: #0B1B3A;
+          opacity: 0;
+          transform: translateX(-4px);
+          transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+        .prog:hover .progGo,
+        .prog:focus-visible .progGo { opacity: 1; transform: translateX(0); }
+        @media (hover: none) {
+          .progGo { opacity: 1; transform: none; }
+        }
+
+        /* Loading skeletons */
+        .progSkel {
+          height: 208px;
+          border-radius: 16px;
+          border: 1px solid #E5E9F2;
+          background: linear-gradient(100deg, #F4F6FB 30%, #EDF1F8 50%, #F4F6FB 70%);
+          background-size: 200% 100%;
+          animation: progShimmer 1.2s ease-in-out infinite;
+        }
+        @keyframes progShimmer {
+          from { background-position: 200% 0; }
+          to   { background-position: -200% 0; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .progSkel { animation: none; }
         }
 
         /* Initial-view CTAs */

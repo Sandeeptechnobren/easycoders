@@ -93,6 +93,30 @@ export default function EasyCodersAdminHome() {
           />
 
           <AdminCard
+            href="/admin/reviews"
+            title="Student Reviews"
+            description="Moderate the testimonials students submit from their dashboard. Publish the best ones to feature them on the public homepage carousel, or reject and delete the rest."
+            icon={
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 2l2.9 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l7.1-1.01L12 2z" />
+              </svg>
+            }
+          />
+
+          <AdminCard
+            href="/admin/gallery"
+            title="Photo Gallery"
+            description="Upload and curate the photos shown on the public Gallery page. Group them by category into filter tabs, feature the best ones, and hide or delete any photo."
+            icon={
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" />
+                <circle cx="9" cy="9" r="2" />
+                <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+              </svg>
+            }
+          />
+
+          <AdminCard
             href="/admin/enrollmentRequests"
             title="Enrollment Requests"
             description="Review enrollment requests submitted via the public registration popup and convert them to admissions."

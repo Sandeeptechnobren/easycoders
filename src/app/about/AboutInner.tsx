@@ -36,12 +36,60 @@ const STATS: Stat[] = [
 ];
 
 const VALUES = [
-  'Project-First Learning',
-  'Industry Mentors',
-  'Placement Support',
-  'Hands-On Training',
-  'Real Codebase Experience',
-  'Community Growth',
+  {
+    title: 'Project-First Learning',
+    desc: 'Every module ends in something you actually built.',
+    icon: (
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 2 2 7l10 5 10-5-10-5Z" /><path d="m2 17 10 5 10-5" /><path d="m2 12 10 5 10-5" />
+      </svg>
+    ),
+  },
+  {
+    title: 'Industry Mentors',
+    desc: 'Guidance from people who ship production code.',
+    icon: (
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="m16 11 2 2 4-4" />
+      </svg>
+    ),
+  },
+  {
+    title: 'Placement Support',
+    desc: 'Resume reviews, mock interviews and real referrals.',
+    icon: (
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="2" y="7" width="20" height="14" rx="2" /><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+      </svg>
+    ),
+  },
+  {
+    title: 'Hands-On Training',
+    desc: 'Minimal slides, maximum keyboard time.',
+    icon: (
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" />
+      </svg>
+    ),
+  },
+  {
+    title: 'Real Codebase Experience',
+    desc: 'Practice in realistic repos, not toy snippets.',
+    icon: (
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <line x1="6" y1="3" x2="6" y2="15" /><circle cx="18" cy="6" r="3" /><circle cx="6" cy="18" r="3" /><path d="M18 9a9 9 0 0 1-9 9" />
+      </svg>
+    ),
+  },
+  {
+    title: 'Community Growth',
+    desc: 'A cohort that levels up together.',
+    icon: (
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
+      </svg>
+    ),
+  },
 ];
 
 const STEPS = [
@@ -109,6 +157,20 @@ export default function AboutInner() {
 
     observer.observe(node);
     return () => observer.disconnect();
+  }, []);
+
+  /* ─── Values cards: reveal (stagger) when they scroll into view ────────── */
+  const valuesRef = useRef<HTMLDivElement | null>(null);
+  const [valuesIn, setValuesIn] = useState(false);
+  useEffect(() => {
+    const node = valuesRef.current;
+    if (!node || typeof IntersectionObserver === 'undefined') { queueMicrotask(() => setValuesIn(true)); return; }
+    const obs = new IntersectionObserver(
+      entries => { if (entries[0]?.isIntersecting) { setValuesIn(true); obs.disconnect(); } },
+      { threshold: 0.15 },
+    );
+    obs.observe(node);
+    return () => obs.disconnect();
   }, []);
 
   return (
@@ -461,66 +523,147 @@ export default function AboutInner() {
           max-width: 1120px;
           margin: 0 auto;
         }
-        .ab-values-h {
-          font-family: 'Playfair Display', serif;
-          font-size: 13px;
-          font-weight: 400;
-          color: rgba(255,255,255,0.45);
-          letter-spacing: 0.1em;
+        .ab-values-head { text-align: center; max-width: 620px; margin: 0 auto 40px; }
+        .ab-values-eyebrow {
+          font-size: 12px;
+          font-weight: 700;
+          color: var(--gold);
+          letter-spacing: 0.14em;
           text-transform: uppercase;
-          margin: 0 0 26px;
+          margin: 0 0 12px;
         }
-        .ab-values-list {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 12px;
+        .ab-values-title {
+          font-family: 'Playfair Display', Georgia, serif;
+          font-size: clamp(24px, 3.4vw, 36px);
+          font-weight: 700;
+          color: #ffffff;
+          letter-spacing: -0.02em;
+          line-height: 1.15;
+          margin: 0 0 12px;
         }
-        .ab-value {
+        .ab-values-sub {
+          font-size: 15px;
+          font-weight: 300;
+          color: rgba(255,255,255,0.6);
+          line-height: 1.65;
+          margin: 0;
+        }
+        .ab-values-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+          gap: 16px;
+        }
+        .ab-vcard {
+          position: relative;
+          overflow: hidden;
+          background: rgba(255,255,255,0.04);
+          border: 1px solid rgba(255,255,255,0.10);
+          border-radius: 16px;
+          padding: 26px 24px;
+          opacity: 0;
+          transition: transform 0.32s cubic-bezier(0.22,1,0.36,1), border-color 0.3s ease, background 0.3s ease, box-shadow 0.32s ease;
+        }
+        /* Staggered reveal when the section scrolls into view */
+        .ab-values.in .ab-vcard { opacity: 1; animation: abReveal 0.6s cubic-bezier(0.22,1,0.36,1) forwards; }
+        @keyframes abReveal {
+          from { opacity: 0; transform: translateY(20px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        /* Gold glow bloom behind the card on hover */
+        .ab-vcard::before {
+          content: '';
+          position: absolute;
+          top: -40%; left: -20%;
+          width: 260px; height: 260px;
+          background: radial-gradient(circle, rgba(232,160,32,0.22) 0%, transparent 60%);
+          opacity: 0;
+          transition: opacity 0.32s ease;
+          pointer-events: none;
+        }
+        .ab-vcard:hover {
+          transform: translateY(-6px);
+          border-color: rgba(232,160,32,0.5);
+          background: rgba(255,255,255,0.065);
+          box-shadow: 0 20px 44px rgba(0,0,0,0.30);
+        }
+        .ab-vcard:hover::before { opacity: 1; }
+        .ab-vicon {
+          position: relative;
+          z-index: 1;
           display: inline-flex;
           align-items: center;
-          gap: 8px;
-          background: rgba(255,255,255,0.06);
-          border: 1px solid rgba(255,255,255,0.12);
-          color: rgba(255,255,255,0.85);
-          padding: 10px 18px;
-          border-radius: 100px;
-          font-size: 14px;
-          font-weight: 500;
-          transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
-        }
-        .ab-value:hover {
+          justify-content: center;
+          width: 46px; height: 46px;
+          border-radius: 13px;
           background: rgba(232,160,32,0.12);
-          border-color: rgba(232,160,32,0.45);
+          border: 1px solid rgba(232,160,32,0.28);
           color: var(--gold-light);
+          margin-bottom: 16px;
+          transition: transform 0.32s cubic-bezier(0.22,1,0.36,1), background 0.3s ease, color 0.3s ease, border-color 0.3s ease;
         }
-        .ab-value-dot {
-          width: 6px; height: 6px;
-          border-radius: 50%;
+        .ab-vcard:hover .ab-vicon {
           background: var(--gold);
-          flex-shrink: 0;
+          border-color: var(--gold);
+          color: var(--navy);
+          transform: scale(1.08) rotate(-4deg);
+        }
+        .ab-vtitle {
+          position: relative;
+          z-index: 1;
+          font-size: 16px;
+          font-weight: 700;
+          color: #ffffff;
+          margin: 0 0 7px;
+          letter-spacing: -0.01em;
+        }
+        .ab-vdesc {
+          position: relative;
+          z-index: 1;
+          font-size: 13.5px;
+          font-weight: 300;
+          color: rgba(255,255,255,0.62);
+          line-height: 1.6;
+          margin: 0;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .ab-vcard { opacity: 1; animation: none; }
+          .ab-values.in .ab-vcard { animation: none; }
+          .ab-vcard:hover { transform: none; }
+          .ab-vcard:hover .ab-vicon { transform: none; }
         }
 
         /* ─── FINAL CTA ──────────────────────────────────────────────── */
         .ab-cta {
-          background: linear-gradient(135deg, var(--navy) 0%, var(--navy-mid) 100%);
-          padding: 96px 24px;
+          background:
+            radial-gradient(ellipse 720px 380px at 50% 42%, rgba(232,160,32,0.11) 0%, transparent 60%),
+            linear-gradient(135deg, var(--navy) 0%, var(--navy-mid) 100%);
+          padding: 104px 24px;
           text-align: center;
           position: relative;
           overflow: hidden;
         }
-        .ab-cta::before,
-        .ab-cta::after {
-          content: '';
+        /* Slowly-pulsing concentric rings behind the CTA */
+        .ab-cta-rings {
           position: absolute;
-          border-radius: 50%;
-          border: 1px solid rgba(232,160,32,0.10);
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
+          inset: 0;
+          display: grid;
+          place-items: center;
           pointer-events: none;
+          z-index: 0;
         }
-        .ab-cta::before { width: 600px; height: 600px; }
-        .ab-cta::after  { width: 900px; height: 900px; border-color: rgba(232,160,32,0.06); }
+        .ab-cta-rings span {
+          grid-area: 1 / 1;
+          border-radius: 50%;
+          border: 1px solid rgba(232,160,32,0.12);
+          animation: abPulse 6s ease-in-out infinite;
+        }
+        .ab-cta-rings span:nth-child(1) { width: 420px; height: 420px; }
+        .ab-cta-rings span:nth-child(2) { width: 680px; height: 680px; border-color: rgba(232,160,32,0.085); animation-delay: 1.2s; }
+        .ab-cta-rings span:nth-child(3) { width: 960px; height: 960px; border-color: rgba(232,160,32,0.05); animation-delay: 2.4s; }
+        @keyframes abPulse {
+          0%, 100% { transform: scale(1); opacity: 0.65; }
+          50%      { transform: scale(1.05); opacity: 1; }
+        }
 
         .ab-cta-tag {
           position: relative;
@@ -543,6 +686,7 @@ export default function AboutInner() {
           line-height: 1.15;
           letter-spacing: -0.02em;
         }
+        .ab-cta-title em { color: var(--gold); font-style: italic; }
         .ab-cta-sub {
           position: relative;
           z-index: 1;
@@ -562,8 +706,13 @@ export default function AboutInner() {
           gap: 14px;
           flex-wrap: wrap;
         }
-        .ab-btn-primary,
-        .ab-btn-outline {
+        /* Buttons render via next/link (<Link>), whose <a> does NOT get the
+           styled-jsx scope class, so these are :global(). And the CDN Bootstrap
+           stylesheet styles bare <a> aggressively (blue + underline) — so the
+           colour/decoration essentials use !important + literal hex to win over
+           it reliably. These classes are only used on this page, so it's safe. */
+        :global(.ab-btn-primary),
+        :global(.ab-btn-outline) {
           display: inline-flex;
           align-items: center;
           gap: 8px;
@@ -571,33 +720,70 @@ export default function AboutInner() {
           border-radius: 12px;
           font-size: 15px;
           font-weight: 600;
-          text-decoration: none;
-          transition: transform 0.18s ease, background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+          text-decoration: none !important;
+          cursor: pointer;
+          transition: transform 0.18s ease, background 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
         }
-        .ab-btn-primary {
-          background: var(--gold);
-          color: var(--navy);
-          border: 1.5px solid var(--gold);
+        /* Scoped under .ab-cta to raise specificity to (0,3,0) so it beats the
+           higher-specificity !important link rule in the CDN Bootstrap sheet. */
+        .ab-cta :global(.ab-btn-primary) {
+          background: #E8A020 !important;
+          color: #0B1B3A !important;
+          border: 1.5px solid #E8A020 !important;
         }
-        .ab-btn-primary:hover {
-          background: var(--gold-light);
-          border-color: var(--gold-light);
+        .ab-cta :global(.ab-btn-primary):hover {
+          background: #F5C356 !important;
+          border-color: #F5C356 !important;
           transform: translateY(-2px);
-          color: var(--navy);
-          text-decoration: none;
+          color: #0B1B3A !important;
+          box-shadow: 0 14px 30px rgba(232,160,32,0.32);
         }
-        .ab-btn-outline {
-          background: transparent;
-          color: rgba(255,255,255,0.85);
-          border: 1.5px solid rgba(255,255,255,0.3);
+        :global(.ab-btn-arrow) { display: inline-block; transition: transform 0.22s cubic-bezier(0.22,1,0.36,1); }
+        .ab-cta :global(.ab-btn-primary):hover :global(.ab-btn-arrow) { transform: translateX(4px); }
+        .ab-cta :global(.ab-btn-outline) {
+          background: rgba(255,255,255,0.03) !important;
+          color: rgba(255,255,255,0.9) !important;
+          border: 1.5px solid rgba(255,255,255,0.3) !important;
         }
-        .ab-btn-outline:hover {
-          border-color: rgba(255,255,255,0.7);
-          color: #ffffff;
-          text-decoration: none;
+        .ab-cta :global(.ab-btn-outline):hover {
+          border-color: #E8A020 !important;
+          color: #F5C356 !important;
+          background: rgba(232,160,32,0.08) !important;
+          transform: translateY(-2px);
         }
+
+        /* Trust row under the CTA buttons */
+        .ab-cta-trust {
+          position: relative;
+          z-index: 1;
+          list-style: none;
+          margin: 32px 0 0;
+          padding: 0;
+          display: flex;
+          justify-content: center;
+          flex-wrap: wrap;
+          gap: 10px 22px;
+        }
+        .ab-cta-trust li {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 13px;
+          font-weight: 500;
+          color: rgba(255,255,255,0.55);
+        }
+        .ab-cta-trust li::before {
+          content: '';
+          width: 6px; height: 6px;
+          border-radius: 50%;
+          background: var(--gold);
+          flex-shrink: 0;
+        }
+
         @media (prefers-reduced-motion: reduce) {
-          .ab-btn-primary:hover, .ab-btn-outline:hover { transform: none; }
+          :global(.ab-btn-primary):hover, :global(.ab-btn-outline):hover { transform: none; }
+          :global(.ab-btn-primary):hover :global(.ab-btn-arrow) { transform: none; }
+          .ab-cta-rings span { animation: none; }
         }
 
         /* ─── RESPONSIVE ─────────────────────────────────────────────── */
@@ -608,6 +794,13 @@ export default function AboutInner() {
           .ab-story-grid { grid-template-columns: 1fr; gap: 56px; }
           .ab-mv { grid-template-columns: 1fr; }
           .ab-story-badge { left: 14px; }
+          .ab-values { padding: 56px 22px; }
+        }
+        @media (max-width: 520px) {
+          .ab-cta { padding: 76px 20px; }
+          .ab-cta-actions { flex-direction: column; align-items: stretch; }
+          :global(.ab-btn-primary), :global(.ab-btn-outline) { width: 100%; justify-content: center; }
+          .ab-cta-trust { gap: 8px 16px; }
         }
       `}</style>
 
@@ -744,15 +937,20 @@ export default function AboutInner() {
         </section>
 
         {/* ─── VALUES STRIP ─── */}
-        <div className="ab-values">
+        <div className={`ab-values ${valuesIn ? 'in' : ''}`} ref={valuesRef}>
           <div className="ab-values-inner">
-            <p className="ab-values-h">What we stand for</p>
-            <div className="ab-values-list">
-              {VALUES.map(v => (
-                <span className="ab-value" key={v}>
-                  <span className="ab-value-dot" aria-hidden="true" />
-                  {v}
-                </span>
+            <div className="ab-values-head">
+              <p className="ab-values-eyebrow">Our principles</p>
+              <h2 className="ab-values-title">What we stand for</h2>
+              <p className="ab-values-sub">The commitments behind every batch we run — the reasons students go from beginner to job-ready with us.</p>
+            </div>
+            <div className="ab-values-grid">
+              {VALUES.map((v, i) => (
+                <article className="ab-vcard" key={v.title} style={{ animationDelay: `${i * 80}ms` }}>
+                  <span className="ab-vicon" aria-hidden="true">{v.icon}</span>
+                  <h3 className="ab-vtitle">{v.title}</h3>
+                  <p className="ab-vdesc">{v.desc}</p>
+                </article>
               ))}
             </div>
           </div>
@@ -760,18 +958,27 @@ export default function AboutInner() {
 
         {/* ─── FINAL CTA ─── */}
         <section className="ab-cta">
+          <div className="ab-cta-rings" aria-hidden="true"><span /><span /><span /></div>
           <p className="ab-cta-tag">Ready to start?</p>
           <h2 className="ab-cta-title">
-            Your coding career<br />starts with us.
+            Your <em>coding career</em><br />starts with us.
           </h2>
           <p className="ab-cta-sub">
             Explore our programs or talk to a counsellor — we&apos;ll help you
             pick the format that fits your goals and your schedule.
           </p>
           <div className="ab-cta-actions">
-            <Link href="/courses" className="ab-btn-primary">Browse all courses →</Link>
+            <Link href="/courses" className="ab-btn-primary">
+              Browse all courses <span className="ab-btn-arrow" aria-hidden="true">→</span>
+            </Link>
             <Link href="/contactus" className="ab-btn-outline">Talk to a counsellor</Link>
           </div>
+          <ul className="ab-cta-trust" aria-label="Why students choose us">
+            <li>No experience needed</li>
+            <li>Mentor-led</li>
+            <li>Project-based</li>
+            <li>Placement support</li>
+          </ul>
         </section>
       </div>
     </>

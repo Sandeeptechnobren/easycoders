@@ -26,7 +26,7 @@ export const metadata: Metadata = {
 async function fetchCoursesForLd(): Promise<ApiCourse[]> {
   try {
     const res = await fetch(
-      'https://api.easycoders.in/projects/backend/public/api/courses',
+      'https://api.easycoders.in/api/courses',
       { next: { revalidate: 3600 } }
     );
     if (!res.ok) return [];

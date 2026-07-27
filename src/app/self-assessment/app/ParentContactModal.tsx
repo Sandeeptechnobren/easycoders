@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import type { AssessProfile } from './ProfileModal';
 
-const BASE = 'https://api.easycoders.in/projects/backend/public/api';
+const BASE = 'https://api.easycoders.in/api';
 
 /**
  * Blocking parent/guardian-contact gate. Shown to EasyCoders-enrolled students

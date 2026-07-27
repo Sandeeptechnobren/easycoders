@@ -23,7 +23,7 @@ import styles from './admissions.module.css';
  * Cascade: Category (program) → Course → Batch (client-side filtered).
  * ────────────────────────────────────────────────────────────────────────── */
 
-const BASE = 'https://api.easycoders.in/projects/backend/public/api';
+const BASE = 'https://api.easycoders.in/api';
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /* Compose CSS-module class names (skips falsey entries). */
@@ -46,6 +46,7 @@ type Credentials = { enrollment_id: string; email: string; password: string; exp
 type AdmitResult = {
   user: { id: number; name: string; email: string } | null;
   credentials: Credentials | null;
+  email_sent?: boolean | null;
 };
 
 type Form = {
@@ -104,6 +105,7 @@ export default function AdmitStudentPage() {
   const [errorMsg, setErrorMsg] = useState('');
   const [result, setResult]     = useState<AdmitResult | null>(null);
   const [copied, setCopied]     = useState(false);
+  const [sendEmail, setSendEmail] = useState(false);
 
   /* ─── Load lookups once ─── */
   useEffect(() => {
@@ -272,6 +274,7 @@ export default function AdmitStudentPage() {
       id_proof_number: form.id_proof_number || undefined,
       referral_source: form.referral_source || undefined,
       installments:    cleanInstallments.length ? cleanInstallments : undefined,
+      send_credentials_email: sendEmail,
     };
 
     setSaving(true);
@@ -284,6 +287,7 @@ export default function AdmitStudentPage() {
       setResult({
         user:        res?.data?.user ?? null,
         credentials: res?.data?.credentials ?? null,
+        email_sent:  res?.data?.email_sent ?? null,
       });
     } catch (e: unknown) {
       setErrorMsg(e instanceof Error ? e.message : 'Failed to admit the student.');
@@ -296,7 +300,7 @@ export default function AdmitStudentPage() {
     setErrors({});
     setInstallments([]);
     setCoupon(null); setCouponMsg('');
-    setErrorMsg(''); setResult(null); setCopied(false);
+    setErrorMsg(''); setResult(null); setCopied(false); setSendEmail(false);
     if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -559,6 +563,17 @@ export default function AdmitStudentPage() {
                   placeholder="Anything the team should know (optional)"
                   onChange={e => setField('notes', e.target.value)} />
               </div>
+
+              <div className={cx('fld', 'sfull', 'subgap')}>
+                <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer', padding: '10px 12px', border: '1px solid #E5E9F2', borderRadius: 10, background: sendEmail ? '#FEF6E7' : '#fff' }}>
+                  <input type="checkbox" checked={sendEmail} onChange={e => setSendEmail(e.target.checked)}
+                    style={{ marginTop: 2, width: 16, height: 16, accentColor: '#E8A020', flexShrink: 0 }} />
+                  <span>
+                    <span style={{ fontWeight: 600, fontSize: 13, color: '#0B1B3A', display: 'block' }}>Email login details to the student</span>
+                    <span style={{ fontSize: 12, color: '#64748B' }}>Sends the enrolment ID + temporary password to the student&rsquo;s email when the account is created. Off by default.</span>
+                  </span>
+                </label>
+              </div>
             </AdminPanel>
           </div>
 
@@ -616,9 +631,15 @@ export default function AdmitStudentPage() {
                     <span className={styles.credLbl}>Temporary password</span>
                     <span className={cx('credVal', 'pw')}>{result.credentials.password}</span>
                   </div>
+                  {result.email_sent === true && (
+                    <p className={styles.admitNote} style={{ color: '#166534', fontWeight: 600 }}>✓ Login details were emailed to {result.credentials.email}.</p>
+                  )}
+                  {result.email_sent === false && (
+                    <p className={styles.admitNote} style={{ color: '#92660D', fontWeight: 600 }}>⚠ Couldn&rsquo;t send the email automatically — share the credentials manually below.</p>
+                  )}
                   <p className={styles.admitNote}>
-                    Share these with the student. The temporary password works until they change it, and
-                    can be re-fetched from the student profile for 7 days. No email is sent automatically.
+                    The temporary password works until the student changes it, and can be re-fetched from the
+                    student profile for 7 days.
                   </p>
                 </>
               ) : (

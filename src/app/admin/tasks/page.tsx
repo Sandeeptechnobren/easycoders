@@ -14,7 +14,7 @@ import styles from './tasks.module.css';
  * drill into a task's submissions and mark/grade them.
  * ────────────────────────────────────────────────────────────────────────── */
 
-const BASE = 'https://api.easycoders.in/projects/backend/public/api';
+const BASE = 'https://api.easycoders.in/api';
 
 function asArray<T>(x: unknown): T[] {
   if (Array.isArray(x)) return x as T[];

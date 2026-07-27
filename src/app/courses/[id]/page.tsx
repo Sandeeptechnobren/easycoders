@@ -5,7 +5,7 @@ import CourseDetail from './CourseDetail';
 import { type ApiCourse, courseImage } from '@/lib/course';
 
 const SITE = 'https://easycoders.in';
-const API  = 'https://api.easycoders.in/projects/backend/public/api';
+const API  = 'https://api.easycoders.in/api';
 
 /* ──────────────────────────────────────────────────────────────────────────
  * /courses/[id] — server-component shell.

@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import RoleGuard from '@/components/RoleGuard';
 import { fetchWithAuth } from '@/lib/api';
 
-const BASE = 'https://api.easycoders.in/projects/backend/public/api';
+const BASE = 'https://api.easycoders.in/api';
 
 type Course = { id: number; name: string };
 type Module = { id: number; title: string; description?: string; order_no: number; topics?: Topic[] };

@@ -1,13 +1,11 @@
 "use client";
 import LoginModal from "@/components/LoginModal";
 import NotificationsBell from "@/components/NotificationsBell";
-import SearchBox from "@/components/SearchBox";
 import { useAuth } from "@/context/AuthContext";
 import { useHasPermission } from "@/lib/permissions";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import styles from "./Navbar.module.css";
 
 type NavLink = {
   name: string;
@@ -16,36 +14,19 @@ type NavLink = {
 };
 
 export default function Navbar() {
-  const { role, logout, isLoading } = useAuth();
+  const { role, logout } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
 
   const [showLogin, setShowLogin] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-  const [navSearch, setNavSearch] = useState("");
   const [isScrolled, setIsScrolled] = useState(false);
 
   /* The EasyCoders / EasyAssess app downloads now live in the floating
    * right-edge <AppDownloadDock /> (mounted in app/providers.tsx), so the
-   * old navbar "Get the App" pills + Android-only note popovers were removed. */
-
-  /* Keep the navbar's search input in sync with the URL's `?search=` param.
-   * Reads `window.location.search` directly (instead of useSearchParams)
-   * to avoid forcing a Suspense boundary around the whole Navbar — that
-   * would break the static prerender of /_not-found and other 404-style
-   * pages. Re-syncs on pathname changes AND on browser back/forward
-   * (popstate). The setState is deferred to a microtask to satisfy the
-   * cascading-renders lint rule. */
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const sync = () => {
-      const q = new URLSearchParams(window.location.search).get("search") ?? "";
-      queueMicrotask(() => setNavSearch(q));
-    };
-    sync();
-    window.addEventListener("popstate", sync);
-    return () => window.removeEventListener("popstate", sync);
-  }, [pathname]);
+   * old navbar "Get the App" pills + Android-only note popovers were removed.
+   * The navbar course-search box was removed in favour of the Gallery link;
+   * search still lives on the /courses page itself. */
 
   const handleLogout = async () => {
     await logout();
@@ -72,6 +53,7 @@ export default function Navbar() {
   const commonLinks: NavLink[] = [
     { name: "Home", href: "/" },
     { name: "Courses", href: "/courses" },
+    { name: "Gallery", href: "/gallery" },
     { name: "About Us", href: "/about" },
     { name: "Contact Us", href: "/contactus" },
   ];
@@ -653,26 +635,6 @@ export default function Navbar() {
                   </Link>
                 );
               })}
-
-              {!role && !isLoading && (
-                <div className="nb-search">
-                  <SearchBox
-                    value={navSearch}
-                    onChange={setNavSearch}
-                    placeholder="Search courses..."
-                    className={styles.navSearch}
-                    inputClassName={styles.navSearchInput}
-                    onSubmit={(value) => {
-                      const q = value.trim();
-                      router.push(
-                        q
-                          ? `/courses?search=${encodeURIComponent(q)}`
-                          : "/courses",
-                      );
-                    }}
-                  />
-                </div>
-              )}
 
             </div>
 

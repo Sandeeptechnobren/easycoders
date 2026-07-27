@@ -40,11 +40,11 @@ type VerifyApiResponse = {
 };
 
 const API =
-  'https://api.easycoders.in/projects/backend/public/api/certificate/verify';
+  'https://api.easycoders.in/api/certificate/verify';
 const COURSE_API =
-  'https://api.easycoders.in/projects/backend/public/api/course-completion/verify';
+  'https://api.easycoders.in/api/course-completion/verify';
 const ELITE_API =
-  'https://api.easycoders.in/projects/backend/public/api/elite-card/verify';
+  'https://api.easycoders.in/api/elite-card/verify';
 
 export default function VerifyCertificate() {
   const [identifier, setIdentifier] = useState('');

@@ -5,7 +5,7 @@ import RoleGuard from '@/components/RoleGuard';
 import { fetchWithAuth } from '@/lib/api';
 import { useFeeVisibility, maskAmount, FeeToggle } from '@/lib/feeMask';
 
-const BASE = 'https://api.easycoders.in/projects/backend/public/api';
+const BASE = 'https://api.easycoders.in/api';
 
 type Admission = {
   id: number;

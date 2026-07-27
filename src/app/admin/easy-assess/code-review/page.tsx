@@ -17,7 +17,7 @@ import { AdminSection, AdminPanel, AdminState } from '@/components/admin/AdminSe
  *   POST /api/assessment/admin/coding-submissions/{answerId}/grade { marks_awarded }
  * ────────────────────────────────────────────────────────────────────────── */
 
-const BASE = 'https://api.easycoders.in/projects/backend/public/api';
+const BASE = 'https://api.easycoders.in/api';
 
 type RunCase = { id: number; hidden: boolean; passed: boolean; weight: number };
 type RunMeta = {

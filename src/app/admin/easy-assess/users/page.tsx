@@ -25,7 +25,7 @@ import {
  * No backend changes needed — every endpoint here already exists.
  * ────────────────────────────────────────────────────────────────────────── */
 
-const BASE = 'https://api.easycoders.in/projects/backend/public/api';
+const BASE = 'https://api.easycoders.in/api';
 
 type Interest = {
   id: number;

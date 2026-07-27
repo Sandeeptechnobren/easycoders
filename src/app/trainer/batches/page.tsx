@@ -9,7 +9,7 @@ import { fetchWithAuth } from '@/lib/api';
    trainer. The backend index() scopes batches to the trainer (role 4), so this
    only ever returns their cohorts. Expand a batch to see its student roster. */
 
-const BASE = 'https://api.easycoders.in/projects/backend/public/api';
+const BASE = 'https://api.easycoders.in/api';
 
 function asArray<T>(x: unknown): T[] {
   if (Array.isArray(x)) return x as T[];

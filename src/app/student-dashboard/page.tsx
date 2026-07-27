@@ -8,6 +8,7 @@ import api from '@/lib/axios';
 import MyBatchCard from '@/components/MyBatchCard';
 import MyTasksCard from '@/components/MyTasksCard';
 import MyCertificatesCard from '@/components/MyCertificatesCard';
+import MyReviewCard from '@/components/MyReviewCard';
 
 export default function StudentDashboard() {
   const { user } = useAuth();
@@ -347,6 +348,9 @@ export default function StudentDashboard() {
 
           {/* My Certificates (renders only when the student has completion certificates) */}
           <MyCertificatesCard />
+
+          {/* Share your story — submit / edit a testimonial for the public site */}
+          <MyReviewCard />
 
           {/* Main Grid */}
           <div className="sd-grid">

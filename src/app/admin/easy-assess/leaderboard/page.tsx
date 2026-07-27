@@ -17,7 +17,7 @@ import { AdminSection, AdminPanel, AdminState } from '@/components/admin/AdminSe
  * date-from / date-to range, top-N limit selector.
  * ────────────────────────────────────────────────────────────────────────── */
 
-const BASE = 'https://api.easycoders.in/projects/backend/public/api';
+const BASE = 'https://api.easycoders.in/api';
 
 type Row = {
   id:                number;

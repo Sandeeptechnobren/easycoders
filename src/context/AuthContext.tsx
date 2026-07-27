@@ -23,7 +23,7 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-const API_USER_URL = 'https://api.easycoders.in/projects/backend/public/api/user';
+const API_USER_URL = 'https://api.easycoders.in/api/user';
 
 export const AuthProvider = ({ children }: any) => {
   const [authState, setAuthState] = useState<AuthState>({

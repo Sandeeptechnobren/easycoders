@@ -10,7 +10,7 @@ import { AdminSection, AdminPanel, AdminState } from '@/components/admin/AdminSe
    course-completion certificate engine: saved, publicly verifiable (QR/code),
    re-downloadable and revocable. */
 
-const BASE = 'https://api.easycoders.in/projects/backend/public/api';
+const BASE = 'https://api.easycoders.in/api';
 
 type Cert = {
   id: number;

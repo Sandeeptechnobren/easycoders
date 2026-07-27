@@ -14,7 +14,7 @@ import { fetchWithAuth } from '@/lib/api';
  * to the student dashboard.
  * ────────────────────────────────────────────────────────────────────────── */
 
-const BASE = 'https://api.easycoders.in/projects/backend/public/api';
+const BASE = 'https://api.easycoders.in/api';
 
 export default function StudentChangePasswordPage() {
   const router = useRouter();

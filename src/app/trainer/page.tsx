@@ -7,7 +7,7 @@ import { fetchWithAuth } from '@/lib/api';
 import { useHasPermission } from '@/lib/permissions';
 import styles from './trainer-home.module.css';
 
-const BASE = 'https://api.easycoders.in/projects/backend/public/api';
+const BASE = 'https://api.easycoders.in/api';
 
 type Batch = {
   id: number;

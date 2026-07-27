@@ -10,6 +10,7 @@ import CountUp from '@/components/CountUp';
 import FAQAccordion from '@/components/FAQAccordion';
 import Registration from '@/components/Registration'; // ← adjust path if needed
 import TestimonialCarousel from '@/components/TestimonialCarousel';
+import GalleryTeaser from '@/components/GalleryTeaser';
 
 /* ──────────────────────────────────────────────────────────────────────
  * FAQ list — kept in one place so it can drive BOTH the on-screen
@@ -519,6 +520,9 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* ── Gallery teaser (renders only when photos are published) ── */}
+      <GalleryTeaser />
 
       {/* ── FAQ ── */}
       <section className="faq-section">

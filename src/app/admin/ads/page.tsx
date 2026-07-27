@@ -19,7 +19,7 @@ import styles from './ads.module.css';
  * Mirrors /admin/courses: hardcoded BASE, fetchWithAuth, an asArray() unwrap
  * helper, a create/edit modal, and the navy/gold AdminSection chrome. */
 
-const BASE = 'https://api.easycoders.in/projects/backend/public/api';
+const BASE = 'https://api.easycoders.in/api';
 
 /** Unwrap a bare array, `{data:[]}`, or `{data:{data:[]}}` (paginator). */
 function asArray<T>(x: unknown): T[] {

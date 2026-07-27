@@ -6,7 +6,7 @@ import styles from './enrollmentRequests.module.css';
 import { fetchWithAuth } from '@/lib/api';
 import Dropdown from '@/components/ui/Dropdown/Dropdown';
 
-const BASE = 'https://api.easycoders.in/projects/backend/public/api';
+const BASE = 'https://api.easycoders.in/api';
 
 type Course = {
   id: number;
@@ -655,7 +655,7 @@ const loadBatches = async () => {
 // import { fetchWithAuth } from '@/lib/api';
 // import Dropdown from '@/components/ui/Dropdown/Dropdown';
 
-// const BASE = 'https://api.easycoders.in/projects/backend/public/api';
+// const BASE = 'https://api.easycoders.in/api';
 
 // type Course = {
 //   id: number;

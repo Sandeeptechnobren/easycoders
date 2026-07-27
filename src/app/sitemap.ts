@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next';
 
 const SITE_URL = 'https://easycoders.in';
-const API_URL  = 'https://api.easycoders.in/projects/backend/public/api';
+const API_URL  = 'https://api.easycoders.in/api';
 
 /**
  * XML sitemap consumed by Google / Bing.

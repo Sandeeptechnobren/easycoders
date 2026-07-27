@@ -226,7 +226,7 @@ export default function HrHomePage() {
     (async () => {
       try {
         setLoadingColleges(true);
-        const res = await fetch('https://api.easycoders.in/projects/backend/public/api/collegeList', { signal: controller.signal });
+        const res = await fetch('https://api.easycoders.in/api/collegeList', { signal: controller.signal });
         if (!res.ok) throw new Error('Failed');
         const json = await res.json();
         setColleges(json.data || []);
@@ -247,7 +247,7 @@ export default function HrHomePage() {
         setError('');
         const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
         if (!token) throw new Error('Unauthorized');
-        const url = 'https://api.easycoders.in/projects/backend/public/api/admin/students' +
+        const url = 'https://api.easycoders.in/api/admin/students' +
           (selectedCollegeID ? `?college_id=${encodeURIComponent(selectedCollegeID)}` : '');
         const res = await fetch(url, {
           method: 'GET',

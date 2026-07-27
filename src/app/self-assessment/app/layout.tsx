@@ -5,7 +5,7 @@ import Link from 'next/link';
 import ProfileModal, { AssessProfile } from './ProfileModal';
 import ParentContactModal from './ParentContactModal';
 
-const API_BASE = 'https://api.easycoders.in/projects/backend/public/api';
+const API_BASE = 'https://api.easycoders.in/api';
 
 /* Sidebar href -> menu key (matches the backend EasyAssessMenus catalogue). */
 const HREF_KEY: Record<string, string> = {

@@ -18,7 +18,7 @@ export default function TypingGame() {
   const fetchText = async () => {
     setLoading(true);
     try {
-      const res = await fetch('https://api.easycoders.in/projects/backend/public/api/typing/random');
+      const res = await fetch('https://api.easycoders.in/api/typing/random');
       const json = await res.json();
       setText(json.data.content);
       resetGame();

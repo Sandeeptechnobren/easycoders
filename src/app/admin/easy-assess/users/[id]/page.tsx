@@ -17,7 +17,7 @@ import { normalizeInterestLabel } from '@/lib/interest';
  * existing /hr/* endpoints (assement_users feed); no backend change.
  * ────────────────────────────────────────────────────────────────────────── */
 
-const BASE = 'https://api.easycoders.in/projects/backend/public/api';
+const BASE = 'https://api.easycoders.in/api';
 
 type InterestOption = { id: number; interest: string };
 

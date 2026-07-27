@@ -7,15 +7,32 @@ type Testimonial = {
   role: string;
   initials: string;
   accent: string;
+  image?: string | null;
+  rating: number;
 };
 
-const testimonials: Testimonial[] = [
+const API = 'https://api.easycoders.in/api';
+const ACCENTS = ['#E8A020', '#1AA5BB', '#22c55e', '#7c3aed', '#ef4444', '#0ea5e9'];
+
+const initialsOf = (name: string) =>
+  (name || '')
+    .split(' ')
+    .map(n => n[0])
+    .filter(Boolean)
+    .join('')
+    .toUpperCase()
+    .slice(0, 2) || 'EC';
+
+/* Shown only until (and if) published student reviews load from the API, so the
+   section is never empty on a fresh site or if the API is unreachable. */
+const FALLBACK: Testimonial[] = [
   {
     quote: 'Easy Coders helped me move from basics to building real-world projects confidently. Within 3 months I had my first job offer.',
     name: 'Aarav Sharma',
     role: 'Frontend Developer',
     initials: 'AS',
     accent: '#E8A020',
+    rating: 5,
   },
   {
     quote: 'The learning approach is practical and industry-focused. They don\'t just teach syntax — they teach you how to think like a developer.',
@@ -23,6 +40,7 @@ const testimonials: Testimonial[] = [
     role: 'Computer Science Student',
     initials: 'PV',
     accent: '#1AA5BB',
+    rating: 5,
   },
   {
     quote: 'Clear explanations, hands-on coding, and great mentorship. I went from zero to building full-stack apps in under 6 months.',
@@ -30,13 +48,48 @@ const testimonials: Testimonial[] = [
     role: 'Backend Developer',
     initials: 'RS',
     accent: '#22c55e',
+    rating: 5,
   },
 ];
 
+type ApiReview = {
+  name: string;
+  headline: string | null;
+  body: string;
+  rating: number;
+  image_url: string | null;
+};
+
 export default function TestimonialCarousel() {
+  const [testimonials, setTestimonials] = useState<Testimonial[]>(FALLBACK);
   const [active, setActive] = useState(0);
   const [animating, setAnimating] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Swap in published student reviews when available; keep the fallback otherwise.
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`${API}/reviews`, { headers: { Accept: 'application/json' } })
+      .then(r => (r.ok ? r.json() : null))
+      .then(j => {
+        if (cancelled) return;
+        const list: ApiReview[] = Array.isArray(j?.data) ? j.data : [];
+        if (list.length) {
+          setTestimonials(list.map((r, i) => ({
+            quote: r.body,
+            name: r.name,
+            role: r.headline || 'Easy Coders Student',
+            initials: initialsOf(r.name),
+            accent: ACCENTS[i % ACCENTS.length],
+            image: r.image_url,
+            rating: Math.max(1, Math.min(5, r.rating || 5)),
+          })));
+          setActive(0);
+        }
+      })
+      .catch(() => { /* keep fallback */ });
+    return () => { cancelled = true; };
+  }, []);
 
   const goTo = (index: number) => {
     if (animating || index === active) return;
@@ -53,9 +106,9 @@ export default function TestimonialCarousel() {
   useEffect(() => {
     timerRef.current = setInterval(next, 5000);
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, [active]);
+  }, [active, testimonials.length]);
 
-  const t = testimonials[active];
+  const t = testimonials[active] ?? testimonials[0];
 
   return (
     <>
@@ -197,12 +250,19 @@ export default function TestimonialCarousel() {
 
       <div className="tc-wrap">
         <div className={`tc-card ${animating ? 'fade-out' : ''}`}>
-          <div className="tc-star">★★★★★</div>
+          <div className="tc-star">
+            {'★'.repeat(t.rating)}
+            <span style={{ opacity: 0.28 }}>{'☆'.repeat(5 - t.rating)}</span>
+          </div>
           <p className="tc-text">{t.quote}</p>
           <div className="tc-author">
-            <div className="tc-avatar" style={{ background: t.accent }}>
-              {t.initials}
-            </div>
+            {t.image ? (
+              <img className="tc-avatar" src={t.image} alt={t.name} style={{ objectFit: 'cover' }} />
+            ) : (
+              <div className="tc-avatar" style={{ background: t.accent }}>
+                {t.initials}
+              </div>
+            )}
             <div>
               <div className="tc-name">{t.name}</div>
               <div className="tc-role">{t.role}</div>

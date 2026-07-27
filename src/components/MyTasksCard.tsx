@@ -9,7 +9,7 @@ import { fetchWithAuth } from '@/lib/api';
    status, plus a pending count. Renders nothing if the student has no tasks.
    View-only — grading happens on the trainer side. */
 
-const BASE = 'https://api.easycoders.in/projects/backend/public/api';
+const BASE = 'https://api.easycoders.in/api';
 
 type Submission = { status: string } | null;
 type Task = {

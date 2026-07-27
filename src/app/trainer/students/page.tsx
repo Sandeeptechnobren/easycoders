@@ -72,7 +72,7 @@ export default function TrainerStudentsPage() {
         setLoading(true);
         setError('');
         const json = await fetchWithAuth(
-          'https://api.easycoders.in/projects/backend/public/api/student/studentslist'
+          'https://api.easycoders.in/api/student/studentslist'
         );
         setStudents(json.data || []);
       } catch (e: any) {
