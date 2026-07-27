@@ -48,7 +48,7 @@ interface ApiCourse {
 
 /* Which category counts as "job-oriented". Case-insensitive substring match so
  * it keeps working if the category is renamed slightly (e.g. "Internships"). */
-const JOB_CATEGORY_MATCH = 'intern';
+const JOB_CATEGORY_MATCH = 'bootcamp';
 
 /* Title → target job role. "PHP Laravel Development" → "PHP Laravel Developer",
  * "UI/UX Design" → "UI/UX Designer"; otherwise fall back to the title itself. */
@@ -268,7 +268,7 @@ export default function Registration({ onClose }: RegistrationProps) {
                       <path d="M20 7h-4V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2Z" />
                       <path d="M8 7V5h8v2" />
                     </svg>
-                    Job-Oriented Training · Now enrolling
+                    Training Bootcamp · Now enrolling
                   </span>
                   <h2 id="reg-title" className="batchesTitle">
                     Train for the <em>job you want</em>
@@ -476,7 +476,6 @@ export default function Registration({ onClose }: RegistrationProps) {
                           </div>
                         </label>
                       </div>
-
                       {payMethod === 'qr' ? (
                         <>
                           <div className="qrBox">

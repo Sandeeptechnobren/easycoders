@@ -20,7 +20,7 @@ export default function robots(): MetadataRoute.Robots {
           '/about',
           '/courses',
           '/contactus',
-          '/register',
+          // '/register',
           '/verifyCertificate',
           '/self-assessment',
         ],

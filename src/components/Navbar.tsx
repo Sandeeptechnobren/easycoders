@@ -183,7 +183,7 @@ export default function Navbar() {
           font-family: 'DM Sans', sans-serif;
           font-size: 12.5px;
           font-weight: 400;
-          color: #4A5568;
+          color: #003591;
           text-decoration: none;
           transition: color 0.2s;
           letter-spacing: 0.01em;

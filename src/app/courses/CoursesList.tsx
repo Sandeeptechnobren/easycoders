@@ -33,7 +33,7 @@ import {
 
 /** Categories we surface in the tab strip. Anything else from the API is hidden
  * (e.g. internal category drafts). Order here is the order users see. */
-const VISIBLE_CATEGORIES = ['Summer Training', 'Internship', 'Job Oriented Programs'];
+const VISIBLE_CATEGORIES = ['Summer Training', 'Coding Bootcamp', 'Job Oriented Programs','Winter Training Program'];
 
 type LoadState = 'loading' | 'ready' | 'error';
 
@@ -65,17 +65,10 @@ export default function CoursesList() {
       });
     return () => { cancelled = true; };
   }, []);
-
-  /* ─── Categories that actually have courses ──────────────────────────── */
   const availableCategories = useMemo(
     () => VISIBLE_CATEGORIES.filter(cat => courses.some(c => c.category?.name === cat)),
     [courses]
   );
-
-  /* ─── Search query from URL (`?search=...`) ───────────────────────────── */
-  // The navbar's SearchBox navigates to `/courses?search=<query>`. Read it
-  // here as the single source of truth so the URL stays shareable and
-  // back/forward navigation works naturally.
   const searchQuery = useMemo(
     () => (searchParams.get('search') || '').trim(),
     [searchParams]

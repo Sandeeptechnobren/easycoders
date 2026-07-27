@@ -31,7 +31,7 @@ const APPS: AppEntry[] = [
   {
     id: 'easycoders',
     name: 'EasyCoders App',
-    size: '83 MB',
+    size: '',
     url: 'https://api.easycoders.in/projects/backend/public/downloads/easycoders.apk',
     accent: 'ec',
     icon: (

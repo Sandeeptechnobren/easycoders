@@ -747,12 +747,7 @@ export default function ContactUsInner() {
 
                 {/* Map — precise address embed (was generic q=jaunpur). */}
                 <div className="ct-map">
-                  <iframe
-                    src="https://maps.google.com/maps?q=City+Tower%2C+Wazidpur%2C+Jaunpur%2C+Uttar+Pradesh+222002&z=15&output=embed"
-                    loading="lazy"
-                    referrerPolicy="no-referrer-when-downgrade"
-                    title="Easy Coders office location — City Tower, Wazidpur, Jaunpur"
-                  />
+                  <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3594.0824643136625!2d82.67833697463624!3d25.73478637736879!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39903b005a5fe39f%3A0xc0827473ba5559bd!2sEasy%20Coders!5e0!3m2!1sen!2sin!4v1785131768299!5m2!1sen!2sin" width="800" height="600"  loading="lazy" ></iframe>
                 </div>
               </div>
 
