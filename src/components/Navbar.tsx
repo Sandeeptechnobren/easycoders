@@ -106,6 +106,10 @@ export default function Navbar() {
   const guestLinks: NavLink[] = [
     ...commonLinks,
     { name: "Login", onClick: () => setShowLogin(true) },
+    {
+    name: "Easy Assess",
+    href: "https://www.easycoders.in/self-assessment/login",
+    },
   ];
 
   const roleNum = role ? parseInt(role, 10) : null;
@@ -542,6 +546,66 @@ export default function Navbar() {
             display: none;
           }
         }
+          /* Easy Assess Button */
+        .nb-link.nb-easy-assess {
+          margin-left: 8px;
+          padding: 9px 18px;
+          border-radius: 100px;
+          background: linear-gradient(135deg, #003591, #0056d6);
+          color: #fff !important;
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          font-weight: 600;
+          letter-spacing: 0.04em;
+          box-shadow: 0 6px 16px rgba(0, 53, 145, 0.2);
+        }
+
+        .nb-link.nb-easy-assess:hover {
+          background: linear-gradient(135deg, #00296f, #0048b8);
+          color: #fff !important;
+          transform: translateY(-1px);
+        }
+
+        .nb-link.nb-easy-assess::after {
+          display: none;
+        }
+
+        /* Mobile */
+        .nb-mob-link.mob-easy-assess {
+          background: #003591;
+          color: #fff;
+          justify-content: center;
+          font-weight: 600;
+        }
+
+        /* NEW Badge */
+        .nb-new-badge {
+          background: #ff3b30;
+          color: #fff;
+          font-size: 9px;
+          font-weight: 700;
+          padding: 2px 6px;
+          border-radius: 999px;
+          line-height: 1;
+          text-transform: uppercase;
+          animation: pulseBadge 1.5s infinite;
+        }
+
+        @keyframes pulseBadge {
+          0% {
+            transform: scale(1);
+            box-shadow: 0 0 0 rgba(255, 59, 48, 0.5);
+          }
+          50% {
+            transform: scale(1.08);
+            box-shadow: 0 0 10px rgba(255, 59, 48, 0.6);
+          }
+          100% {
+            transform: scale(1);
+            box-shadow: 0 0 0 rgba(255, 59, 48, 0);
+          }
+        }
       `}</style>
 
       {/* ── FIXED HEADER WRAPPER ── */}
@@ -608,8 +672,12 @@ export default function Navbar() {
               {/* In-app notifications bell — only renders when logged in */}
               <NotificationsBell />
               {navLinks.map((link) => {
+                // const isLogout = link.name === "Logout";
+                // const isLogin = link.name === "Login";
+                // const isActive = link.href && pathname === link.href;
                 const isLogout = link.name === "Logout";
                 const isLogin = link.name === "Login";
+                const isEasyAssess = link.name === "Easy Assess";
                 const isActive = link.href && pathname === link.href;
 
                 return (
@@ -626,12 +694,14 @@ export default function Navbar() {
                       "nb-link",
                       isLogout ? "nb-logout" : "",
                       isLogin ? "nb-login" : "",
+                      isEasyAssess ? "nb-easy-assess" : "",
                       isActive ? "nb-active" : "",
                     ]
                       .filter(Boolean)
                       .join(" ")}
                   >
                     {link.name}
+                     {isEasyAssess && <span className="nb-new-badge">NEW</span>}
                   </Link>
                 );
               })}
@@ -697,8 +767,12 @@ export default function Navbar() {
 
         <div className="nb-drawer-links">
           {navLinks.map((link) => {
+            // const isLogout = link.name === "Logout";
+            // const isLogin = link.name === "Login";
+            // const isActive = link.href && pathname === link.href;
             const isLogout = link.name === "Logout";
             const isLogin = link.name === "Login";
+            const isEasyAssess = link.name === "Easy Assess";
             const isActive = link.href && pathname === link.href;
 
             return (
@@ -716,12 +790,14 @@ export default function Navbar() {
                   "nb-mob-link",
                   isLogout ? "mob-logout" : "",
                   isLogin ? "mob-login" : "",
+                  isEasyAssess ? "mob-easy-assess" : "",
                   isActive ? "mob-active" : "",
                 ]
                   .filter(Boolean)
                   .join(" ")}
               >
                 {link.name}
+                {isEasyAssess && <span className="nb-new-badge">NEW</span>}
               </Link>
             );
           })}
