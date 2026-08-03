@@ -32,7 +32,7 @@ const APPS: AppEntry[] = [
     id: 'easycoders',
     name: 'EasyCoders App',
     size: '',
-    url: 'https://api.easycoders.in/projects/backend/public/downloads/easycoders.apk',
+    url: 'https://api.easycoders.in/downloads/easycoders.apk',
     accent: 'ec',
     icon: (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -45,7 +45,7 @@ const APPS: AppEntry[] = [
     id: 'easyassess',
     name: 'EasyAssess App',
     size: '',
-    url: 'https://api.easycoders.in/projects/backend/public/downloads/easyassess.apk',
+    url: 'https://api.easycoders.in/downloads/easyassess.apk',
     accent: 'ea',
     icon: (
       <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">

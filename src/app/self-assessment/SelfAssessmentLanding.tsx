@@ -31,7 +31,7 @@ import { useRouter } from 'next/navigation';
 type SessionState = 'unknown' | 'guest' | 'authed';
 
 const EASYASSESS_DOWNLOAD_URL =
-  'https://api.easycoders.in/projects/backend/public/downloads/easyassess.apk';
+  'https://api.easycoders.in/downloads/easyassess.apk';
 
 export default function SelfAssessmentLanding() {
   const router = useRouter();

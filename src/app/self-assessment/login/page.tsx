@@ -402,7 +402,7 @@ export default function AssessmentLogin() {
           {/* Get the Android app */}
           <div style={{ textAlign: 'center', marginTop: 16 }}>
             <a
-              href="https://api.easycoders.in/projects/backend/public/downloads/easyassess.apk"
+              href="https://api.easycoders.in/downloads/easyassess.apk"
               download
               style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 600, color: '#7C3AED', textDecoration: 'none' }}
             >

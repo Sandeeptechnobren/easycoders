@@ -38,7 +38,7 @@ type Credentials = { email?: string; password: string; expires_at?: string | nul
 
 const fmtStatus = (s: string) => s.replace(/_/g, ' ');
 
-const STORAGE_BASE = 'https://api.easycoders.in/projects/backend/public';
+const STORAGE_BASE = 'https://api.easycoders.in';
 const photoUrl = (p?: string | null) => (!p ? null : p.startsWith('http') ? p : `${STORAGE_BASE}/storage/${p}`);
 const initialsOf = (name: string) => {
   const p = name.trim().split(/\s+/);
