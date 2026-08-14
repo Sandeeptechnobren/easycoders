@@ -599,6 +599,49 @@
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
+ * 6c. COURSE CARD ARTWORK — the Independence illustration on every course card,
+ *     on the home grid (.cg-*) and the /courses listing (.cl-*), which covers
+ *     Summer Training, Internship and every other category.
+ *
+ * ⚠️ PERFORMANCE: the supplied file is 8640×5762 / 1.4MB — roughly 30× the
+ * pixels a ~300px card slot can use, on four cards at once. It is NOT used
+ * directly. `course-card.jpg` is a 1000px re-encode generated with sharp
+ * (78KB, 94.5% smaller) and that is what ships. The originals are kept in
+ * public/flag/ as masters; regenerate with:
+ *   sharp(src).resize({width:1000}).jpeg({quality:82,mozjpeg:true})
+ *
+ * ⚠️ TRADE-OFF, stated plainly: this puts the SAME artwork on every card, so
+ * PHP / MERN / Python / Android are no longer visually distinguishable at a
+ * glance — the thumbnail stops carrying information. That is the explicit
+ * request, and it is one line to revert (delete this block). If the courses
+ * should stay distinguishable, the alternative is a tricolour ribbon over each
+ * existing thumbnail instead.
+ * ───────────────────────────────────────────────────────────────────────────── */
+[data-theme='tiranga'] .cg-image-wrap,
+[data-theme='tiranga'] .cl-image-wrap {
+  background-image: url('/flag/course-card.jpg');
+  background-size: cover;
+  background-position: center 32%;   /* keeps the flag and figure in frame */
+  background-repeat: no-repeat;
+}
+
+/* Hide the per-course photo so the illustration reads cleanly — two busy images
+   blended together would just be mush. `visibility` rather than `display:none`
+   so the element keeps its box and the wrapper's aspect-ratio is preserved. */
+[data-theme='tiranga'] .cg-image-wrap img,
+[data-theme='tiranga'] .cl-image-wrap img {
+  visibility: hidden;
+}
+
+/* The BEGINNER / level badge sits on top of the artwork, so give it a solid
+   backing — over the illustration's pale sky it would otherwise lose contrast. */
+[data-theme='tiranga'] .cg-badge {
+  background: rgb(var(--navy-deep-rgb) / 0.86) !important;
+  color: #fff !important;
+  backdrop-filter: blur(3px);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
  * 7. MICRO-INTERACTIONS — cards, buttons, focus.
  *    Applied to shared structural classes only, so one rule covers many pages.
  * ───────────────────────────────────────────────────────────────────────────── */
