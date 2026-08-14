@@ -619,26 +619,62 @@
  * ───────────────────────────────────────────────────────────────────────────── */
 [data-theme='tiranga'] .cg-image-wrap,
 [data-theme='tiranga'] .cl-image-wrap {
-  background-image: url('/flag/course-card.jpg');
-  background-size: cover;
-  background-position: center 32%;   /* keeps the flag and figure in frame */
-  background-repeat: no-repeat;
+  /* Required so the ribbon can be positioned against the thumbnail, and so it
+     is clipped to the image area instead of hanging over the card body.
+     .cg-image-wrap already sets both; .cl-image-wrap gets them here. */
+  position: relative;
+  overflow: hidden;
 }
 
-/* Hide the per-course photo so the illustration reads cleanly — two busy images
-   blended together would just be mush. `visibility` rather than `display:none`
-   so the element keeps its box and the wrapper's aspect-ratio is preserved. */
-[data-theme='tiranga'] .cg-image-wrap img,
-[data-theme='tiranga'] .cl-image-wrap img {
-  visibility: hidden;
+/* The ribbon itself — a tricolour band across the top-right corner.
+   Uses ::before because .cg-image-wrap::after is ALREADY the card's hover
+   gradient; taking it would have deleted that effect. The level badge sits
+   top-LEFT, so the two never collide.
+   z-index 2 puts it above the hover gradient (z-index 1) but the badge is also
+   2 and sits on the opposite corner, so neither is obscured. */
+[data-theme='tiranga'] .cg-image-wrap::before,
+[data-theme='tiranga'] .cl-image-wrap::before {
+  content: '';
+  position: absolute;
+  z-index: 2;
+  /* Sized and offset so the 45° band crosses the corner cleanly at any card
+     width — the diagonal of the visible triangle, not the card. */
+  top: 16px;
+  right: -58px;
+  width: 190px;
+  height: 26px;
+  transform: rotate(45deg);
+  background: linear-gradient(
+    90deg,
+    var(--saffron) 0%, var(--saffron) 33.33%,
+    #FFFFFF 33.33%, #FFFFFF 66.66%,
+    var(--india-green) 66.66%, var(--india-green) 100%
+  );
+  box-shadow: 0 2px 8px rgb(var(--navy-deep-rgb) / 0.35);
+  /* Chakra-navy hairlines on the band's own edges, so the white stripe never
+     dissolves into a pale thumbnail and the ribbon keeps a defined shape
+     whatever photo sits behind it.
+     These MUST live on the ribbon (::before). Putting them on ::after would
+     have hit the card's existing hover gradient, which is inset:0 — drawing a
+     stray line across the entire thumbnail instead of under the band. */
+  border-top: 1px solid rgb(var(--chakra-rgb) / 0.28);
+  border-bottom: 1px solid rgb(var(--chakra-rgb) / 0.28);
+  pointer-events: none;
 }
 
-/* The BEGINNER / level badge sits on top of the artwork, so give it a solid
-   backing — over the illustration's pale sky it would otherwise lose contrast. */
-[data-theme='tiranga'] .cg-badge {
-  background: rgb(var(--navy-deep-rgb) / 0.86) !important;
-  color: #fff !important;
-  backdrop-filter: blur(3px);
+/* Slight lift on hover, matching the card's own hover motion. */
+[data-theme='tiranga'] .cg-card:hover .cg-image-wrap::before,
+[data-theme='tiranga'] .cl-card:hover .cl-image-wrap::before {
+  transform: rotate(45deg) translateY(-2px);
+  transition: transform .24s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-theme='tiranga'] .cg-card:hover .cg-image-wrap::before,
+  [data-theme='tiranga'] .cl-card:hover .cl-image-wrap::before {
+    transform: rotate(45deg);
+    transition: none;
+  }
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
