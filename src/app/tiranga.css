@@ -303,11 +303,18 @@
  *                                             filename, which must be written as
  *                                             %20 inside url() or the rule silently
  *                                             fails to parse
- *   indianflag2.avif  576×402  ⚠️ actually a JPEG carrying an .avif extension.
- *                                             Next serves it as Content-Type
- *                                             image/avif, so a browser told "AVIF"
- *                                             and handed JPEG bytes may refuse to
- *                                             decode. Rename it to .jpg before use.
+ *   indianflag2.avif  576×402  ⚠️ SOURCE ONLY — do not reference this path.
+ *                                             It is a JPEG carrying an .avif
+ *                                             extension (Next would serve it as
+ *                                             Content-Type image/avif), AND it
+ *                                             carries an "alamy - 2CA33EJ" stock
+ *                                             watermark across its bottom band.
+ *                                             Use banner-flag.jpg instead.
+ *   banner-flag.jpg   576×340  genuine JPEG   ← the page banners (§6d). Derived
+ *                                             from indianflag2 by cropping rows
+ *                                             340-402 away, which removes the
+ *                                             watermark, and re-encoding under an
+ *                                             honest extension.
  *
  * ⚠️ RESOLUTION: at 740×493 this is small for a full-bleed hero — `cover` on a
  * 1920px viewport upscales ~2.6×, which would normally look soft. It survives
@@ -320,6 +327,8 @@
  * hero rather than to a broken layout. */
 [data-theme='tiranga'] {
   --hero-flag: url('/flag/indianflag.avif');
+  /* The inner-page banners use the smoke flag instead — see §6d. */
+  --banner-flag: url('/flag/banner-flag.jpg');
 }
 
 /* The photo and its scrim are LAYERED BACKGROUNDS on .hero itself, not extra
@@ -611,20 +620,36 @@
  * than the light content sections — the flag can genuinely show here. The
  * gradient still runs densest at the LEFT, where the breadcrumb, title and
  * description sit, and lifts toward the right where there is no copy.
+ *
+ * IMAGE: the smoke flag (banner-flag.jpg), not the hero's photograph. It is a
+ * dark image — black smoke at both ends with the tricolour burning through the
+ * middle — which is why it survives here at a lighter scrim than the hero's.
+ *
+ * ⚠️ Its ONE bright region is the white/chakra band across the vertical centre,
+ * and `cover` on a ~6:1 banner shows almost exactly that band and nothing else.
+ * So the scrim is not decorative: white body copy lands directly on white smoke
+ * without it. Measured against the worst case (pure-white smoke under the copy):
+ * 12.6:1 at the left edge, 7.5:1 at 68% across, both past AA. Past ~70% there is
+ * no text, so the image is allowed to come forward.
+ *
+ * Horizontal `background-position` is deliberately absent: `cover` scales this
+ * image to the full banner width, so there is no horizontal overflow left to
+ * position. Only the vertical crop is live, and centre is what puts the chakra
+ * on screen.
  * ───────────────────────────────────────────────────────────────────────────── */
 [data-theme='tiranga'] .ph-wrap {
   background-color: var(--navy);
   background-image:
     linear-gradient(
       100deg,
-      rgb(var(--navy-deep-rgb) / 0.94) 0%,
-      rgb(var(--navy-deep-rgb) / 0.90) 40%,
-      rgb(var(--navy-rgb) / 0.74) 72%,
-      rgb(var(--navy-rgb) / 0.58) 100%
+      rgb(var(--navy-deep-rgb) / 0.92) 0%,
+      rgb(var(--navy-deep-rgb) / 0.88) 45%,
+      rgb(var(--navy-rgb) / 0.72) 68%,
+      rgb(var(--navy-rgb) / 0.50) 100%
     ),
-    url('/flag/indianflag.avif');
+    var(--banner-flag);
   background-size: cover, cover;
-  background-position: center, center right;
+  background-position: center, center;
   background-repeat: no-repeat, no-repeat;
 }
 
@@ -642,17 +667,24 @@
   z-index: 1;
 }
 
-/* Phones: the copy spans the full width with nothing beside it, so the scrim
-   goes denser and the image recentres. */
+/* Phones: the copy spans the full width with nothing beside it, so a
+   left-to-right clearing gradient has nowhere to clear — it goes uniform and
+   dense instead.
+
+   Note the banner is roughly 1.6:1 here against the image's 1.7:1, so unlike
+   desktop very nearly the WHOLE frame is on screen: saffron smoke at the top,
+   green at the bottom. That is the better read of the two, and it is also why
+   the source had to be cropped — the watermark band would have been visible at
+   this size. */
 @media (max-width: 900px) {
   [data-theme='tiranga'] .ph-wrap {
     background-image:
       linear-gradient(
         180deg,
-        rgb(var(--navy-deep-rgb) / 0.93) 0%,
-        rgb(var(--navy-deep-rgb) / 0.90) 100%
+        rgb(var(--navy-deep-rgb) / 0.91) 0%,
+        rgb(var(--navy-deep-rgb) / 0.88) 100%
       ),
-      url('/flag/indianflag.avif');
+      var(--banner-flag);
     background-position: center, center;
   }
 }
@@ -668,13 +700,13 @@
   background-image:
     linear-gradient(
       100deg,
-      rgb(var(--navy-deep-rgb) / 0.95) 0%,
-      rgb(var(--navy-deep-rgb) / 0.92) 45%,
-      rgb(var(--navy-rgb) / 0.80) 100%
+      rgb(var(--navy-deep-rgb) / 0.94) 0%,
+      rgb(var(--navy-deep-rgb) / 0.91) 45%,
+      rgb(var(--navy-rgb) / 0.78) 100%
     ),
-    url('/flag/indianflag.avif');
+    var(--banner-flag);
   background-size: cover, cover;
-  background-position: center, center right;
+  background-position: center, center;
   background-repeat: no-repeat, no-repeat;
 }
 
