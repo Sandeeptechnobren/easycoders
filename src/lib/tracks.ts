@@ -24,13 +24,24 @@ import path from 'node:path';
 export type Track = {
   /** Public URL, e.g. `/audio/foo.mp3`. */
   src: string;
-  /** Display name, cleaned up from the filename. */
+  /** Display name — the ID3 title where there is one, else the filename. */
   title: string;
-  /** Film / album, when the filename carried a `from-<x>` segment. */
+  /** Artist, album, or the film a `from-<x>` filename segment named. */
   subtitle?: string;
+  /** Cover art extracted from the ID3 APIC frame, if the file carried one. */
+  cover?: string;
 };
 
 const AUDIO_DIR = path.join(process.cwd(), 'public', 'audio');
+/** Written by scripts/extract-covers.mjs on prebuild/predev. */
+const MANIFEST = path.join(process.cwd(), 'public', 'audio-art', 'index.json');
+
+type ManifestEntry = {
+  title: string | null;
+  artist: string | null;
+  album: string | null;
+  cover: string | null;
+};
 
 /** Extensions a browser might actually play. `.flac`/`.wav` are included for
  *  completeness even though they are a poor choice over the network. */
@@ -122,8 +133,42 @@ function parseName(fileName: string): { title: string; subtitle?: string } {
 }
 
 /**
+ * Rip-site branding stapled onto the ID3 title itself, e.g.
+ * "Vande Mataram - PagalNew". Matched as a whole trailing segment so a real
+ * title is never truncated mid-phrase.
+ */
+const TITLE_SITE_SUFFIX =
+  /\s*[-–—]\s*(pagalnew|pagalworld|pagalfree|mr-?jatt|djpunjab|songspk|wapking|pendujatt|savetube|ytshorts)\s*$/i;
+
+/**
+ * Clean an ID3 title. These are better than filenames but not clean: they
+ * carry the same site branding, and rippers often append the whole SEO
+ * description after a pipe — "…Aye Watan Tere Liye | Desh Bhakti Song |
+ * 26 January Song". Everything from the first pipe is descriptive filler.
+ */
+function cleanTagTitle(raw: string): string {
+  const firstSegment = raw.split('|')[0];
+  return firstSegment.replace(TITLE_SITE_SUFFIX, '').trim();
+}
+
+function readManifest(): Record<string, ManifestEntry> {
+  try {
+    return JSON.parse(fs.readFileSync(MANIFEST, 'utf8')) as Record<string, ManifestEntry>;
+  } catch {
+    // Not generated yet (or public/audio-art was cleaned). Titles fall back to
+    // the filename parser and the dock shows its placeholder artwork — the
+    // player still works, it just looks plainer.
+    return {};
+  }
+}
+
+/**
  * Every playable file in `public/audio/`, sorted by filename so the running
  * order is stable and predictable (prefix files `01-`, `02-` to control it).
+ *
+ * Names come from the ID3 tags where the file has them, and fall back to the
+ * filename parser above where it doesn't — of the current six tracks, five are
+ * tagged and one carries nothing but the ripper's filename.
  *
  * A missing folder is not an error — it just means no music, and the dock
  * renders nothing.
@@ -136,13 +181,25 @@ export function getTracks(): Track[] {
     return [];
   }
 
+  const manifest = readManifest();
+
   return entries
     .filter((f) => AUDIO_EXTS.has(path.extname(f).toLowerCase()))
     .sort((a, b) => a.localeCompare(b))
-    .map((f) => ({
-      // encodeURIComponent, not encodeURI: these filenames routinely contain
-      // spaces, '&' and '#', all of which break a bare URL.
-      src: `/audio/${encodeURIComponent(f)}`,
-      ...parseName(f),
-    }));
+    .map((f) => {
+      const meta = manifest[f];
+      const fromName = parseName(f);
+      const tagged = meta?.title ? cleanTagTitle(meta.title) : '';
+
+      return {
+        // encodeURIComponent, not encodeURI: these filenames routinely contain
+        // spaces, '&' and '#', all of which break a bare URL.
+        src: `/audio/${encodeURIComponent(f)}`,
+        title: tagged || fromName.title,
+        // Artist first — on a playlist row it identifies the track better than
+        // the album, which for film songs is usually just the film again.
+        subtitle: meta?.artist || meta?.album || fromName.subtitle,
+        cover: meta?.cover ?? undefined,
+      };
+    });
 }

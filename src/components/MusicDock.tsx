@@ -296,6 +296,12 @@ export default function MusicDock({ tracks }: { tracks: Track[] }) {
                     onClick={() => choose(i)}
                   >
                     <span className="md-num">{String(i + 1).padStart(2, '0')}</span>
+                    {t.cover ? (
+                      // eslint-disable-next-line @next/next/no-img-element -- see the note on the bar artwork
+                      <img className="md-thumb" src={t.cover} alt="" width={28} height={28} loading="lazy" />
+                    ) : (
+                      <span className="md-thumb md-art-none" aria-hidden="true" />
+                    )}
                     <span className="md-item-txt">
                       {t.title}
                       {t.subtitle && <em> · {t.subtitle}</em>}
@@ -310,12 +316,40 @@ export default function MusicDock({ tracks }: { tracks: Track[] }) {
 
       {/* ── Always-visible bar ─────────────────────────────────────────── */}
       <div className="md-bar">
-        <button
-          type="button"
-          className={`md-play ${armed ? 'armed' : ''}`}
-          onClick={toggle}
-          aria-label={playing ? `Pause ${track.title}` : `Play ${track.title}`}
-        >
+        {/* Cover art, straight off the track's ID3 APIC frame. Five of the six
+            files carry one; the sixth gets the tricolour placeholder. alt="" —
+            it is decoration, and the title sits next to it in text. */}
+        {track.cover ? (
+          /* A 38px thumbnail off a local static file. next/image would add a
+             runtime optimiser pass and layout machinery for no gain at this
+             size, so the plain element is the right call here. */
+          // eslint-disable-next-line @next/next/no-img-element
+          <img className="md-art" src={track.cover} alt="" width={38} height={38} />
+        ) : (
+          <span className="md-art md-art-none" aria-hidden="true" />
+        )}
+
+        <div className="md-meta">
+          <span className="md-title">{failed ? 'Track unavailable' : track.title}</span>
+          {track.subtitle && !failed && <span className="md-sub">{track.subtitle}</span>}
+        </div>
+
+        <div className="md-transport">
+          {many && (
+            <button type="button" className="md-step" onClick={() => skip(-1)} aria-label="Previous track">
+              <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true">
+                <path d="M7.5 6v12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                <path d="M18 6.9v10.2a.9.9 0 0 1-1.39.75l-7.7-5.1a.9.9 0 0 1 0-1.5l7.7-5.1A.9.9 0 0 1 18 6.9Z" fill="currentColor" />
+              </svg>
+            </button>
+          )}
+
+          <button
+            type="button"
+            className={`md-play ${armed ? 'armed' : ''}`}
+            onClick={toggle}
+            aria-label={playing ? `Pause ${track.title}` : `Play ${track.title}`}
+          >
           {buffering ? (
             <span className="md-spin" aria-hidden="true" />
           ) : playing ? (
@@ -328,33 +362,22 @@ export default function MusicDock({ tracks }: { tracks: Track[] }) {
               <path d="M8 5.2v13.6a1 1 0 0 0 1.53.85l10.4-6.8a1 1 0 0 0 0-1.7L9.53 4.35A1 1 0 0 0 8 5.2Z" fill="currentColor" />
             </svg>
           )}
-        </button>
-
-        {many && (
-          <button type="button" className="md-mini" onClick={() => skip(-1)} aria-label="Previous track">
-            <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
-              <path d="M7 6v12M18 6.6v10.8a.8.8 0 0 1-1.25.66l-7.9-5.4a.8.8 0 0 1 0-1.32l7.9-5.4A.8.8 0 0 1 18 6.6Z" fill="currentColor" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-            </svg>
           </button>
-        )}
 
-        <div className="md-meta">
-          <span className="md-title">{failed ? 'Track unavailable' : track.title}</span>
-          {track.subtitle && !failed && <span className="md-sub">{track.subtitle}</span>}
+          {many && (
+            <button type="button" className="md-step" onClick={() => skip(1)} aria-label="Next track">
+              <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true">
+                <path d="M16.5 6v12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                <path d="M6 6.9v10.2a.9.9 0 0 0 1.39.75l7.7-5.1a.9.9 0 0 0 0-1.5l-7.7-5.1A.9.9 0 0 0 6 6.9Z" fill="currentColor" />
+              </svg>
+            </button>
+          )}
         </div>
 
         {/* Equalizer — a playing indicator that doesn't need a label. */}
         <span className={`md-eq ${playing ? 'on' : ''}`} aria-hidden="true">
           <i /><i /><i />
         </span>
-
-        {many && (
-          <button type="button" className="md-mini" onClick={() => skip(1)} aria-label="Next track">
-            <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
-              <path d="M17 6v12M6 6.6v10.8a.8.8 0 0 0 1.25.66l7.9-5.4a.8.8 0 0 0 0-1.32l-7.9-5.4A.8.8 0 0 0 6 6.6Z" fill="currentColor" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-            </svg>
-          </button>
-        )}
 
         <button
           type="button"
@@ -420,8 +443,11 @@ export default function MusicDock({ tracks }: { tracks: Track[] }) {
              navbar (999), below modals (9999). */
           z-index: 1000;
           width: max-content;
-          max-width: min(560px, calc(100vw - 32px));
-          border-radius: 16px;
+          max-width: min(640px, calc(100vw - 32px));
+          /* Fully rounded ends — a pill. Opening it swaps to a large-but-finite
+             radius, because a pill silhouette on a tall panel reads as a
+             mistake rather than a shape. */
+          border-radius: 999px;
           overflow: hidden;
           color: #fff;
           font-family: 'DM Sans', system-ui, sans-serif;
@@ -430,22 +456,101 @@ export default function MusicDock({ tracks }: { tracks: Track[] }) {
           -webkit-backdrop-filter: blur(14px) saturate(1.2);
           border: 1px solid rgb(255 255 255 / 0.12);
           box-shadow: 0 14px 40px rgb(0 0 0 / 0.34);
+          transition: border-radius 0.24s ease;
         }
-        /* Tricolour seam along the top, matching the navbar/footer/banner. */
-        .md::before {
-          content: '';
-          position: absolute;
-          inset: 0 0 auto 0;
-          height: 2px;
-          background: var(--tiranga-bar, linear-gradient(90deg, #FF9933 0 33.33%, #fff 33.33% 66.66%, #138808 66.66%));
+        .md[data-open='y'] { border-radius: 24px; }
+
+        /* Tricolour edge. This used to be a 2px seam across the top, which a
+           pill silhouette destroys — with rounded ends a straight top line
+           clips to a stub in the middle.
+
+           So it becomes a RING that follows the radius: a filled tricolour
+           layer masked down to just its own 2px border box. Two masks are
+           composited so the middle is punched out; without that the ::before
+           would sit over the whole dock as a solid tricolour block, which is
+           exactly what an unsupporting browser would render — hence the
+           @supports gate rather than trusting the fallback. */
+        @supports (mask-composite: exclude) or (-webkit-mask-composite: xor) {
+          .md::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            padding: 2px;
+            background: var(--tiranga-bar, linear-gradient(90deg, #FF9933 0 33.33%, #fff 33.33% 66.66%, #138808 66.66%));
+            -webkit-mask:
+              linear-gradient(#000 0 0) content-box,
+              linear-gradient(#000 0 0);
+            mask:
+              linear-gradient(#000 0 0) content-box,
+              linear-gradient(#000 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+            z-index: 2;
+          }
         }
 
         .md-bar {
           display: flex;
           align-items: center;
           gap: 10px;
-          padding: 9px 12px;
+          /* Asymmetric on purpose: the artwork is a rounded square hard against
+             the left cap, so it needs less inset than the round buttons at the
+             other end to look equally spaced inside a pill. */
+          padding: 7px 14px 7px 8px;
         }
+
+        /* ── Cover art ─────────────────────────────────────────────────── */
+        .md-art {
+          flex: none;
+          width: 38px;
+          height: 38px;
+          border-radius: 12px;
+          object-fit: cover;
+          background: rgb(255 255 255 / 0.08);
+          box-shadow: 0 2px 8px rgb(0 0 0 / 0.35);
+        }
+        /* Placeholder for a track with no APIC frame — a tricolour tile rather
+           than a broken-image box or an empty hole. */
+        .md-art-none {
+          display: block;
+          background:
+            radial-gradient(circle at 50% 50%, transparent 34%, rgb(0 0 128 / 0.85) 35%, rgb(0 0 128 / 0.85) 42%, transparent 43%),
+            linear-gradient(
+              180deg,
+              var(--saffron, #FF9933) 0 33.33%,
+              #fff 33.33% 66.66%,
+              var(--india-green, #138808) 66.66%
+            );
+        }
+
+        .md-transport {
+          flex: none;
+          display: flex;
+          align-items: center;
+          gap: 4px;
+        }
+        /* Prev/next as real controls: same visual family as play, one step down
+           in weight, so the transport group reads as a unit. */
+        .md-step {
+          width: 30px;
+          height: 30px;
+          display: grid;
+          place-items: center;
+          border: 0;
+          border-radius: 50%;
+          cursor: pointer;
+          color: rgb(255 255 255 / 0.85);
+          background: rgb(255 255 255 / 0.09);
+          transition: background 0.16s ease, color 0.16s ease, transform 0.16s ease;
+        }
+        .md-step:hover {
+          background: rgb(255 255 255 / 0.18);
+          color: #fff;
+          transform: scale(1.06);
+        }
+        .md-step:active { transform: scale(0.94); }
 
         .md-play {
           position: relative;   /* containing block for the .armed halo */
@@ -498,7 +603,14 @@ export default function MusicDock({ tracks }: { tracks: Track[] }) {
         .md-toggle svg { transition: transform 0.22s ease; }
         .md[data-open='y'] .md-toggle svg { transform: rotate(180deg); }
 
+        /* Fixed width, not content width. The dock is centred, so letting this
+           size to the title would make the whole pill grow and shrink — and
+           shift sideways — on every track change. Titles here range from
+           "Desh Mere" to "Dil Diya Hai Jaan Bhi Denge Aye Watan Tere Liye";
+           the long ones ellipsis instead. */
         .md-meta {
+          flex: none;
+          width: 190px;
           min-width: 0;
           display: flex;
           flex-direction: column;
@@ -660,6 +772,14 @@ export default function MusicDock({ tracks }: { tracks: Track[] }) {
           color: rgb(255 255 255 / 0.42);
         }
         .md-item[aria-current='true'] .md-num { color: var(--saffron, #FF9933); }
+        .md-thumb {
+          flex: none;
+          width: 28px;
+          height: 28px;
+          border-radius: 7px;
+          object-fit: cover;
+          background: rgb(255 255 255 / 0.08);
+        }
         .md-item-txt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .md-item-txt em { font-style: normal; color: rgb(255 255 255 / 0.5); }
 
@@ -690,10 +810,20 @@ export default function MusicDock({ tracks }: { tracks: Track[] }) {
         @media (max-width: 600px) {
           .md {
             bottom: 88px;
+            /* Explicit width rather than max-content: with the meta column
+               flexing below, max-content would collapse the pill to its
+               contents and re-centre it on every track change. */
+            width: calc(100vw - 20px);
             max-width: calc(100vw - 20px);
           }
-          .md-bar { gap: 7px; padding: 8px 10px; }
-          .md-vol { display: none; }   /* phones have hardware volume */
+          .md-meta { flex: 1 1 auto; width: auto; }
+          .md-bar { gap: 8px; padding: 6px 10px 6px 6px; }
+          /* Phones have hardware volume, and the equalizer is decoration —
+             both give up their width so the artwork and transport survive,
+             which are the parts you actually operate. */
+          .md-vol,
+          .md-eq { display: none; }
+          .md-art { width: 34px; height: 34px; border-radius: 10px; }
           .md-title { font-size: 12px; }
         }
 
