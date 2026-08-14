@@ -428,6 +428,84 @@
   opacity: 1;
 }
 
+/* ─────────────────────────────────────────────────────────────────────────────
+ * STATS BAND — tricolour seam, tricolour stat underlines, and hover.
+ * ───────────────────────────────────────────────────────────────────────────── */
+
+/* The 2px gold seam bridging the navy hero into the cream band becomes the
+   full tricolour. Painted with a gradient on the existing border box rather
+   than a new element, so nothing reflows. */
+[data-theme='tiranga'] .stats-bar {
+  position: relative;
+  border-top-color: transparent;
+}
+[data-theme='tiranga'] .stats-bar::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--tiranga-bar);
+  pointer-events: none;
+}
+
+/* Each stat sits on its own tricolour segment, revealed on hover — so the band
+   reads as one continuous flag when scanned, not four repeated flags. */
+[data-theme='tiranga'] .stat-item {
+  position: relative;
+  transition: background-color .22s ease, transform .22s ease;
+}
+[data-theme='tiranga'] .stat-item::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background: var(--tiranga-bar);
+  opacity: 0;
+  transform: scaleX(.4);
+  transform-origin: center;
+  transition: opacity .24s ease, transform .32s cubic-bezier(0.22, 0.61, 0.36, 1);
+  pointer-events: none;
+}
+[data-theme='tiranga'] .stat-item:hover {
+  background: rgb(var(--saffron-rgb) / 0.05);
+  transform: translateY(-2px);
+}
+[data-theme='tiranga'] .stat-item:hover::after {
+  opacity: 1;
+  transform: scaleX(1);
+}
+
+/* The little rule under each number goes tricolour and widens on hover. */
+[data-theme='tiranga'] .stat-value::after {
+  background: var(--tiranga-bar) !important;
+  opacity: 0.9 !important;
+  transition: width .3s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+[data-theme='tiranga'] .stat-item:hover .stat-value::after {
+  width: 46px;
+}
+
+/* Chakra navy for the numerals — the highest-contrast flag colour (~15:1), so
+   the figures stay the most legible thing in the band. */
+[data-theme='tiranga'] .stat-value {
+  color: var(--chakra);
+  transition: color .22s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-theme='tiranga'] .stat-item,
+  [data-theme='tiranga'] .stat-item::after,
+  [data-theme='tiranga'] .stat-value,
+  [data-theme='tiranga'] .stat-value::after {
+    transition: none !important;
+  }
+  [data-theme='tiranga'] .stat-item:hover { transform: none; }
+}
+
 /* Primary buttons get a warm tricolour-leaning glow on hover. */
 [data-theme='tiranga'] .btn-primary:hover,
 [data-theme='tiranga'] .enrollNow:hover {
