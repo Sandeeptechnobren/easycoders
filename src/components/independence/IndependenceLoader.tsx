@@ -1,48 +1,62 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 /**
  * Independence Day launch animation.
  *
- * Sequence (~1.6s total):
- *   1. Dark branded ground fades in
- *   2. Easy Coders logo settles
- *   3. Saffron → white → green light sweeps across it
- *   4. An Ashoka Chakra ring traces in behind
- *   5. A tricolour progress line fills
- *   6. The whole thing fades out
+ * Plays a branded video (public/videos/ec-loader.mp4) over a CSS fallback that
+ * is ALWAYS rendered underneath. If the video is slow, blocked or unsupported,
+ * the CSS animation is already on screen and the user sees no gap.
  *
- * Deliberate constraints, all from the brief and the project's rules:
- *  - Shows ONCE PER SESSION (sessionStorage), never on every route change.
- *  - Never blocks: `pointer-events: none` from the moment it starts fading, and
- *    it self-dismisses on a timer regardless of page state — it can't strand a
- *    user behind a stuck overlay.
- *  - `prefers-reduced-motion` collapses it to a brief static fade (no sweep, no
- *    spin) rather than removing the brand moment entirely.
- *  - Only renders when the Tiranga theme is ACTIVE, so with the theme off the
- *    site loads exactly as before.
- *  - Pure CSS/SVG — no library, no canvas, transform/opacity only.
+ * ── Why this is capped ────────────────────────────────────────────────────
+ * The source video is 10.0s / 2.9MB. A 10s gate in front of a website is a bad
+ * first impression, so the loader auto-dismisses at MAX_MS regardless of how
+ * much of the video has played, and a Skip control appears almost immediately.
+ * Change MAX_MS to let it run longer (10_000 plays the whole thing).
+ *
+ * ── Guards, in order of importance ────────────────────────────────────────
+ *  1. HARD TIMEOUT. The overlay leaves at MAX_MS whatever happens — a stalled
+ *     download or a decode failure can never strand a visitor behind it.
+ *  2. NOT SHOWN ON EXPENSIVE CONNECTIONS. 2.9MB is skipped entirely when
+ *     Save-Data is on or the connection reports 2g/3g; the CSS loader plays
+ *     instead. A branded flourish is not worth someone's data.
+ *  3. ONCE PER SESSION (sessionStorage) — never on route changes.
+ *  4. NEVER BLOCKS INPUT: pointer-events:none the moment it starts fading.
+ *  5. prefers-reduced-motion skips the video and shows a brief static fade.
  */
+
+/** How long the loader is allowed to hold the screen. Video is 10s; raise to 10_000 to play it in full. */
+const MAX_MS = 3200;
+/** Skip appears this soon, so the exit is always within reach. */
+const SKIP_AFTER_MS = 600;
+/** If the video hasn't buffered enough by now, don't bother — stay on CSS. */
+const VIDEO_BUDGET_MS = 1200;
 
 const SESSION_KEY = 'ec_independence_seen';
 
 export default function IndependenceLoader() {
-  // Start hidden and decide on the client: reading sessionStorage during render
-  // would break hydration, and we must not flash the overlay for someone who
-  // has already seen it this session.
   const [phase, setPhase] = useState<'idle' | 'playing' | 'leaving' | 'done'>('idle');
+  const [useVideo, setUseVideo] = useState(false);
+  const [showSkip, setShowSkip] = useState(false);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  const finish = () => {
+    setPhase((p) => (p === 'done' ? p : 'leaving'));
+    const t = setTimeout(() => setPhase('done'), 420);
+    timers.current.push(t);
+  };
 
   useEffect(() => {
     let seen = false;
     try {
       seen = sessionStorage.getItem(SESSION_KEY) === '1';
     } catch {
-      /* storage blocked — just play it */
+      /* storage blocked — play it */
     }
-    // Already shown this session: stay in 'idle', which renders null. Returning
-    // here (rather than setting 'done') also keeps this effect free of a
-    // synchronous setState, which would cause a cascading render.
+    // Already shown: stay 'idle' (renders null). Returning here also avoids a
+    // synchronous setState in the effect body.
     if (seen) return;
 
     try {
@@ -55,63 +69,86 @@ export default function IndependenceLoader() {
       typeof window !== 'undefined' &&
       window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
-    // Shorter, gentler timing when reduced motion is requested.
-    const hold = reduced ? 500 : 1400;
-    const fade = reduced ? 200 : 420;
+    // Don't spend 2.9MB of someone's mobile data on decoration.
+    const conn = (navigator as unknown as { connection?: { saveData?: boolean; effectiveType?: string } }).connection;
+    const expensive = !!conn?.saveData || /(^|-)(2g|3g)$/.test(conn?.effectiveType ?? '');
 
-    let t1: ReturnType<typeof setTimeout>;
-    let t2: ReturnType<typeof setTimeout>;
+    const wantVideo = !reduced && !expensive;
 
-    // Start on the next frame so the state change is not synchronous inside the
-    // effect body. One frame is imperceptible and it lets first paint land first.
     const raf = requestAnimationFrame(() => {
       setPhase('playing');
-      t1 = setTimeout(() => setPhase('leaving'), hold);
-      t2 = setTimeout(() => setPhase('done'), hold + fade);
+      if (wantVideo) setUseVideo(true);
+
+      timers.current.push(setTimeout(() => setShowSkip(true), SKIP_AFTER_MS));
+      // The hard stop. Nothing about the video can extend this.
+      timers.current.push(setTimeout(finish, reduced ? 700 : MAX_MS));
+
+      if (wantVideo) {
+        // If it hasn't started playing within the budget, drop it and let the
+        // CSS loader (already visible underneath) carry on alone.
+        timers.current.push(
+          setTimeout(() => {
+            const v = videoRef.current;
+            if (!v || v.readyState < 3 /* HAVE_FUTURE_DATA */) setUseVideo(false);
+          }, VIDEO_BUDGET_MS),
+        );
+      }
     });
 
+    const snapshot = timers.current;
     return () => {
       cancelAnimationFrame(raf);
-      clearTimeout(t1);
-      clearTimeout(t2);
+      snapshot.forEach(clearTimeout);
     };
   }, []);
 
   if (phase === 'idle' || phase === 'done') return null;
 
   return (
-    <div
-      className={`idl ${phase === 'leaving' ? 'idl-out' : ''}`}
-      role="status"
-      aria-label="Easy Coders"
-    >
-      <div className="idl-stage">
-        {/* Chakra ring traces in behind the mark */}
+    <div className={`idl ${phase === 'leaving' ? 'idl-out' : ''}`} role="status" aria-label="Easy Coders">
+      {/* CSS fallback — always rendered, sits under the video. If the video
+          never arrives, this is what the user sees, with no visible gap. */}
+      <div className={`idl-stage ${useVideo ? 'idl-stage-hidden' : ''}`}>
         <svg className="idl-chakra" viewBox="0 0 120 120" aria-hidden="true">
           <circle className="idl-chakra-ring" cx="60" cy="60" r="52" />
-          {/* 24 spokes — the correct count for the Ashoka Chakra */}
           {Array.from({ length: 24 }).map((_, i) => (
-            <line
-              key={i}
-              x1="60"
-              y1="12"
-              x2="60"
-              y2="26"
-              transform={`rotate(${i * 15} 60 60)`}
-            />
+            <line key={i} x1="60" y1="12" x2="60" y2="26" transform={`rotate(${i * 15} 60 60)`} />
           ))}
         </svg>
 
         <div className="idl-logo-wrap">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/images/eclogo.png" alt="" className="idl-logo" aria-hidden="true" />
-          {/* The tricolour light sweep */}
           <span className="idl-sweep" aria-hidden="true" />
         </div>
 
         <p className="idl-word">Easy Coders</p>
         <div className="idl-bar" aria-hidden="true"><span /></div>
       </div>
+
+      {useVideo && (
+        <video
+          ref={videoRef}
+          className="idl-video"
+          src="/videos/ec-loader.mp4"
+          autoPlay
+          muted
+          playsInline
+          preload="auto"
+          aria-hidden="true"
+          // A decode/network failure must not leave a black screen — fall back.
+          onError={() => setUseVideo(false)}
+          onStalled={() => setUseVideo(false)}
+          // If the clip is shorter than MAX_MS, leave as soon as it ends.
+          onEnded={finish}
+        />
+      )}
+
+      {showSkip && (
+        <button type="button" className="idl-skip" onClick={finish}>
+          Skip
+        </button>
+      )}
 
       <style jsx>{`
         .idl {
@@ -120,16 +157,46 @@ export default function IndependenceLoader() {
           z-index: 9998;
           display: grid;
           place-items: center;
-          background:
-            radial-gradient(120% 90% at 50% 40%, #12244F 0%, #07122A 60%, #050D20 100%);
+          background: radial-gradient(120% 90% at 50% 40%, #12244F 0%, #07122A 60%, #050D20 100%);
           animation: idl-in 260ms ease both;
         }
-        .idl-out {
-          animation: idl-out 420ms ease forwards;
-          pointer-events: none; /* never trap the user behind a fading overlay */
+        .idl-out { animation: idl-out 420ms ease forwards; pointer-events: none; }
+
+        /* object-fit: contain, not cover — cover would crop the branding badly
+           on a portrait phone. The dark ground fills the letterbox. */
+        .idl-video {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
+          background: transparent;
         }
 
-        .idl-stage { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+        .idl-stage {
+          position: relative;
+          display: flex; flex-direction: column; align-items: center; gap: 16px;
+          transition: opacity 300ms ease;
+        }
+        /* Kept mounted (so it can take over instantly on video failure) but
+           faded out while the video is playing. */
+        .idl-stage-hidden { opacity: 0; }
+
+        .idl-skip {
+          position: absolute;
+          right: 22px; bottom: 20px;
+          padding: 7px 16px;
+          font-size: 12px; font-weight: 700; letter-spacing: .04em;
+          color: rgb(255 255 255 / 0.9);
+          background: rgb(255 255 255 / 0.10);
+          border: 1px solid rgb(255 255 255 / 0.28);
+          border-radius: 99px;
+          cursor: pointer;
+          backdrop-filter: blur(6px);
+          z-index: 2;
+        }
+        .idl-skip:hover { background: rgb(255 255 255 / 0.20); }
+        .idl-skip:focus-visible { outline: 2px solid #FF9933; outline-offset: 2px; }
 
         .idl-chakra {
           position: absolute;
@@ -137,84 +204,50 @@ export default function IndependenceLoader() {
           top: 50%; left: 50%;
           transform: translate(-50%, calc(-50% - 34px));
           overflow: visible;
+          animation: idl-chakra-spin 9s linear infinite;
         }
         .idl-chakra-ring,
         .idl-chakra :global(line) {
-          fill: none;
-          stroke: #7FA0FF;
-          stroke-width: 1.5;
-          opacity: 0;
-          animation: idl-chakra-fade 1.5s ease both;
+          fill: none; stroke: #7FA0FF; stroke-width: 1.5;
+          opacity: 0; animation: idl-chakra-fade 1.5s ease both;
         }
-        .idl-chakra { animation: idl-chakra-spin 9s linear infinite; }
 
         .idl-logo-wrap { position: relative; overflow: hidden; border-radius: 14px; }
-        .idl-logo {
-          display: block;
-          width: 96px; height: auto;
-          animation: idl-pop 620ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
-        }
-
-        /* Saffron → white → green light passing across the mark. */
+        .idl-logo { display: block; width: 96px; height: auto; animation: idl-pop 620ms cubic-bezier(0.22,0.61,0.36,1) both; }
         .idl-sweep {
-          position: absolute;
-          inset: 0;
-          background: linear-gradient(
-            105deg,
-            transparent 20%,
-            rgba(255, 153, 51, 0.85) 38%,
-            rgba(255, 255, 255, 0.95) 50%,
-            rgba(19, 136, 8, 0.85) 62%,
-            transparent 80%
-          );
+          position: absolute; inset: 0;
+          background: linear-gradient(105deg, transparent 20%, rgba(255,153,51,.85) 38%, rgba(255,255,255,.95) 50%, rgba(19,136,8,.85) 62%, transparent 80%);
           transform: translateX(-120%);
-          animation: idl-sweep 1150ms 260ms cubic-bezier(0.4, 0, 0.2, 1) both;
+          animation: idl-sweep 1150ms 260ms cubic-bezier(0.4,0,0.2,1) both;
           mix-blend-mode: screen;
         }
-
         .idl-word {
-          margin: 0;
-          font-family: 'Playfair Display', Georgia, serif;
-          font-size: 19px;
-          font-weight: 700;
-          letter-spacing: 0.02em;
-          color: #fff;
-          opacity: 0;
-          animation: idl-rise 520ms 420ms ease both;
+          margin: 0; font-family: 'Playfair Display', Georgia, serif;
+          font-size: 19px; font-weight: 700; letter-spacing: .02em; color: #fff;
+          opacity: 0; animation: idl-rise 520ms 420ms ease both;
         }
-
-        .idl-bar {
-          width: 150px; height: 3px;
-          border-radius: 99px;
-          background: rgba(255, 255, 255, 0.14);
-          overflow: hidden;
-        }
+        .idl-bar { width: 150px; height: 3px; border-radius: 99px; background: rgb(255 255 255 / .14); overflow: hidden; }
         .idl-bar span {
-          display: block;
-          height: 100%;
-          width: 100%;
-          transform-origin: left center;
-          transform: scaleX(0);
-          background: linear-gradient(90deg, #FF9933 0%, #FFFFFF 50%, #138808 100%);
-          animation: idl-fill 1250ms 200ms cubic-bezier(0.4, 0, 0.2, 1) both;
+          display: block; height: 100%; width: 100%;
+          transform-origin: left center; transform: scaleX(0);
+          background: linear-gradient(90deg,#FF9933 0%,#FFFFFF 50%,#138808 100%);
+          animation: idl-fill 1250ms 200ms cubic-bezier(0.4,0,0.2,1) both;
         }
 
         @keyframes idl-in  { from { opacity: 0 } to { opacity: 1 } }
         @keyframes idl-out { to { opacity: 0; visibility: hidden } }
-        /* Scale + fade only — no bounce/elastic, per the project's design rules. */
-        @keyframes idl-pop  { from { opacity: 0; transform: scale(0.82) } to { opacity: 1; transform: scale(1) } }
+        @keyframes idl-pop  { from { opacity: 0; transform: scale(.82) } to { opacity: 1; transform: scale(1) } }
         @keyframes idl-rise { from { opacity: 0; transform: translateY(8px) } to { opacity: 1; transform: none } }
         @keyframes idl-sweep { to { transform: translateX(120%) } }
         @keyframes idl-fill  { to { transform: scaleX(1) } }
-        @keyframes idl-chakra-fade { 0% { opacity: 0 } 45% { opacity: 0.5 } 100% { opacity: 0.28 } }
+        @keyframes idl-chakra-fade { 0% { opacity: 0 } 45% { opacity: .5 } 100% { opacity: .28 } }
         @keyframes idl-chakra-spin { to { transform: translate(-50%, calc(-50% - 34px)) rotate(360deg) } }
 
-        /* Reduced motion: keep the brand moment, drop the movement. */
         @media (prefers-reduced-motion: reduce) {
           .idl-logo, .idl-word { animation: idl-in 200ms ease both; transform: none; }
           .idl-sweep { display: none; }
           .idl-chakra { animation: none; }
-          .idl-chakra-ring, .idl-chakra :global(line) { animation: none; opacity: 0.3; }
+          .idl-chakra-ring, .idl-chakra :global(line) { animation: none; opacity: .3; }
           .idl-bar span { animation: idl-fill 300ms linear both; }
         }
       `}</style>
