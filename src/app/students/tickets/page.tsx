@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import RoleGuard from '@/components/RoleGuard';
 import api from '@/lib/axios';
-import Loader from '../../loader/page';
+import Loader from '@/components/Loader';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 type TicketResponse = {
@@ -186,7 +186,7 @@ export default function StudentTicketsPage() {
     } finally { setActing(false); }
   };
 
-  if (loading || loadingCategories) return <Loader />;
+  if (loading || loadingCategories) return <Loader fullscreen />;
 
   // Stats — five-state aware
   const openCount     = tickets.filter(t => t.status === 'open').length;

@@ -6,6 +6,7 @@ import Footer from '@/components/Footer';
 import SelfAssessmentBubble from '@/components/SelfAssessmentBubble';
 import AppDownloadDock from '@/components/AppDownloadDock';
 import { AuthProvider } from '@/context/AuthContext';
+import { ThemeProvider } from '@/context/ThemeContext';
 
 /* Logged-in portals (and the self-assessment sub-app) don't need the public
  * app-download dock — show it only on the marketing / public pages. */
@@ -33,12 +34,17 @@ export default function Providers({ children }: { children: React.ReactNode }) {
   const isPublicPage = !PORTAL_PREFIXES.some((p) => pathname?.startsWith(p));
 
   return (
-    <AuthProvider>
-      {!isSelfAssessment && <Navbar />}
-      <main className="flex-grow-1">{children}</main>
-      {!isSelfAssessment && <Footer />}
-      {!isSelfAssessment && <SelfAssessmentBubble />}
-      {isPublicPage && <AppDownloadDock />}
-    </AuthProvider>
+    /* ThemeProvider sits OUTSIDE AuthProvider: the site theme is public and must
+     * resolve for logged-out visitors too, and it must not wait on the auth
+     * round-trip. */
+    <ThemeProvider>
+      <AuthProvider>
+        {!isSelfAssessment && <Navbar />}
+        <main className="flex-grow-1">{children}</main>
+        {!isSelfAssessment && <Footer />}
+        {!isSelfAssessment && <SelfAssessmentBubble />}
+        {isPublicPage && <AppDownloadDock />}
+      </AuthProvider>
+    </ThemeProvider>
   );
 }

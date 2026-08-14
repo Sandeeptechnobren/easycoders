@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import api from "@/lib/axios";
-import Loader from "@/app/loader/page";
+import Loader from "@/components/Loader";
 import '../../globals.css';
 
 // Define the type for an Inquiry
@@ -98,7 +98,10 @@ export default function ContactInquiries() {
                 </div>
 
                 {loading ? (
-                    <Loader />
+                    /* Inline, not fullscreen — this sits inside a card. The old
+                       shared loader forced min-height:100vh here and blew the
+                       layout out. */
+                    <Loader label="Loading inquiries…" />
                 ) : inquiries.length > 0 ? (
                     <div className="table-responsive rounded-4 p-3"
                         style={{

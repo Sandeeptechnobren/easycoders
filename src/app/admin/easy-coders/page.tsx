@@ -215,6 +215,19 @@ export default function EasyCodersAdminHome() {
           />
 
           <AdminCard
+            href="/admin/site-theme"
+            title="Site Theme"
+            description="Switch the seasonal Tiranga tricolour theme on for the whole website, instantly or on a schedule. Turn it off any time — nothing else about the site changes."
+            icon={
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="9" />
+                <path d="M12 3v18M3 12h18" />
+                <path d="M5.6 5.6l12.8 12.8M18.4 5.6L5.6 18.4" />
+              </svg>
+            }
+          />
+
+          <AdminCard
             href="/admin/notifications"
             title="Notifications"
             description="Compose a custom notification and send it to everyone, a role, a batch, a course or hand-picked students — instantly or scheduled. Lands in their app inbox and as a push."

@@ -1,5 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=ADLaM+Display&display=swap');
+/* Seasonal theme layer. Entirely scoped under [data-theme='tiranga'], so it is
+   inert unless the admin switches the theme on. Kept in its own file so it can
+   be reviewed — or deleted — as one unit. */
+@import './tiranga.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -232,41 +236,12 @@ body {
   max-width: 400px;
 }
  
-.loader-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    background: #050505;
-}
-.loader-logo {
-    width: 150px;
-    animation: pulse 1.2s ease-in-out infinite alternate;
-}
-@keyframes pulse {
-    0% {
-        opacity: 0.4;
-        transform: scale(0.9);
-    }
-    100% {
-        opacity: 1;
-        transform: scale(1.1);
-    }
-}
-@keyframes pulse {
-    0% {
-        opacity: 0.4;
-        transform: scale(0.9);
-    }
-    100% {
-        opacity: 1;
-        transform: scale(1.1);
-    }
-}
-.loader-logo {
-    width: 150px;
-    animation: pulse 1.2s ease-in-out infinite alternate;
-}
+/* Removed: dead `.loader-container` / `.loader-logo` / `@keyframes pulse`.
+   Nothing in src/ ever referenced these class names, and the block was
+   self-duplicated — `@keyframes pulse` and `.loader-logo` were each defined
+   twice, identically. The near-black `background:#050505` is a leftover from an
+   abandoned dark loader design, superseded by @/components/Loader. */
+
 @layer utilities {
     .text-balance {
         text-wrap: balance;

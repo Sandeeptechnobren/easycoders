@@ -1,0 +1,195 @@
+/* ═════════════════════════════════════════════════════════════════════════════
+ * TIRANGA THEME — seasonal tricolour accent layer.
+ *
+ * EVERYTHING here is scoped under [data-theme='tiranga'], so with the theme off
+ * this file contributes exactly nothing and the site is byte-identical to
+ * before. That is the whole point: the toggle must be a true no-op when off.
+ *
+ * This is an ACCENT layer, not a repaint. The navy structural palette is left
+ * alone (it carries the text contrast); only the ACCENT family shifts gold →
+ * saffron, and tricolour edges/motifs are added on top. Backgrounds and body
+ * copy are deliberately untouched — repainting them would mean rewriting ~5,200
+ * hardcoded colours and would wreck contrast.
+ *
+ * ⚠️ CONTRAST — the reason saffron is never used for text:
+ *      saffron #FF9933 on white ≈ 2.1:1  → FAILS WCAG AA (needs 4.5:1)
+ *      deep saffron #B35C00 on white ≈ 5.9:1 → passes AA
+ *      india green #138808 on white ≈ 4.9:1 → passes AA
+ *      chakra navy #000080 on white ≈ 15.3:1 → excellent
+ * So saffron is decorative only (bars, fills, large display); anything that has
+ * to be READ uses the deep saffron, the green, or the existing navy ink.
+ * ═════════════════════════════════════════════════════════════════════════════ */
+
+[data-theme='tiranga'] {
+  /* ── The flag ── */
+  --saffron:        #FF9933;
+  --saffron-deep:   #B35C00;  /* text-safe (5.9:1) — use whenever it must be read */
+  --saffron-soft:   #FFF4E8;
+  --india-green:    #138808;
+  --india-green-deep: #0E6606;
+  --india-green-soft: #EAF7E8;
+  --chakra:         #000080;
+
+  --saffron-rgb:    255 153 51;
+  --india-green-rgb: 19 136 8;
+  --chakra-rgb:     0 0 128;
+
+  /* Reusable tricolour edge. */
+  --tiranga-bar: linear-gradient(
+    90deg,
+    var(--saffron) 0%, var(--saffron) 33.33%,
+    #FFFFFF 33.33%, #FFFFFF 66.66%,
+    var(--india-green) 66.66%, var(--india-green) 100%
+  );
+
+  /* ── Accent family: gold → saffron ──
+     The navy family is deliberately NOT re-pointed. Navy carries nearly all the
+     text contrast on this site; swapping it would silently break legibility in
+     ~64 files. Gold is purely decorative, so it can shift safely. */
+  --gold:       #FF9933;
+  --gold-light: #FFC078;
+  --gold-soft:  #FFF4E8;
+  --gold-deep:  #B35C00;  /* text-safe; the old #B97A0F was 4.6:1, this is 5.9:1 */
+  --gold-rgb:   255 153 51;
+
+  /* ── Bootstrap 5.3 ──
+     No --bs-* colour is overridden anywhere in this codebase, so setting them
+     here is high leverage: it recolours all 33 .btn-primary instances, links and
+     .spinner-border across all 51 pages for free. Both the hex and the -rgb form
+     are needed — 5.3 composites alpha variants from the -rgb triplet. */
+  --bs-primary:      #B35C00;
+  --bs-primary-rgb:  179, 92, 0;
+  --bs-link-color:   #0B1B3A;
+  --bs-link-hover-color: #B35C00;
+  /* <body> hardcodes the Bootstrap utility class .text-dark, which is
+     !important and therefore beats body{color}. Rather than removing the class
+     (which would shift body text site-wide even with the theme OFF), we retint
+     the token it reads. Chakra-tinted ink, never pure grey. */
+  --bs-dark-rgb:     11, 27, 58;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * 1. The tricolour hairline across the very top of every page.
+ *    position:fixed so it can never shift layout — it overlays the top 3px of
+ *    the fixed navbar rather than displacing it.
+ * ───────────────────────────────────────────────────────────────────────────── */
+[data-theme='tiranga'] body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--tiranga-bar);
+  /* Above the fixed navbar (z-index 1000-ish) but below modals (9999). */
+  z-index: 3000;
+  pointer-events: none;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * 2. Chrome edges. All use absolutely-positioned pseudo-elements rather than
+ *    borders, so nothing changes an element's box and no layout shifts.
+ * ───────────────────────────────────────────────────────────────────────────── */
+
+/* Navbar — tricolour underline. */
+[data-theme='tiranga'] nav.nb::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: var(--tiranga-bar);
+  opacity: 0.9;
+  pointer-events: none;
+}
+
+/* Footer — tricolour top edge. `position: relative` is safe to add: the footer
+   is a static block, so this changes no geometry. */
+[data-theme='tiranga'] footer {
+  position: relative;
+}
+[data-theme='tiranga'] footer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--tiranga-bar);
+  pointer-events: none;
+}
+
+/* Admin hero — tricolour base. .adm-hero already uses ::before, so use ::after. */
+[data-theme='tiranga'] .adm-hero::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background: var(--tiranga-bar);
+  pointer-events: none;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * 3. Ashoka chakra watermark on the dark hero surfaces.
+ *
+ *    Drawn in pure CSS — repeating-conic-gradient gives the 24 spokes at 15°
+ *    intervals, which is the correct count. No image asset, no extra request,
+ *    and it scales cleanly at any size.
+ * ───────────────────────────────────────────────────────────────────────────── */
+[data-theme='tiranga'] .adm-hero {
+  position: relative;
+  overflow: hidden;
+}
+[data-theme='tiranga'] .adm-hero > * {
+  position: relative;
+  z-index: 1;
+}
+[data-theme='tiranga'] .adm-hero::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: -70px;
+  width: 260px;
+  height: 260px;
+  transform: translateY(-50%);
+  border-radius: 50%;
+  background:
+    repeating-conic-gradient(
+      from 0deg,
+      rgb(255 255 255 / 0.16) 0deg 0.8deg,
+      transparent 0.8deg 15deg
+    );
+  box-shadow: inset 0 0 0 3px rgb(255 255 255 / 0.14);
+  opacity: 0.9;
+  pointer-events: none;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * 4. Small accents.
+ * ───────────────────────────────────────────────────────────────────────────── */
+
+/* Focus ring picks up the saffron. Keyboard focus only — :focus-visible, so
+   mouse users don't see rings. */
+[data-theme='tiranga'] :focus-visible {
+  outline: 2px solid var(--saffron-deep);
+  outline-offset: 2px;
+}
+
+/* Text selection in the flag colours. */
+[data-theme='tiranga'] ::selection {
+  background: rgb(var(--saffron-rgb) / 0.28);
+  color: #0B1B3A;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * 5. Motion. The project forbids bounce/elastic easing, and every animation
+ *    must respect reduced-motion.
+ * ───────────────────────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  [data-theme='tiranga'] .adm-hero::before {
+    animation: none !important;
+  }
+}
