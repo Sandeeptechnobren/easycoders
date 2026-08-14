@@ -292,11 +292,75 @@
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
- * 6. HERO — tricolour wash, tech grid and a chakra watermark.
+ * 6. HERO — flag photograph, tricolour wash, tech grid and a chakra watermark.
  * ───────────────────────────────────────────────────────────────────────────── */
+
+/* Swap the photograph here — one place, one line. Drop the file at
+   public/images/independence-flag.jpg (or point this at any other path).
+   If the file is missing the url() simply fails to paint and the navy hero
+   background shows through unchanged, so a wrong path degrades to today's
+   design rather than to a broken layout. */
+[data-theme='tiranga'] {
+  --hero-flag: url('/images/independence-flag.jpg');
+}
+
+/* The photo and its scrim are LAYERED BACKGROUNDS on .hero itself, not extra
+   pseudo-elements. Both pseudos are already spoken for — the page's own
+   `.hero::before` paints the teal/gold brand glows, and `.hero::after` below
+   paints the grid — and overriding either would silently delete that work.
+   Layered backgrounds also mean the scrim composites over the photo WITHOUT a
+   CSS filter, which would otherwise inherit down onto the hero's children and
+   blur the headline.
+
+   ⚠️ CONTRAST IS THE WHOLE PROBLEM HERE. The hero uses white text, and a flag
+   photo has large near-white and bright saffron regions; dropped in raw the
+   headline becomes unreadable. So the gradient sits ON TOP of the photo (first
+   background layer = topmost), dense over the left text column and clearing
+   toward the right where nothing has to be read. */
 [data-theme='tiranga'] .hero {
   position: relative;
   isolation: isolate;
+  /* Shows through if the image 404s ⇒ a wrong path degrades to today's design. */
+  background-color: var(--navy);
+  background-image:
+    linear-gradient(
+      100deg,
+      rgb(var(--navy-deep-rgb) / 0.95) 0%,
+      rgb(var(--navy-deep-rgb) / 0.90) 34%,
+      rgb(var(--navy-deep-rgb) / 0.66) 62%,
+      rgb(var(--navy-deep-rgb) / 0.46) 100%
+    ),
+    /* A vertical pass so the badge and the CTA row — the smallest text — sit on
+       darker ground than the headline needs. */
+    linear-gradient(
+      180deg,
+      rgb(var(--navy-deep-rgb) / 0.34) 0%,
+      transparent 38%,
+      transparent 60%,
+      rgb(var(--navy-deep-rgb) / 0.46) 100%
+    ),
+    var(--hero-flag);
+  background-size: cover, cover, cover;
+  background-position: center, center, center right;
+  background-repeat: no-repeat, no-repeat, no-repeat;
+}
+
+/* Phones: .hero-visual is hidden and the copy spans the full width, so the photo
+   sits behind ALL of the text. Push the scrim close to opaque. */
+@media (max-width: 900px) {
+  [data-theme='tiranga'] .hero {
+    background-image:
+      linear-gradient(
+        180deg,
+        rgb(var(--navy-deep-rgb) / 0.92) 0%,
+        rgb(var(--navy-deep-rgb) / 0.88) 55%,
+        rgb(var(--navy-deep-rgb) / 0.94) 100%
+      ),
+      var(--hero-flag);
+    background-size: cover, cover;
+    background-position: center, center center;
+    background-repeat: no-repeat, no-repeat;
+  }
 }
 /* Grid + tricolour wash. The base .hero::before is already used, so this rides
    on ::after and sits behind content via z-index. */
