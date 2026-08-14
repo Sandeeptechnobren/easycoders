@@ -11,6 +11,7 @@ import IndependenceLoader from '@/components/independence/IndependenceLoader';
 import IndependenceBanner from '@/components/independence/IndependenceBanner';
 import JetFlypast from '@/components/independence/JetFlypast';
 import PointerFX from '@/components/independence/PointerFX';
+import TricolourFall from '@/components/independence/TricolourFall';
 
 /**
  * Independence Day chrome. Split into its own component because it must sit
@@ -36,6 +37,9 @@ function IndependenceChrome({ showBanner }: { showBanner: boolean }) {
       {/* Publishes --ptr-x/--ptr-y once for every parallax layer, and renders
           the ambient tricolour light. Self-disables on touch and reduced motion. */}
       {showBanner && <PointerFX />}
+      {/* One-shot celebration on site load. Removes itself once the pieces have
+          landed, so nothing keeps animating for the rest of the session. */}
+      {showBanner && <TricolourFall />}
     </>
   );
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 /**
  * Independence Day launch animation.
@@ -42,11 +42,23 @@ export default function IndependenceLoader() {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
-  const finish = () => {
+  /** Tells anything waiting on the loader (e.g. the tricolour fall) to begin. */
+  const announceDone = useCallback(() => {
+    try {
+      window.dispatchEvent(new CustomEvent('ec:loader-done'));
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  // useCallback so the mount effect can depend on it honestly rather than
+  // silencing the exhaustive-deps warning.
+  const finish = useCallback(() => {
     setPhase((p) => (p === 'done' ? p : 'leaving'));
+    announceDone();
     const t = setTimeout(() => setPhase('done'), 420);
     timers.current.push(t);
-  };
+  }, [announceDone]);
 
   useEffect(() => {
     let seen = false;
@@ -55,9 +67,14 @@ export default function IndependenceLoader() {
     } catch {
       /* storage blocked — play it */
     }
-    // Already shown: stay 'idle' (renders null). Returning here also avoids a
-    // synchronous setState in the effect body.
-    if (seen) return;
+    // Already shown this session: stay 'idle' (renders null). Announce
+    // immediately so anything waiting on the loader — the tricolour fall —
+    // starts straight away rather than sitting on its fallback timer.
+    if (seen) {
+      const t = setTimeout(announceDone, 60);
+      timers.current.push(t);
+      return;
+    }
 
     try {
       sessionStorage.setItem(SESSION_KEY, '1');
@@ -100,7 +117,8 @@ export default function IndependenceLoader() {
       cancelAnimationFrame(raf);
       snapshot.forEach(clearTimeout);
     };
-  }, []);
+    // Both are useCallback-stable, so this still runs exactly once on mount.
+  }, [announceDone, finish]);
 
   if (phase === 'idle' || phase === 'done') return null;
 
