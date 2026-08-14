@@ -2,6 +2,8 @@
 import LoginModal from "@/components/LoginModal";
 import NotificationsBell from "@/components/NotificationsBell";
 import { useAuth } from "@/context/AuthContext";
+import { useSiteTheme } from "@/context/ThemeContext";
+import NavLogoJets from "@/components/independence/NavLogoJets";
 import { useHasPermission } from "@/lib/permissions";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -14,6 +16,8 @@ type NavLink = {
 };
 
 export default function Navbar() {
+  const { theme } = useSiteTheme();
+  const isTiranga = theme === 'tiranga';
   const { role, logout } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
@@ -662,6 +666,10 @@ export default function Navbar() {
           <div className="nb-inner">
             {/* Logo */}
             <div className="nb-logo">
+              {/* Independence Day: miniature flypast circling the mark. Renders
+                  behind the link and is theme-gated, so with the theme off the
+                  logo is exactly as before. */}
+              {isTiranga && <NavLogoJets />}
               <Link href={logoRedirect}>
                 <img src="/images/logo.svg" alt="Easy Coders Logo" />
               </Link>

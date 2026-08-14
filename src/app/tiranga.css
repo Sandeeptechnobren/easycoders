@@ -216,6 +216,12 @@
   display: inline-block;
   border-radius: 12px;
 }
+/* Keep the mark and its link above the miniature flypast behind it, so the
+   jets pass BEHIND the brand and the link keeps its full click target. */
+[data-theme='tiranga'] .nb-logo > a {
+  position: relative;
+  z-index: 1;
+}
 [data-theme='tiranga'] .nb-logo img {
   transition: transform .32s ease, filter .32s ease;
   will-change: transform;

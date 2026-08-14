@@ -254,17 +254,24 @@ export default function HomePage() {
         .trust-text { font-size: 13px; color: rgba(255,255,255,0.72); line-height: 1.5; }
         .trust-text strong { color: rgba(255,255,255,0.85); font-weight: 500; }
         .hero-visual { position: relative; display: flex; justify-content: center; align-items: center; }
-        /* Flag sits over the top-left of the hero visual. Absolute so it cannot
-           reflow the existing image, and it is dropped entirely on narrow
-           screens where .hero-visual is already hidden. */
+        /* Anchored to the hero section itself (not the image wrapper) so it
+           survives on mobile. Absolute + pointer-events:none, so it can never
+           reflow the layout or steal a tap. z-index 1 keeps it above the
+           atmosphere but below .container, which is z-index 1 and later in the
+           DOM — so the copy always wins. */
         .hero-flag {
           position: absolute;
-          top: -18px;
-          left: -26px;
-          z-index: 3;
+          top: 96px;
+          right: 40px;
+          z-index: 1;
           pointer-events: none;
         }
-        @media (max-width: 1100px) { .hero-flag { left: -6px; transform: scale(.86); transform-origin: top left; } }
+        @media (max-width: 1100px) { .hero-flag { right: 18px; transform: scale(.88); transform-origin: top right; } }
+        /* Mobile: smaller and tucked into the top-right corner, clear of the
+           headline which is left-aligned and full width there. */
+        @media (max-width: 900px) {
+          .hero-flag { top: 74px; right: 10px; transform: scale(.6); transform-origin: top right; opacity: .92; }
+        }
         .hero-img-frame {
           width: 100%; max-width: 480px; height: 480px;
           border-radius: var(--radius-lg); overflow: hidden;
@@ -422,6 +429,17 @@ export default function HomePage() {
         {/* Parallax sky behind the hero content. Masked to fade out before the
             headline, so it never costs contrast on the copy or the CTAs. */}
         {isTiranga && <HeroAtmosphere />}
+
+        {/* Hoisting ceremony — runs once, then settles into a slow wave.
+            Deliberately a direct child of .hero, NOT of .hero-visual: that
+            wrapper is display:none below 900px, which gave the flag a 0×0 box
+            and hid it from every mobile visitor. Anchored to the hero itself it
+            renders at all breakpoints. */}
+        {isTiranga && (
+          <div className="hero-flag">
+            <FlagHoist height={200} />
+          </div>
+        )}
         <div className="container">
           <div className="hero-grid">
             <div className="hero-content">
@@ -478,14 +496,6 @@ export default function HomePage() {
               </div>
             </div>
             <div className="hero-visual">
-              {/* Hoisting ceremony — runs once, then settles into a slow wave.
-                  Sits alongside the existing hero image rather than replacing
-                  it, so the original visual is untouched when the theme is off. */}
-              {isTiranga && (
-                <div className="hero-flag">
-                  <FlagHoist height={200} />
-                </div>
-              )}
               <div className="hero-img-frame">
                 <Image
                   src="/images/easycoder-hero.png"
