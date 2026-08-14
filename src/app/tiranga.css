@@ -185,11 +185,233 @@
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
- * 5. Motion. The project forbids bounce/elastic easing, and every animation
+ * 5. NAVBAR — glass surface + tricolour nav underline + logo treatment.
+ *
+ *    Targeted from here rather than by editing Navbar.tsx (809 lines of working
+ *    nav/auth/mobile logic): the visual result is the same, nothing in that
+ *    component's behaviour is put at risk, and removing this file reverts it.
+ * ───────────────────────────────────────────────────────────────────────────── */
+
+/* Glass surface once scrolled. Only on .scrolled so the hero keeps its clean
+   transparent nav. */
+[data-theme='tiranga'] .nb.scrolled {
+  background: rgb(255 255 255 / 0.82) !important;
+  backdrop-filter: blur(14px) saturate(1.4);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4);
+  border-bottom: 1px solid rgb(var(--saffron-rgb) / 0.18);
+  box-shadow: 0 6px 28px rgb(var(--chakra-rgb) / 0.10);
+}
+
+/* Nav underline becomes the tricolour. The base rule already positions and
+   sizes ::after — only the paint changes, so hover geometry is untouched. */
+[data-theme='tiranga'] .nb-link::after {
+  background: var(--tiranga-bar) !important;
+  border-radius: 2px;
+}
+
+/* ── Logo: saffron → green glow, light sweep and a chakra ring on hover ──
+   Fires on hover AND keyboard focus, so it isn't mouse-only. */
+[data-theme='tiranga'] .nb-logo {
+  position: relative;
+  display: inline-block;
+  border-radius: 12px;
+}
+[data-theme='tiranga'] .nb-logo img {
+  transition: transform .32s ease, filter .32s ease;
+  will-change: transform;
+}
+[data-theme='tiranga'] .nb-logo:hover img,
+[data-theme='tiranga'] .nb-logo:focus-within img {
+  transform: scale(1.045);
+  filter:
+    drop-shadow(0 0 7px rgb(var(--saffron-rgb) / 0.55))
+    drop-shadow(0 0 13px rgb(var(--india-green-rgb) / 0.38));
+}
+
+/* Chakra ring — 24 spokes via a conic gradient, masked to a thin annulus so it
+   reads as a ring rather than a disc. */
+[data-theme='tiranga'] .nb-logo::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 68px;
+  height: 68px;
+  margin: -34px 0 0 -34px;
+  border-radius: 50%;
+  background: repeating-conic-gradient(
+    from 0deg,
+    var(--chakra) 0deg 0.9deg,
+    transparent 0.9deg 15deg
+  );
+  -webkit-mask: radial-gradient(circle, transparent 56%, #000 58%, #000 100%);
+          mask: radial-gradient(circle, transparent 56%, #000 58%, #000 100%);
+  opacity: 0;
+  transform: rotate(-25deg) scale(0.82);
+  transition: opacity .34s ease, transform .5s ease;
+  pointer-events: none;
+}
+[data-theme='tiranga'] .nb-logo:hover::before,
+[data-theme='tiranga'] .nb-logo:focus-within::before {
+  opacity: 0.5;
+  transform: rotate(0deg) scale(1);
+}
+
+/* Tricolour light sweep across the mark. */
+[data-theme='tiranga'] .nb-logo::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  background: linear-gradient(
+    105deg,
+    transparent 30%,
+    rgb(var(--saffron-rgb) / 0.55) 44%,
+    rgb(255 255 255 / 0.75) 50%,
+    rgb(var(--india-green-rgb) / 0.55) 56%,
+    transparent 70%
+  );
+  opacity: 0;
+  transform: translateX(-60%);
+  pointer-events: none;
+}
+[data-theme='tiranga'] .nb-logo:hover::after,
+[data-theme='tiranga'] .nb-logo:focus-within::after {
+  animation: tir-logo-sweep 850ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+@keyframes tir-logo-sweep {
+  0%   { opacity: 0;   transform: translateX(-60%); }
+  35%  { opacity: 0.9; }
+  100% { opacity: 0;   transform: translateX(60%); }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * 6. HERO — tricolour wash, tech grid and a chakra watermark.
+ * ───────────────────────────────────────────────────────────────────────────── */
+[data-theme='tiranga'] .hero {
+  position: relative;
+  isolation: isolate;
+}
+/* Grid + tricolour wash. The base .hero::before is already used, so this rides
+   on ::after and sits behind content via z-index. */
+[data-theme='tiranga'] .hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgb(255 255 255 / 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(255 255 255 / 0.045) 1px, transparent 1px),
+    radial-gradient(60% 70% at 8% 15%, rgb(var(--saffron-rgb) / 0.20), transparent 62%),
+    radial-gradient(55% 65% at 92% 82%, rgb(var(--india-green-rgb) / 0.18), transparent 62%);
+  background-size: 46px 46px, 46px 46px, 100% 100%, 100% 100%;
+  /* Fade the grid out toward the bottom so it never fights the copy. */
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 55%, transparent 100%);
+          mask-image: linear-gradient(180deg, #000 0%, #000 55%, transparent 100%);
+}
+
+/* Hero eyebrow badge picks up the tricolour. */
+[data-theme='tiranga'] .hero-badge {
+  background: rgb(255 255 255 / 0.08) !important;
+  border: 1px solid rgb(var(--saffron-rgb) / 0.42) !important;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+[data-theme='tiranga'] .hero-badge span {
+  background: var(--saffron) !important;
+  box-shadow: 0 0 0 3px rgb(var(--saffron-rgb) / 0.22);
+}
+[data-theme='tiranga'] .hero-title .highlight {
+  background: linear-gradient(90deg, var(--saffron) 0%, #FFFFFF 52%, #7CD16F 100%);
+  -webkit-background-clip: text;
+          background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * 7. MICRO-INTERACTIONS — cards, buttons, focus.
+ *    Applied to shared structural classes only, so one rule covers many pages.
+ * ───────────────────────────────────────────────────────────────────────────── */
+
+/* Card lift + tricolour top edge. The edge is a pseudo-element, so no border is
+   added and nothing reflows. */
+[data-theme='tiranga'] .courseCardBlock,
+[data-theme='tiranga'] .mainCard,
+[data-theme='tiranga'] .adm-card {
+  position: relative;
+  transition: transform .22s ease, box-shadow .22s ease;
+}
+[data-theme='tiranga'] .courseCardBlock::before,
+[data-theme='tiranga'] .mainCard::before,
+[data-theme='tiranga'] .adm-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  border-radius: 3px 3px 0 0;
+  background: var(--tiranga-bar);
+  opacity: 0;
+  transition: opacity .22s ease;
+  pointer-events: none;
+}
+[data-theme='tiranga'] .courseCardBlock:hover,
+[data-theme='tiranga'] .mainCard:hover,
+[data-theme='tiranga'] .adm-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 40px rgb(var(--chakra-rgb) / 0.13);
+}
+[data-theme='tiranga'] .courseCardBlock:hover::before,
+[data-theme='tiranga'] .mainCard:hover::before,
+[data-theme='tiranga'] .adm-card:hover::before {
+  opacity: 1;
+}
+
+/* Primary buttons get a warm tricolour-leaning glow on hover. */
+[data-theme='tiranga'] .btn-primary:hover,
+[data-theme='tiranga'] .enrollNow:hover {
+  box-shadow:
+    0 6px 18px rgb(var(--saffron-rgb) / 0.34),
+    0 2px 6px rgb(var(--india-green-rgb) / 0.20);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * 8. FOOTER — tricolour edge is already handled above; add the closing line.
+ * ───────────────────────────────────────────────────────────────────────────── */
+[data-theme='tiranga'] footer::after {
+  content: 'Proudly building India’s next generation of developers';
+  display: block;
+  padding: 14px 16px 18px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: rgb(255 255 255 / 0.55);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * 9. Motion. The project forbids bounce/elastic easing, and every animation
  *    must respect reduced-motion.
  * ───────────────────────────────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
-  [data-theme='tiranga'] .adm-hero::before {
+  [data-theme='tiranga'] .adm-hero::before,
+  [data-theme='tiranga'] .nb-logo::after {
     animation: none !important;
+  }
+  [data-theme='tiranga'] .nb-logo img,
+  [data-theme='tiranga'] .nb-logo::before,
+  [data-theme='tiranga'] .courseCardBlock,
+  [data-theme='tiranga'] .mainCard,
+  [data-theme='tiranga'] .adm-card,
+  [data-theme='tiranga'] .courseCardBlock::before,
+  [data-theme='tiranga'] .mainCard::before,
+  [data-theme='tiranga'] .adm-card::before {
+    transition: none !important;
+  }
+  [data-theme='tiranga'] .courseCardBlock:hover,
+  [data-theme='tiranga'] .mainCard:hover,
+  [data-theme='tiranga'] .adm-card:hover {
+    transform: none;
   }
 }

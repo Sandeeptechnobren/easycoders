@@ -6,7 +6,31 @@ import Footer from '@/components/Footer';
 import SelfAssessmentBubble from '@/components/SelfAssessmentBubble';
 import AppDownloadDock from '@/components/AppDownloadDock';
 import { AuthProvider } from '@/context/AuthContext';
-import { ThemeProvider } from '@/context/ThemeContext';
+import { ThemeProvider, useSiteTheme } from '@/context/ThemeContext';
+import IndependenceLoader from '@/components/independence/IndependenceLoader';
+import IndependenceBanner from '@/components/independence/IndependenceBanner';
+
+/**
+ * Independence Day chrome. Split into its own component because it must sit
+ * INSIDE ThemeProvider to read the theme — a parent cannot consume its own
+ * child's context.
+ *
+ * Both pieces are theme-gated, so with the theme off nothing renders and the
+ * site behaves exactly as before. The banner is kept off the portals and the
+ * EasyAssess sub-app: it is a marketing announcement, and portals are work
+ * surfaces where a promo bar would just be in the way.
+ */
+function IndependenceChrome({ showBanner }: { showBanner: boolean }) {
+  const { theme } = useSiteTheme();
+  if (theme !== 'tiranga') return null;
+
+  return (
+    <>
+      <IndependenceLoader />
+      {showBanner && <IndependenceBanner />}
+    </>
+  );
+}
 
 /* Logged-in portals (and the self-assessment sub-app) don't need the public
  * app-download dock — show it only on the marketing / public pages. */
@@ -38,6 +62,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
      * resolve for logged-out visitors too, and it must not wait on the auth
      * round-trip. */
     <ThemeProvider>
+      <IndependenceChrome showBanner={isPublicPage} />
       <AuthProvider>
         {!isSelfAssessment && <Navbar />}
         <main className="flex-grow-1">{children}</main>
