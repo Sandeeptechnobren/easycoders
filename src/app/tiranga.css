@@ -599,6 +599,86 @@
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
+ * 6d. PAGE HEADERS — the flag behind the banner on every inner page.
+ *
+ * `.ph-wrap` is the shared PageHeader, so ONE rule covers About, Contact Us,
+ * Courses, Course Detail, Gallery and Verify Certificate — every public page
+ * that has a banner. Applied as layered backgrounds on the element itself, so
+ * `.ph-wrap::before` (the gold/teal brand glows) keeps painting over the top and
+ * is not overwritten.
+ *
+ * These banners are white-text-on-navy, so they tolerate a much lighter scrim
+ * than the light content sections — the flag can genuinely show here. The
+ * gradient still runs densest at the LEFT, where the breadcrumb, title and
+ * description sit, and lifts toward the right where there is no copy.
+ * ───────────────────────────────────────────────────────────────────────────── */
+[data-theme='tiranga'] .ph-wrap {
+  background-color: var(--navy);
+  background-image:
+    linear-gradient(
+      100deg,
+      rgb(var(--navy-deep-rgb) / 0.94) 0%,
+      rgb(var(--navy-deep-rgb) / 0.90) 40%,
+      rgb(var(--navy-rgb) / 0.74) 72%,
+      rgb(var(--navy-rgb) / 0.58) 100%
+    ),
+    url('/flag/indianflag.avif');
+  background-size: cover, cover;
+  background-position: center, center right;
+  background-repeat: no-repeat, no-repeat;
+}
+
+/* A tricolour hairline along the banner's base, tying it to the seam used on
+   the navbar, footer and stats band. */
+[data-theme='tiranga'] .ph-wrap::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: var(--tiranga-bar);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Phones: the copy spans the full width with nothing beside it, so the scrim
+   goes denser and the image recentres. */
+@media (max-width: 900px) {
+  [data-theme='tiranga'] .ph-wrap {
+    background-image:
+      linear-gradient(
+        180deg,
+        rgb(var(--navy-deep-rgb) / 0.93) 0%,
+        rgb(var(--navy-deep-rgb) / 0.90) 100%
+      ),
+      url('/flag/indianflag.avif');
+    background-position: center, center;
+  }
+}
+
+/* The ADMIN banner is a separate component with its own class, so it needs the
+   same treatment explicitly. Note both of its pseudo-elements are already spoken
+   for by this file — ::before is the chakra watermark and ::after the tricolour
+   base edge — which is exactly why this rides on the element's own background.
+   Scrim is a touch denser than the public banners: admin screens are work
+   surfaces, so the imagery stays further back. */
+[data-theme='tiranga'] .adm-hero {
+  background-color: var(--navy);
+  background-image:
+    linear-gradient(
+      100deg,
+      rgb(var(--navy-deep-rgb) / 0.95) 0%,
+      rgb(var(--navy-deep-rgb) / 0.92) 45%,
+      rgb(var(--navy-rgb) / 0.80) 100%
+    ),
+    url('/flag/indianflag.avif');
+  background-size: cover, cover;
+  background-position: center, center right;
+  background-repeat: no-repeat, no-repeat;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
  * 6c. COURSE CARD ARTWORK — the Independence illustration on every course card,
  *     on the home grid (.cg-*) and the /courses listing (.cl-*), which covers
  *     Summer Training, Internship and every other category.
