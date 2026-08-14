@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import Script from 'next/script';
 import Providers from './providers';
+import { getTracks } from '@/lib/tracks';
 import './globals.css';
 
 /* ──────────────────────────────────────────────────────────────────────────
@@ -98,6 +99,11 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  /* Read `public/audio/` here because this is the app's only Server Component,
+   * and `getTracks()` needs `fs`. Resolved at build time — see the note in
+   * src/lib/tracks.ts — and handed down as plain serialisable data. */
+  const tracks = getTracks();
+
   return (
     /* data-theme drives the site-wide theme; data-bs-theme is a freebie — the
      * CDN Bootstrap 5.3 below recolours its whole component set off it.
@@ -139,7 +145,7 @@ export default function RootLayout({
         />
       </head>
       <body className="text-dark d-flex flex-column min-vh-100">
-        <Providers>{children}</Providers>
+        <Providers tracks={tracks}>{children}</Providers>
         <Script
           src="https://code.jquery.com/jquery-3.6.0.min.js"
           strategy="beforeInteractive"

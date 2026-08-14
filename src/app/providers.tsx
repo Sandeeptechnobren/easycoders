@@ -7,6 +7,8 @@ import SelfAssessmentBubble from '@/components/SelfAssessmentBubble';
 import AppDownloadDock from '@/components/AppDownloadDock';
 import { AuthProvider } from '@/context/AuthContext';
 import { ThemeProvider, useSiteTheme } from '@/context/ThemeContext';
+import MusicDock from '@/components/MusicDock';
+import type { Track } from '@/lib/tracks';
 import IndependenceLoader from '@/components/independence/IndependenceLoader';
 import IndependenceBanner from '@/components/independence/IndependenceBanner';
 import JetFlypast from '@/components/independence/JetFlypast';
@@ -24,7 +26,13 @@ import GloryWave from '@/components/independence/GloryWave';
  * EasyAssess sub-app: it is a marketing announcement, and portals are work
  * surfaces where a promo bar would just be in the way.
  */
-function IndependenceChrome({ showBanner }: { showBanner: boolean }) {
+function IndependenceChrome({
+  showBanner,
+  tracks,
+}: {
+  showBanner: boolean;
+  tracks: Track[];
+}) {
   const { theme } = useSiteTheme();
   if (theme !== 'tiranga') return null;
 
@@ -44,6 +52,12 @@ function IndependenceChrome({ showBanner }: { showBanner: boolean }) {
       {/* Slow tricolour light sweeping the page — 'glory'. Screen-blended so it
           can only add light, never reduce text contrast. */}
       {showBanner && <GloryWave />}
+      {/* Bottom-centre music dock. Gated exactly like the rest of this chrome:
+          on with the theme, and off the portals — a player floating over an
+          attendance table is in the way, not festive. Never autoplays.
+          To make it permanent, lift this line out of IndependenceChrome and
+          render it from Providers directly. */}
+      {showBanner && <MusicDock tracks={tracks} />}
     </>
   );
 }
@@ -68,7 +82,15 @@ const PORTAL_PREFIXES = [
  * Next.js App Router. Anything that uses hooks (`usePathname`,
  * `useState`, etc.) must be in here, not in layout.tsx.
  */
-export default function Providers({ children }: { children: React.ReactNode }) {
+export default function Providers({
+  children,
+  tracks,
+}: {
+  children: React.ReactNode;
+  /* Discovered from public/audio/ at build time by the layout — this component
+   * can't read the filesystem itself, it's a Client Component. */
+  tracks: Track[];
+}) {
   const pathname = usePathname();
   const isSelfAssessment = pathname?.startsWith('/self-assessment') ?? false;
   const isPublicPage = !PORTAL_PREFIXES.some((p) => pathname?.startsWith(p));
@@ -78,7 +100,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
      * resolve for logged-out visitors too, and it must not wait on the auth
      * round-trip. */
     <ThemeProvider>
-      <IndependenceChrome showBanner={isPublicPage} />
+      <IndependenceChrome showBanner={isPublicPage} tracks={tracks} />
       <AuthProvider>
         {!isSelfAssessment && <Navbar />}
         <main className="flex-grow-1">{children}</main>
