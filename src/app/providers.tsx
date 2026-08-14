@@ -12,6 +12,7 @@ import IndependenceBanner from '@/components/independence/IndependenceBanner';
 import JetFlypast from '@/components/independence/JetFlypast';
 import PointerFX from '@/components/independence/PointerFX';
 import TricolourFall from '@/components/independence/TricolourFall';
+import GloryWave from '@/components/independence/GloryWave';
 
 /**
  * Independence Day chrome. Split into its own component because it must sit
@@ -40,6 +41,9 @@ function IndependenceChrome({ showBanner }: { showBanner: boolean }) {
       {/* One-shot celebration on site load. Removes itself once the pieces have
           landed, so nothing keeps animating for the rest of the session. */}
       {showBanner && <TricolourFall />}
+      {/* Slow tricolour light sweeping the page — 'glory'. Screen-blended so it
+          can only add light, never reduce text contrast. */}
+      {showBanner && <GloryWave />}
     </>
   );
 }
