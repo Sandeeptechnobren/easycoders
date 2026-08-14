@@ -12,6 +12,7 @@ import Registration from '@/components/Registration'; // ← adjust path if need
 import TestimonialCarousel from '@/components/TestimonialCarousel';
 import GalleryTeaser from '@/components/GalleryTeaser';
 import FlagHoist from '@/components/independence/FlagHoist';
+import HeroAtmosphere from '@/components/independence/HeroAtmosphere';
 import { useSiteTheme } from '@/context/ThemeContext';
 
 /* ──────────────────────────────────────────────────────────────────────
@@ -418,6 +419,9 @@ export default function HomePage() {
 
       {/* ── HERO ── */}
       <section className="hero">
+        {/* Parallax sky behind the hero content. Masked to fade out before the
+            headline, so it never costs contrast on the copy or the CTAs. */}
+        {isTiranga && <HeroAtmosphere />}
         <div className="container">
           <div className="hero-grid">
             <div className="hero-content">

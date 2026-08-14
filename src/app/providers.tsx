@@ -10,6 +10,7 @@ import { ThemeProvider, useSiteTheme } from '@/context/ThemeContext';
 import IndependenceLoader from '@/components/independence/IndependenceLoader';
 import IndependenceBanner from '@/components/independence/IndependenceBanner';
 import JetFlypast from '@/components/independence/JetFlypast';
+import PointerFX from '@/components/independence/PointerFX';
 
 /**
  * Independence Day chrome. Split into its own component because it must sit
@@ -32,6 +33,9 @@ function IndependenceChrome({ showBanner }: { showBanner: boolean }) {
       {/* Site-wide flypast. Kept off the portals: those are work surfaces where
           moving objects over a data table are a distraction, not a flourish. */}
       {showBanner && <JetFlypast />}
+      {/* Publishes --ptr-x/--ptr-y once for every parallax layer, and renders
+          the ambient tricolour light. Self-disables on touch and reduced motion. */}
+      {showBanner && <PointerFX />}
     </>
   );
 }

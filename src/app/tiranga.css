@@ -311,6 +311,60 @@
           mask-image: linear-gradient(180deg, #000 0%, #000 55%, transparent 100%);
 }
 
+/* ⚠️ Stacking guard. HeroAtmosphere is position:absolute, and a POSITIONED
+   element paints above non-positioned siblings regardless of source order — so
+   without this the sky would render on top of the headline and CTAs. Lifting
+   the content container onto its own layer keeps text above the atmosphere.
+   This is the single most important rule in this file. */
+[data-theme='tiranga'] .hero > .container {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Premium shine sweep ──
+   A diagonal light reflection that crosses ONCE on hover and then stops — the
+   e-commerce "premium product" cue. Deliberately not looping: a permanently
+   sweeping highlight reads as a loading skeleton, not polish. */
+[data-theme='tiranga'] .btn-primary,
+[data-theme='tiranga'] .enrollNow,
+[data-theme='tiranga'] .courseCardBlock,
+[data-theme='tiranga'] .mainCard {
+  position: relative;
+  overflow: hidden;
+}
+[data-theme='tiranga'] .btn-primary::after,
+[data-theme='tiranga'] .enrollNow::after,
+[data-theme='tiranga'] .courseCardBlock::after,
+[data-theme='tiranga'] .mainCard::after {
+  content: '';
+  position: absolute;
+  top: -60%;
+  left: -75%;
+  width: 45%;
+  height: 220%;
+  transform: rotate(18deg) translateX(-140%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgb(255 255 255 / 0.42),
+    rgb(255 224 180 / 0.30),
+    transparent
+  );
+  opacity: 0;
+  pointer-events: none;
+}
+[data-theme='tiranga'] .btn-primary:hover::after,
+[data-theme='tiranga'] .enrollNow:hover::after,
+[data-theme='tiranga'] .courseCardBlock:hover::after,
+[data-theme='tiranga'] .mainCard:hover::after {
+  animation: tir-shine 760ms cubic-bezier(0.32, 0, 0.24, 1);
+}
+@keyframes tir-shine {
+  0%   { opacity: 0;    transform: rotate(18deg) translateX(-140%); }
+  16%  { opacity: 0.95; }
+  100% { opacity: 0;    transform: rotate(18deg) translateX(320%); }
+}
+
 /* Hero eyebrow badge picks up the tricolour. */
 [data-theme='tiranga'] .hero-badge {
   background: rgb(255 255 255 / 0.08) !important;
@@ -413,5 +467,13 @@
   [data-theme='tiranga'] .mainCard:hover,
   [data-theme='tiranga'] .adm-card:hover {
     transform: none;
+  }
+  /* No shine sweep either — it is pure decorative motion. */
+  [data-theme='tiranga'] .btn-primary:hover::after,
+  [data-theme='tiranga'] .enrollNow:hover::after,
+  [data-theme='tiranga'] .courseCardBlock:hover::after,
+  [data-theme='tiranga'] .mainCard:hover::after {
+    animation: none !important;
+    opacity: 0 !important;
   }
 }
