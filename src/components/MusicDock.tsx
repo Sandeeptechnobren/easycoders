@@ -14,17 +14,14 @@ import type { Track } from '@/lib/tracks';
  *
  * Three decisions worth knowing before editing:
  *
- * 1. `preload="none"`. The current track is a 10.4 MB MP3. With any other
- *    preload value every visitor downloads it on arrival, whether or not they
- *    ever press play — on mobile data that alone would dwarf the rest of the
- *    page. Nothing is fetched until the first press. The cost is that the
- *    duration is unknown until then, which is why the bar reads "—:—" while
- *    idle rather than showing a fake 0:00.
+ * 1. `preload="metadata"`. Only the file header is fetched up front — enough
+ *    for the duration to show before anything plays — not the 10 MB body. The
+ *    body streams progressively once playback starts, so a visitor who leaves
+ *    after twenty seconds never pulls the whole file.
  *
- * 2. It NEVER autoplays. Browsers block un-muted autoplay without a user
- *    gesture, so an attempt would mostly fail anyway — but the real reason is
- *    that music starting by itself on a training site is hostile. The user
- *    presses play, or there is silence.
+ * 2. AUTOPLAY, with a gesture fallback. See AUTOPLAY below — the short version
+ *    is that no amount of code can force this, so it degrades to starting on
+ *    the visitor's first click/keypress instead of failing silently.
  *
  * 3. Volume/mute live on the <audio> element, not in React state, and the
  *    slider is uncontrolled. Restoring a saved volume is then a DOM assignment
@@ -35,6 +32,13 @@ import type { Track } from '@/lib/tracks';
  * ────────────────────────────────────────────────────────────────────────── */
 
 const STORE_KEY = 'ec_music_prefs';
+
+/**
+ * Safety net for the autoplay attempt if `ec:loader-done` never arrives.
+ * The loader fires that event at its 3.2s hard timeout — and fires it
+ * immediately when it decides not to show at all — so this rarely runs.
+ */
+const AUTOPLAY_FALLBACK_MS = 4000;
 
 /** Seconds → m:ss. Duration is NaN until metadata loads, hence the guard. */
 function fmt(s: number): string {
@@ -58,6 +62,8 @@ export default function MusicDock({ tracks }: { tracks: Track[] }) {
   const [buffering, setBuffering] = useState(false);
   const [failed, setFailed] = useState(false);
   const [muted, setMuted] = useState(false);
+  /** Autoplay was refused; playback is queued behind the first user gesture. */
+  const [armed, setArmed] = useState(false);
   const [time, setTime] = useState(0);
   const [duration, setDuration] = useState(NaN);
   const [open, setOpen] = useState(false);
@@ -82,6 +88,76 @@ export default function MusicDock({ tracks }: { tracks: Track[] }) {
       /* Corrupt or unavailable storage is not worth failing over. */
     }
     if (volRef.current) volRef.current.value = String(a.muted ? 0 : a.volume);
+  }, []);
+
+  /* ── AUTOPLAY ─────────────────────────────────────────────────────────────
+     Starts the music on load, once the loader overlay has cleared (it fires
+     `ec:loader-done`, the same cue TricolourFall waits on) so the song doesn't
+     begin behind a full-screen overlay.
+
+     ⚠️ THIS CANNOT BE GUARANTEED, and no amount of code changes that. Every
+     current browser blocks un-muted autoplay until the visitor has interacted
+     with the site; Chrome relaxes it only once its Media Engagement Index for
+     the domain is high, which a first-time visitor never has. So `play()` here
+     is EXPECTED to reject on a cold visit — that is policy, not a bug.
+
+     The fallback is the standard one: on rejection, arm a one-shot listener and
+     start at the visitor's very first click, tap or keypress, wherever on the
+     page it lands. In practice the music begins a second or two later than
+     asked, rather than not at all.
+
+     Starting muted would evade the block, but silent music is not music — and
+     un-muting later needs a gesture anyway, so it buys nothing.
+
+     No opt-out is stored: a visitor who pauses gets the music again on their
+     next page load, as specified. Persisting a manual pause into
+     `ec_music_prefs` would be a small addition here if that becomes annoying. */
+  useEffect(() => {
+    const a = audioRef.current;
+    if (!a) return;
+
+    let disarm = () => {};
+
+    /* Autoplay was refused — wait for the first gesture anywhere and go then. */
+    const armForGesture = () => {
+      setArmed(true);
+
+      const go = () => {
+        disarm();
+        a.play()
+          .then(() => setArmed(false))
+          .catch(() => setArmed(false)); // out of options; leave the dock idle
+      };
+
+      // `capture` so a handler that stops propagation can't swallow this, and
+      // pointerdown/keydown/touchend between them cover mouse, touch and
+      // keyboard-only navigation.
+      const opts = { capture: true } as const;
+      const events = ['pointerdown', 'keydown', 'touchend'] as const;
+      events.forEach((ev) => window.addEventListener(ev, go, opts));
+      disarm = () => {
+        events.forEach((ev) => window.removeEventListener(ev, go, opts));
+        disarm = () => {};
+      };
+    };
+
+    let tried = false;
+    const attempt = () => {
+      if (tried) return;
+      tried = true;
+      // Both setState paths are inside promise callbacks, so neither runs
+      // synchronously inside this effect.
+      a.play().catch(armForGesture);
+    };
+
+    window.addEventListener('ec:loader-done', attempt, { once: true });
+    const timer = setTimeout(attempt, AUTOPLAY_FALLBACK_MS);
+
+    return () => {
+      window.removeEventListener('ec:loader-done', attempt);
+      clearTimeout(timer);
+      disarm();
+    };
   }, []);
 
   /* React writes the new `src` during render; the element only picks it up on
@@ -158,8 +234,11 @@ export default function MusicDock({ tracks }: { tracks: Track[] }) {
       <audio
         ref={audioRef}
         src={track.src}
-        preload="none"
-        onPlay={() => setPlaying(true)}
+        preload="metadata"
+        onPlay={() => {
+          setPlaying(true);
+          setArmed(false); // covers a manual press that beat the gesture handler
+        }}
         onPause={() => setPlaying(false)}
         onEnded={onEnded}
         onWaiting={() => setBuffering(true)}
@@ -233,7 +312,7 @@ export default function MusicDock({ tracks }: { tracks: Track[] }) {
       <div className="md-bar">
         <button
           type="button"
-          className="md-play"
+          className={`md-play ${armed ? 'armed' : ''}`}
           onClick={toggle}
           aria-label={playing ? `Pause ${track.title}` : `Play ${track.title}`}
         >
@@ -369,6 +448,7 @@ export default function MusicDock({ tracks }: { tracks: Track[] }) {
         }
 
         .md-play {
+          position: relative;   /* containing block for the .armed halo */
           flex: none;
           width: 34px;
           height: 34px;
@@ -384,6 +464,22 @@ export default function MusicDock({ tracks }: { tracks: Track[] }) {
         }
         .md-play:hover { transform: scale(1.07); box-shadow: 0 4px 16px rgb(var(--saffron-rgb, 255 153 51) / 0.55); }
         .md-play:active { transform: scale(0.96); }
+
+        /* Autoplay refused and waiting on a gesture. A halo rather than a
+           message: it will resolve itself the moment the visitor touches
+           anything, so it needs to read as "ready", not as an error. */
+        .md-play.armed::after {
+          content: '';
+          position: absolute;
+          inset: -5px;
+          border-radius: 50%;
+          border: 2px solid rgb(var(--saffron-rgb, 255 153 51) / 0.8);
+          animation: md-halo 1.9s ease-out infinite;
+        }
+        @keyframes md-halo {
+          0%        { transform: scale(0.8); opacity: 0.9; }
+          70%, 100% { transform: scale(1.45); opacity: 0; }
+        }
 
         .md-mini {
           flex: none;
@@ -605,6 +701,9 @@ export default function MusicDock({ tracks }: { tracks: Track[] }) {
           .md-eq.on i,
           .md-spin { animation: none; }
           .md-eq.on i { height: 9px; }
+          /* The halo still has to be visible, just still — it is the only cue
+             that playback is waiting on a gesture. */
+          .md-play.armed::after { animation: none; opacity: 0.9; }
           .md-play,
           .md-mini,
           .md-toggle svg { transition: none; }
