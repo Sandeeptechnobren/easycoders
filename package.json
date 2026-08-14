@@ -4,11 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "predev": "node scripts/extract-covers.mjs",
     "build": "next build",
-    "prebuild": "node scripts/extract-covers.mjs",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "music": "node scripts/build-music.mjs"
   },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",

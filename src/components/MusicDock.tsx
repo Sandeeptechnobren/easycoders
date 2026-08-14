@@ -1,12 +1,24 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { Track } from '@/lib/tracks';
+
+export type Track = {
+  /** Absolute URL on the backend host. */
+  src: string;
+  title: string;
+  subtitle?: string | null;
+  cover?: string | null;
+};
+
+/* Same hardcoded base as src/lib/axios.ts and the ~13 pages that inline it.
+ * Plain fetch rather than the axios instance: this endpoint is public, so the
+ * bearer-token interceptor has nothing to add. */
+const API_BASE = 'https://api.easycoders.in/api';
 
 /* ──────────────────────────────────────────────────────────────────────────
  * Bottom-centre music dock.
  *
- * Plays whatever `getTracks()` found in `public/audio/`. Mounted from
+ * Plays the playlist returned by `GET /api/music`. Mounted from
  * providers.tsx OUTSIDE `{children}`, which matters: the App Router swaps only
  * the page subtree on navigation, so the dock — and the <audio> element inside
  * it — survives route changes and the music keeps playing instead of cutting
@@ -15,9 +27,10 @@ import type { Track } from '@/lib/tracks';
  * Three decisions worth knowing before editing:
  *
  * 1. `preload="metadata"`. Only the file header is fetched up front — enough
- *    for the duration to show before anything plays — not the 10 MB body. The
- *    body streams progressively once playback starts, so a visitor who leaves
- *    after twenty seconds never pulls the whole file.
+ *    for the duration to show before anything plays — not the multi-MB body.
+ *    The body streams progressively once playback starts (the server answers
+ *    range requests with 206, verified), so a visitor who leaves after twenty
+ *    seconds never pulls the whole file.
  *
  * 2. AUTOPLAY, with a gesture fallback. See AUTOPLAY below — the short version
  *    is that no amount of code can force this, so it degrades to starting on
@@ -48,7 +61,42 @@ function fmt(s: number): string {
   return `${m}:${String(r).padStart(2, '0')}`;
 }
 
-export default function MusicDock({ tracks }: { tracks: Track[] }) {
+/**
+ * Fetches the playlist, then hands it to the dock.
+ *
+ * The split is structural, not stylistic. `Dock` runs its setup on mount —
+ * restoring volume onto the <audio> element and firing the autoplay attempt —
+ * and both need that element to exist. If one component both fetched and
+ * rendered, those effects would run on the first paint, when there is no track
+ * yet and therefore no <audio> in the tree; they would bail on a null ref and
+ * never retry. Mounting `Dock` only once tracks exist makes its mount the right
+ * moment by construction.
+ *
+ * A failed or empty fetch renders nothing at all — the site is simply quiet.
+ * There is no error UI because there is no action a visitor could take.
+ */
+export default function MusicDock() {
+  const [tracks, setTracks] = useState<Track[] | null>(null);
+
+  useEffect(() => {
+    const ac = new AbortController();
+    fetch(`${API_BASE}/music`, { signal: ac.signal })
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
+      .then((json) => {
+        const list = Array.isArray(json?.data) ? (json.data as Track[]) : [];
+        // Guard the shape: a track with no src would mount a dock that can
+        // never play anything.
+        setTracks(list.filter((t) => t && typeof t.src === 'string' && t.src));
+      })
+      .catch(() => setTracks([]));
+    return () => ac.abort();
+  }, []);
+
+  if (!tracks?.length) return null;
+  return <Dock tracks={tracks} />;
+}
+
+function Dock({ tracks }: { tracks: Track[] }) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const volRef = useRef<HTMLInputElement>(null);
   /** True while the user drags the seek bar — suppresses `timeupdate` so the
