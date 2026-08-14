@@ -295,13 +295,31 @@
  * 6. HERO — flag photograph, tricolour wash, tech grid and a chakra watermark.
  * ───────────────────────────────────────────────────────────────────────────── */
 
-/* Swap the photograph here — one place, one line. Drop the file at
-   public/images/independence-flag.jpg (or point this at any other path).
-   If the file is missing the url() simply fails to paint and the navy hero
-   background shows through unchanged, so a wrong path degrades to today's
-   design rather than to a broken layout. */
+/* Swap the photograph here — one place, one line.
+ *
+ * Available in public/flag/ :
+ *   indianflag.avif   740×493  genuine AVIF   ← in use (matches the supplied shot)
+ *   card flag.jpg     391×783  genuine JPEG   portrait; note the SPACE in the
+ *                                             filename, which must be written as
+ *                                             %20 inside url() or the rule silently
+ *                                             fails to parse
+ *   indianflag2.avif  576×402  ⚠️ actually a JPEG carrying an .avif extension.
+ *                                             Next serves it as Content-Type
+ *                                             image/avif, so a browser told "AVIF"
+ *                                             and handed JPEG bytes may refuse to
+ *                                             decode. Rename it to .jpg before use.
+ *
+ * ⚠️ RESOLUTION: at 740×493 this is small for a full-bleed hero — `cover` on a
+ * 1920px viewport upscales ~2.6×, which would normally look soft. It survives
+ * here only because the scrim below sits at 90%+ opacity over the text column
+ * and the image reads as atmosphere rather than subject. If you want it sharp,
+ * supply a ~2400px-wide version at this same path.
+ *
+ * A missing path, or a browser without AVIF support, simply fails to paint and
+ * the navy `background-color` below shows through — so it degrades to today's
+ * hero rather than to a broken layout. */
 [data-theme='tiranga'] {
-  --hero-flag: url('/images/independence-flag.jpg');
+  --hero-flag: url('/flag/indianflag.avif');
 }
 
 /* The photo and its scrim are LAYERED BACKGROUNDS on .hero itself, not extra
