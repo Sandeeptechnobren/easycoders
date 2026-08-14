@@ -520,20 +520,18 @@
   background-repeat: no-repeat, no-repeat;
 }
 
-/* ── Stats band — cream ground, dark text (keeps its tricolour seam above) ── */
-[data-theme='tiranga'] .stats-bar {
-  background-image:
-    linear-gradient(
-      180deg,
-      rgb(250 250 247 / 0.96) 0%,
-      rgb(250 250 247 / 0.93) 50%,
-      rgb(250 250 247 / 0.96) 100%
-    ),
-    url('/flag/card%20flag.jpg');
-  background-size: cover, cover;
-  background-position: center, center top;
-  background-repeat: no-repeat, no-repeat;
-}
+/* ── Stats band ──────────────────────────────────────────────────────────────
+   The band itself deliberately carries NO photograph — its imagery lives on the
+   individual .stat-item cells instead (see the STATS BAND section below).
+
+   Why: this band is ~150px tall and full-bleed, so `cover` from `card flag.jpg`
+   (391×783, portrait) cropped it to a 391×31 sliver — 4% of the image, which is
+   a horizontal stripe of colour and not a recognisable flag. Combined with the
+   0.93 scrim it was there, was paid for on every page load, and was invisible.
+
+   A .stat-item is ~300×150, so cover takes 47% of the image height instead of
+   4%: the chakra, the saffron and the green all survive the crop. That is the
+   whole reason for moving it down a level. ─────────────────────────────────── */
 
 /* ── FAQ — cream ground, dark text ── */
 [data-theme='tiranga'] .faq-section {
@@ -588,9 +586,10 @@
    push each scrim a few points denser. Cheap insurance for readability on the
    screens where it matters most. */
 @media (max-width: 900px) {
+  /* .stats-bar is absent here on purpose — it no longer carries an image; its
+     cells do, and they get their own mobile rule further down. */
   [data-theme='tiranga'] .section-white,
-  [data-theme='tiranga'] .faq-section,
-  [data-theme='tiranga'] .stats-bar {
+  [data-theme='tiranga'] .faq-section {
     background-image:
       linear-gradient(180deg, rgb(255 255 255 / 0.975), rgb(255 255 255 / 0.965)),
       url('/flag/indianflag.avif');
@@ -854,7 +853,62 @@
 [data-theme='tiranga'] .stat-item {
   position: relative;
   transition: background-color .22s ease, transform .22s ease;
+
+  /* The flag, one per cell. Scrim is RADIAL rather than linear: it pools the
+     image in the middle of each cell, behind the figure, and closes to solid
+     cream at the cell's edges. That does two jobs at once — it keeps the
+     imagery deliberate rather than wall-to-wall, and it means the four cells
+     fade out before the container edge, so there is no seam where the band's
+     plain cream gutters begin.
+
+     0.72 in the centre is far lighter than the 0.93+ used elsewhere on light
+     sections, and it is affordable: measured against the darkest 1% of pixels
+     in this crop, the 13px labels still hold 6.5:1 and the numerals ~13:1,
+     both comfortably past AA. Contrast was never the limit on this band — the
+     crop was. */
+  background-image:
+    radial-gradient(
+      ellipse 120% 108% at 50% 46%,
+      rgb(250 250 247 / 0.72) 0%,
+      rgb(250 250 247 / 0.82) 52%,
+      rgb(250 250 247 / 0.95) 88%,
+      rgb(250 250 247 / 1) 100%
+    ),
+    url('/flag/indianflag.avif');
+  background-size: cover, cover;
+  background-repeat: no-repeat, no-repeat;
 }
+
+/* Four cells showing the identical crop would read as a tiled texture. Each
+   takes a different slice instead, walking down the flag from the saffron at
+   the top to the green at the bottom, so the band gains a left-to-right
+   tricolour progression that follows the reading direction.
+
+   Only the VERTICAL value does anything here: `cover` scales this image to the
+   cell's width exactly, so there is no horizontal overflow left to position. */
+[data-theme='tiranga'] .stat-item:nth-child(1) { background-position: center, center 22%; }
+[data-theme='tiranga'] .stat-item:nth-child(2) { background-position: center, center 42%; }
+[data-theme='tiranga'] .stat-item:nth-child(3) { background-position: center, center 58%; }
+[data-theme='tiranga'] .stat-item:nth-child(4) { background-position: center, center 78%; }
+
+/* Hover warmth. This has to be its own layer: the cell's `background-color`
+   now sits UNDER an opaque photograph and can never be seen again, and a
+   gradient cannot be transitioned, so neither of the obvious routes animates.
+   An overlay on ::before does — and ::before was the one pseudo-element on
+   .stat-item still free (::after is the tricolour underline below).
+
+   It paints over the text as well as the background, which is fine at this
+   alpha: an 8% saffron wash moves the numerals from ~15:1 to ~13:1. */
+[data-theme='tiranga'] .stat-item::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgb(var(--saffron-rgb) / 0.08);
+  opacity: 0;
+  transition: opacity .22s ease;
+  pointer-events: none;
+}
+[data-theme='tiranga'] .stat-item:hover::before { opacity: 1; }
 [data-theme='tiranga'] .stat-item::after {
   content: '';
   position: absolute;
@@ -869,13 +923,46 @@
   transition: opacity .24s ease, transform .32s cubic-bezier(0.22, 0.61, 0.36, 1);
   pointer-events: none;
 }
+/* ⚠️ This was `background: rgb(...)` — the SHORTHAND, which resets
+   background-image to none and would have wiped the flag above on hover. The
+   warmth moved to ::before; all this rule does now is lift the cell. */
 [data-theme='tiranga'] .stat-item:hover {
-  background: rgb(var(--saffron-rgb) / 0.05);
   transform: translateY(-2px);
 }
 [data-theme='tiranga'] .stat-item:hover::after {
   opacity: 1;
   transform: scaleX(1);
+}
+
+/* ⚠️ Below ~950px the per-cell vertical offsets above silently stop working,
+   and it is worth understanding why rather than rediscovering it later.
+
+   `cover` only overflows on the axis where the box is proportionally shorter
+   than the image. This image is 3:2; a 150px-tall cell has to be at least
+   ~225px wide for the crop to overflow VERTICALLY. Four cells in a 1200px
+   container are 300px each, so it works on desktop — but as the container
+   narrows the cells drop under 225px, the crop starts overflowing horizontally
+   instead, and every `center 22%` becomes a no-op. All four cells would then
+   show an identical crop, which is exactly the tiling this was meant to avoid.
+
+   So below that width the variation moves to the axis that still has room. */
+@media (max-width: 900px) {
+  [data-theme='tiranga'] .stat-item {
+    /* Denser too: on a phone the copy runs edge to edge inside the cell. */
+    background-image:
+      radial-gradient(
+        ellipse 130% 115% at 50% 46%,
+        rgb(250 250 247 / 0.80) 0%,
+        rgb(250 250 247 / 0.88) 55%,
+        rgb(250 250 247 / 0.97) 90%,
+        rgb(250 250 247 / 1) 100%
+      ),
+      url('/flag/indianflag.avif');
+  }
+  [data-theme='tiranga'] .stat-item:nth-child(1) { background-position: center, 18% center; }
+  [data-theme='tiranga'] .stat-item:nth-child(2) { background-position: center, 39% center; }
+  [data-theme='tiranga'] .stat-item:nth-child(3) { background-position: center, 61% center; }
+  [data-theme='tiranga'] .stat-item:nth-child(4) { background-position: center, 82% center; }
 }
 
 /* The little rule under each number goes tricolour and widens on hover. */
@@ -897,6 +984,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   [data-theme='tiranga'] .stat-item,
+  [data-theme='tiranga'] .stat-item::before,
   [data-theme='tiranga'] .stat-item::after,
   [data-theme='tiranga'] .stat-value,
   [data-theme='tiranga'] .stat-value::after {
