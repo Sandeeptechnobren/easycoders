@@ -166,13 +166,9 @@ export default function VerifyCertificate() {
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600;700&display=swap');
 
         .vc-page {
-          --navy: #0B1B3A;
-          --navy-mid: #152D5A;
-          --gold: #E8A020;
-          --gold-light: #F5C356;
-          --teal: #1AA5BB;
-          --slate: #4A5568;
-          --border: #E5E9F2;
+          /* Brand tokens come from globals.css — redeclaring them on this wrapper
+             outranks :root for the subtree and would defeat theming. All values
+             matched the central set, so this is a visual no-op. */
           font-family: 'DM Sans', system-ui, sans-serif;
           width: 100%; min-height: 100vh;
           background: var(--navy);

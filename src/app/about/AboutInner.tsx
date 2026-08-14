@@ -176,20 +176,11 @@ export default function AboutInner() {
   return (
     <>
       <style jsx>{`
-        :global(:root) {
-          --navy:       #0B1B3A;
-          --navy-mid:   #152D5A;
-          --navy-deep:  #07122A;
-          --navy-soft:  #F4F6FB;
-          --gold:       #E8A020;
-          --gold-light: #F5C356;
-          --gold-soft:  #FEF6E7;
-          --slate:      #4A5568;
-          --slate-soft: #94A3B8;
-          --border:     #E5E9F2;
-          --white:      #FFFFFF;
-          --success:    #16a34a;
-        }
+        /* The brand tokens that used to be redeclared here are now defined once
+           in globals.css. Every value in this block was identical to the central
+           set, so removing it is a visual no-op — and it is necessary, because a
+           local :root redeclaration outranks the theme override and would defeat
+           theming while this page is mounted. */
 
         .ab {
           font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
