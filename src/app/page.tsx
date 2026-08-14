@@ -11,6 +11,8 @@ import FAQAccordion from '@/components/FAQAccordion';
 import Registration from '@/components/Registration'; // ← adjust path if needed
 import TestimonialCarousel from '@/components/TestimonialCarousel';
 import GalleryTeaser from '@/components/GalleryTeaser';
+import FlagHoist from '@/components/independence/FlagHoist';
+import { useSiteTheme } from '@/context/ThemeContext';
 
 /* ──────────────────────────────────────────────────────────────────────
  * FAQ list — kept in one place so it can drive BOTH the on-screen
@@ -74,6 +76,11 @@ const FALLBACK_COURSES: HomeCourse[] = [
 ];
 
 export default function HomePage() {
+  // Drives the Independence Day hero variant. Falls back to 'default' outside
+  // the provider, so this page can never crash on it.
+  const { theme } = useSiteTheme();
+  const isTiranga = theme === 'tiranga';
+
   const [courses, setCourses] = useState<HomeCourse[]>(FALLBACK_COURSES);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('All');
@@ -246,6 +253,17 @@ export default function HomePage() {
         .trust-text { font-size: 13px; color: rgba(255,255,255,0.72); line-height: 1.5; }
         .trust-text strong { color: rgba(255,255,255,0.85); font-weight: 500; }
         .hero-visual { position: relative; display: flex; justify-content: center; align-items: center; }
+        /* Flag sits over the top-left of the hero visual. Absolute so it cannot
+           reflow the existing image, and it is dropped entirely on narrow
+           screens where .hero-visual is already hidden. */
+        .hero-flag {
+          position: absolute;
+          top: -18px;
+          left: -26px;
+          z-index: 3;
+          pointer-events: none;
+        }
+        @media (max-width: 1100px) { .hero-flag { left: -6px; transform: scale(.86); transform-origin: top left; } }
         .hero-img-frame {
           width: 100%; max-width: 480px; height: 480px;
           border-radius: var(--radius-lg); overflow: hidden;
@@ -403,19 +421,42 @@ export default function HomePage() {
         <div className="container">
           <div className="hero-grid">
             <div className="hero-content">
-              <div className="hero-badge">
-                <span></span>
-                Industry-Aligned Coding Programs
-              </div>
-              <h1 className="hero-title">
-                Launch Your<br />
-                <span className="highlight">Coding Career</span><br />
-                with Confidence
-              </h1>
-              <p className="hero-subtitle">
-                From absolute beginner to job-ready professional.
-                <br /><strong>No prior coding knowledge required.</strong> Just your ambition.
-              </p>
+              {/* Independence Day headline. Swapped in only while the theme is
+                  on, so switching the theme off restores the evergreen hero
+                  exactly — no content is lost or duplicated. */}
+              {isTiranga ? (
+                <>
+                  <div className="hero-badge id-badge">
+                    <span></span>
+                    Happy Independence Day · 15 August 2026
+                  </div>
+                  <h1 className="hero-title">
+                    Build Skills.<br />
+                    <span className="highlight">Build Careers.</span><br />
+                    Build India.
+                  </h1>
+                  <p className="hero-subtitle">
+                    Celebrating the spirit of freedom, innovation and a digitally empowered India.
+                    <br /><strong>Industry-oriented software training.</strong> No prior coding knowledge required.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <div className="hero-badge">
+                    <span></span>
+                    Industry-Aligned Coding Programs
+                  </div>
+                  <h1 className="hero-title">
+                    Launch Your<br />
+                    <span className="highlight">Coding Career</span><br />
+                    with Confidence
+                  </h1>
+                  <p className="hero-subtitle">
+                    From absolute beginner to job-ready professional.
+                    <br /><strong>No prior coding knowledge required.</strong> Just your ambition.
+                  </p>
+                </>
+              )}
               <div className="hero-cta">
                 <Link href="/courses" className="btn-primary">Explore Courses →</Link>
                 <Link href="/about" className="btn-outline">Learn About Us</Link>
@@ -433,6 +474,14 @@ export default function HomePage() {
               </div>
             </div>
             <div className="hero-visual">
+              {/* Hoisting ceremony — runs once, then settles into a slow wave.
+                  Sits alongside the existing hero image rather than replacing
+                  it, so the original visual is untouched when the theme is off. */}
+              {isTiranga && (
+                <div className="hero-flag">
+                  <FlagHoist height={200} />
+                </div>
+              )}
               <div className="hero-img-frame">
                 <Image
                   src="/images/easycoder-hero.png"
