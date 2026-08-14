@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import api from '@/lib/axios';
-import Loader from '../../loader/page';
+import Loader from '@/components/Loader';
 
 /* Module-scope so the purity rule doesn't flag Date.now() being called inside
    the component render (same pattern as MyTasksCard). */
@@ -45,7 +45,7 @@ export default function TasksPage() {
     return () => document.removeEventListener('keydown', onKey);
   }, [preview]);
 
-  if (loadingTasks || loadingCategories) return <Loader />;
+  if (loadingTasks || loadingCategories) return <Loader fullscreen />;
 
   const filteredTasks = tasks.filter(task =>
     task.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||

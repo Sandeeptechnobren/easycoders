@@ -99,8 +99,27 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    /* data-theme drives the site-wide theme; data-bs-theme is a freebie — the
+     * CDN Bootstrap 5.3 below recolours its whole component set off it.
+     * suppressHydrationWarning is required because THEME_BOOTSTRAP below mutates
+     * these attributes before React hydrates; without it React logs a mismatch
+     * warning in dev even though the markup is correct. */
+    <html lang="en" data-theme="default" data-bs-theme="light" suppressHydrationWarning>
       <head>
+        {/* Applies the saved theme BEFORE first paint, so there is no flash of
+         * the default theme. This must be a plain inline script, not React
+         * state: layout.tsx is a Server Component (it exports `metadata`, which
+         * a Client Component may not), so it cannot read localStorage — and
+         * doing it during render would guarantee a hydration mismatch, since
+         * the server has no localStorage. Mutating the DOM here happens outside
+         * React's tree, so React never reconciles it. ThemeProvider revalidates
+         * against the server afterwards and corrects the value if it changed. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('ec_site_theme');if(t==='tiranga'){var d=document.documentElement;d.setAttribute('data-theme','tiranga');}}catch(e){}})();`,
+          }}
+        />
+
         {/* Preconnect to Google Fonts for faster web font load */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />

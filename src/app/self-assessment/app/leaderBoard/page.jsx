@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import api from '@/lib/axios';
-import Loader from '../../../loader/page';
+import Loader from '@/components/Loader';
 
 export default function LeaderboardPage() {
   const [leaders, setLeaders] = useState([]);
@@ -55,7 +55,7 @@ export default function LeaderboardPage() {
     ? <img src={item.user.avatar_thumb_url} alt={item.user?.name || ''} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
     : <span>{initials(item?.user?.name)}</span>);
 
-  if (loading) return <Loader />;
+  if (loading) return <Loader fullscreen />;
 
   return (
     <>

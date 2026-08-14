@@ -2,6 +2,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import Loader from '@/components/Loader';
 
 type Props = {
   allowedRoles: number[];
@@ -39,15 +40,14 @@ export default function RoleGuard({ allowedRoles, children }: Props) {
     }
   }, [role, isLoading, allowedRoles, router]);
 
-  // Show loading state while checking authentication
+  // Show loading state while checking authentication.
+  // This is the most-seen loader in the app — it renders on EVERY role-gated
+  // page while the token is validated. It used to be a raw Bootstrap
+  // `.spinner-border`, which lives in the CDN stylesheet and so could not be
+  // themed or restyled; the shared Loader is token-driven and follows the
+  // active theme.
   if (isLoading) {
-    return (
-      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '100vh' }}>
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </div>
-      </div>
-    );
+    return <Loader fullscreen label="Checking your access…" />;
   }
 
   // Convert role to number for comparison

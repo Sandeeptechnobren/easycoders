@@ -45,3 +45,10 @@ CLAUDE.md
 **/CLAUDE.md
 .claude/
 .claudeignore
+
+# Music library — the masters live here locally but are HOSTED ON THE BACKEND
+# (public/music/ on the Laravel box, served via GET /api/music). Shipping ~39MB
+# of MP3 in the Vercel deploy would re-upload them on every build for files that
+# never change. Regenerate the upload payload with `npm run music`.
+/public/audio/
+/.music-dist/

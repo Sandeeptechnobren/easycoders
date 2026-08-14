@@ -1,0 +1,1050 @@
+/* ═════════════════════════════════════════════════════════════════════════════
+ * TIRANGA THEME — seasonal tricolour accent layer.
+ *
+ * EVERYTHING here is scoped under [data-theme='tiranga'], so with the theme off
+ * this file contributes exactly nothing and the site is byte-identical to
+ * before. That is the whole point: the toggle must be a true no-op when off.
+ *
+ * This is an ACCENT layer, not a repaint. The navy structural palette is left
+ * alone (it carries the text contrast); only the ACCENT family shifts gold →
+ * saffron, and tricolour edges/motifs are added on top. Backgrounds and body
+ * copy are deliberately untouched — repainting them would mean rewriting ~5,200
+ * hardcoded colours and would wreck contrast.
+ *
+ * ⚠️ CONTRAST — the reason saffron is never used for text:
+ *      saffron #FF9933 on white ≈ 2.1:1  → FAILS WCAG AA (needs 4.5:1)
+ *      deep saffron #B35C00 on white ≈ 5.9:1 → passes AA
+ *      india green #138808 on white ≈ 4.9:1 → passes AA
+ *      chakra navy #000080 on white ≈ 15.3:1 → excellent
+ * So saffron is decorative only (bars, fills, large display); anything that has
+ * to be READ uses the deep saffron, the green, or the existing navy ink.
+ * ═════════════════════════════════════════════════════════════════════════════ */
+
+[data-theme='tiranga'] {
+  /* ── The flag ── */
+  --saffron:        #FF9933;
+  --saffron-deep:   #B35C00;  /* text-safe (5.9:1) — use whenever it must be read */
+  --saffron-soft:   #FFF4E8;
+  --india-green:    #138808;
+  --india-green-deep: #0E6606;
+  --india-green-soft: #EAF7E8;
+  --chakra:         #000080;
+
+  --saffron-rgb:    255 153 51;
+  --india-green-rgb: 19 136 8;
+  --chakra-rgb:     0 0 128;
+
+  /* Reusable tricolour edge. */
+  --tiranga-bar: linear-gradient(
+    90deg,
+    var(--saffron) 0%, var(--saffron) 33.33%,
+    #FFFFFF 33.33%, #FFFFFF 66.66%,
+    var(--india-green) 66.66%, var(--india-green) 100%
+  );
+
+  /* ── Accent family: gold → saffron ──
+     The navy family is deliberately NOT re-pointed. Navy carries nearly all the
+     text contrast on this site; swapping it would silently break legibility in
+     ~64 files. Gold is purely decorative, so it can shift safely. */
+  --gold:       #FF9933;
+  --gold-light: #FFC078;
+  --gold-soft:  #FFF4E8;
+  --gold-deep:  #B35C00;  /* text-safe; the old #B97A0F was 4.6:1, this is 5.9:1 */
+  --gold-rgb:   255 153 51;
+
+  /* ── Bootstrap 5.3 ──
+     No --bs-* colour is overridden anywhere in this codebase, so setting them
+     here is high leverage: it recolours all 33 .btn-primary instances, links and
+     .spinner-border across all 51 pages for free. Both the hex and the -rgb form
+     are needed — 5.3 composites alpha variants from the -rgb triplet. */
+  --bs-primary:      #B35C00;
+  --bs-primary-rgb:  179, 92, 0;
+  --bs-link-color:   #0B1B3A;
+  --bs-link-hover-color: #B35C00;
+  /* <body> hardcodes the Bootstrap utility class .text-dark, which is
+     !important and therefore beats body{color}. Rather than removing the class
+     (which would shift body text site-wide even with the theme OFF), we retint
+     the token it reads. Chakra-tinted ink, never pure grey. */
+  --bs-dark-rgb:     11, 27, 58;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * 1. The tricolour hairline across the very top of every page.
+ *    position:fixed so it can never shift layout — it overlays the top 3px of
+ *    the fixed navbar rather than displacing it.
+ * ───────────────────────────────────────────────────────────────────────────── */
+[data-theme='tiranga'] body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--tiranga-bar);
+  /* Above the fixed navbar (z-index 1000-ish) but below modals (9999). */
+  z-index: 3000;
+  pointer-events: none;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * 2. Chrome edges. All use absolutely-positioned pseudo-elements rather than
+ *    borders, so nothing changes an element's box and no layout shifts.
+ * ───────────────────────────────────────────────────────────────────────────── */
+
+/* Navbar — tricolour underline. */
+[data-theme='tiranga'] nav.nb::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: var(--tiranga-bar);
+  opacity: 0.9;
+  pointer-events: none;
+}
+
+/* Footer — tricolour top edge. `position: relative` is safe to add: the footer
+   is a static block, so this changes no geometry. */
+[data-theme='tiranga'] footer {
+  position: relative;
+}
+[data-theme='tiranga'] footer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--tiranga-bar);
+  pointer-events: none;
+}
+
+/* Admin hero — tricolour base. .adm-hero already uses ::before, so use ::after. */
+[data-theme='tiranga'] .adm-hero::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background: var(--tiranga-bar);
+  pointer-events: none;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * 3. Ashoka chakra watermark on the dark hero surfaces.
+ *
+ *    Drawn in pure CSS — repeating-conic-gradient gives the 24 spokes at 15°
+ *    intervals, which is the correct count. No image asset, no extra request,
+ *    and it scales cleanly at any size.
+ * ───────────────────────────────────────────────────────────────────────────── */
+[data-theme='tiranga'] .adm-hero {
+  position: relative;
+  overflow: hidden;
+}
+[data-theme='tiranga'] .adm-hero > * {
+  position: relative;
+  z-index: 1;
+}
+[data-theme='tiranga'] .adm-hero::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: -70px;
+  width: 260px;
+  height: 260px;
+  transform: translateY(-50%);
+  border-radius: 50%;
+  background:
+    repeating-conic-gradient(
+      from 0deg,
+      rgb(255 255 255 / 0.16) 0deg 0.8deg,
+      transparent 0.8deg 15deg
+    );
+  box-shadow: inset 0 0 0 3px rgb(255 255 255 / 0.14);
+  opacity: 0.9;
+  pointer-events: none;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * 4. Small accents.
+ * ───────────────────────────────────────────────────────────────────────────── */
+
+/* Focus ring picks up the saffron. Keyboard focus only — :focus-visible, so
+   mouse users don't see rings. */
+[data-theme='tiranga'] :focus-visible {
+  outline: 2px solid var(--saffron-deep);
+  outline-offset: 2px;
+}
+
+/* Text selection in the flag colours. */
+[data-theme='tiranga'] ::selection {
+  background: rgb(var(--saffron-rgb) / 0.28);
+  color: #0B1B3A;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * 5. NAVBAR — glass surface + tricolour nav underline + logo treatment.
+ *
+ *    Targeted from here rather than by editing Navbar.tsx (809 lines of working
+ *    nav/auth/mobile logic): the visual result is the same, nothing in that
+ *    component's behaviour is put at risk, and removing this file reverts it.
+ * ───────────────────────────────────────────────────────────────────────────── */
+
+/* Glass surface once scrolled. Only on .scrolled so the hero keeps its clean
+   transparent nav. */
+[data-theme='tiranga'] .nb.scrolled {
+  background: rgb(255 255 255 / 0.82) !important;
+  backdrop-filter: blur(14px) saturate(1.4);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4);
+  border-bottom: 1px solid rgb(var(--saffron-rgb) / 0.18);
+  box-shadow: 0 6px 28px rgb(var(--chakra-rgb) / 0.10);
+}
+
+/* Nav underline becomes the tricolour. The base rule already positions and
+   sizes ::after — only the paint changes, so hover geometry is untouched. */
+[data-theme='tiranga'] .nb-link::after {
+  background: var(--tiranga-bar) !important;
+  border-radius: 2px;
+}
+
+/* ── Logo: saffron → green glow, light sweep and a chakra ring on hover ──
+   Fires on hover AND keyboard focus, so it isn't mouse-only. */
+[data-theme='tiranga'] .nb-logo {
+  position: relative;
+  display: inline-block;
+  border-radius: 12px;
+}
+/* Keep the mark and its link above the miniature flypast behind it, so the
+   jets pass BEHIND the brand and the link keeps its full click target. */
+[data-theme='tiranga'] .nb-logo > a {
+  position: relative;
+  z-index: 1;
+}
+[data-theme='tiranga'] .nb-logo img {
+  transition: transform .32s ease, filter .32s ease;
+  will-change: transform;
+}
+[data-theme='tiranga'] .nb-logo:hover img,
+[data-theme='tiranga'] .nb-logo:focus-within img {
+  transform: scale(1.045);
+  filter:
+    drop-shadow(0 0 7px rgb(var(--saffron-rgb) / 0.55))
+    drop-shadow(0 0 13px rgb(var(--india-green-rgb) / 0.38));
+}
+
+/* Chakra ring — 24 spokes via a conic gradient, masked to a thin annulus so it
+   reads as a ring rather than a disc. */
+[data-theme='tiranga'] .nb-logo::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 68px;
+  height: 68px;
+  margin: -34px 0 0 -34px;
+  border-radius: 50%;
+  background: repeating-conic-gradient(
+    from 0deg,
+    var(--chakra) 0deg 0.9deg,
+    transparent 0.9deg 15deg
+  );
+  -webkit-mask: radial-gradient(circle, transparent 56%, #000 58%, #000 100%);
+          mask: radial-gradient(circle, transparent 56%, #000 58%, #000 100%);
+  opacity: 0;
+  transform: rotate(-25deg) scale(0.82);
+  transition: opacity .34s ease, transform .5s ease;
+  pointer-events: none;
+}
+[data-theme='tiranga'] .nb-logo:hover::before,
+[data-theme='tiranga'] .nb-logo:focus-within::before {
+  opacity: 0.5;
+  transform: rotate(0deg) scale(1);
+}
+
+/* Tricolour light sweep across the mark. */
+[data-theme='tiranga'] .nb-logo::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  background: linear-gradient(
+    105deg,
+    transparent 30%,
+    rgb(var(--saffron-rgb) / 0.55) 44%,
+    rgb(255 255 255 / 0.75) 50%,
+    rgb(var(--india-green-rgb) / 0.55) 56%,
+    transparent 70%
+  );
+  opacity: 0;
+  transform: translateX(-60%);
+  pointer-events: none;
+}
+[data-theme='tiranga'] .nb-logo:hover::after,
+[data-theme='tiranga'] .nb-logo:focus-within::after {
+  animation: tir-logo-sweep 850ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+@keyframes tir-logo-sweep {
+  0%   { opacity: 0;   transform: translateX(-60%); }
+  35%  { opacity: 0.9; }
+  100% { opacity: 0;   transform: translateX(60%); }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * 6. HERO — flag photograph, tricolour wash, tech grid and a chakra watermark.
+ * ───────────────────────────────────────────────────────────────────────────── */
+
+/* Swap the photograph here — one place, one line.
+ *
+ * Available in public/flag/ :
+ *   indianflag.avif   740×493  genuine AVIF   ← in use (matches the supplied shot)
+ *   card flag.jpg     391×783  genuine JPEG   portrait; note the SPACE in the
+ *                                             filename, which must be written as
+ *                                             %20 inside url() or the rule silently
+ *                                             fails to parse
+ *   indianflag2.avif  576×402  ⚠️ SOURCE ONLY — do not reference this path.
+ *                                             It is a JPEG carrying an .avif
+ *                                             extension (Next would serve it as
+ *                                             Content-Type image/avif), AND it
+ *                                             carries an "alamy - 2CA33EJ" stock
+ *                                             watermark across its bottom band.
+ *                                             Use banner-flag.jpg instead.
+ *   banner-flag.jpg   576×340  genuine JPEG   ← the page banners (§6d). Derived
+ *                                             from indianflag2 by cropping rows
+ *                                             340-402 away, which removes the
+ *                                             watermark, and re-encoding under an
+ *                                             honest extension.
+ *
+ * ⚠️ RESOLUTION: at 740×493 this is small for a full-bleed hero — `cover` on a
+ * 1920px viewport upscales ~2.6×, which would normally look soft. It survives
+ * here only because the scrim below sits at 90%+ opacity over the text column
+ * and the image reads as atmosphere rather than subject. If you want it sharp,
+ * supply a ~2400px-wide version at this same path.
+ *
+ * A missing path, or a browser without AVIF support, simply fails to paint and
+ * the navy `background-color` below shows through — so it degrades to today's
+ * hero rather than to a broken layout. */
+[data-theme='tiranga'] {
+  --hero-flag: url('/flag/indianflag.avif');
+  /* The inner-page banners use the smoke flag instead — see §6d. */
+  --banner-flag: url('/flag/banner-flag.jpg');
+}
+
+/* The photo and its scrim are LAYERED BACKGROUNDS on .hero itself, not extra
+   pseudo-elements. Both pseudos are already spoken for — the page's own
+   `.hero::before` paints the teal/gold brand glows, and `.hero::after` below
+   paints the grid — and overriding either would silently delete that work.
+   Layered backgrounds also mean the scrim composites over the photo WITHOUT a
+   CSS filter, which would otherwise inherit down onto the hero's children and
+   blur the headline.
+
+   ⚠️ CONTRAST IS THE WHOLE PROBLEM HERE. The hero uses white text, and a flag
+   photo has large near-white and bright saffron regions; dropped in raw the
+   headline becomes unreadable. So the gradient sits ON TOP of the photo (first
+   background layer = topmost), dense over the left text column and clearing
+   toward the right where nothing has to be read. */
+[data-theme='tiranga'] .hero {
+  position: relative;
+  isolation: isolate;
+  /* Shows through if the image 404s ⇒ a wrong path degrades to today's design. */
+  background-color: var(--navy);
+  background-image:
+    linear-gradient(
+      100deg,
+      rgb(var(--navy-deep-rgb) / 0.95) 0%,
+      rgb(var(--navy-deep-rgb) / 0.90) 34%,
+      rgb(var(--navy-deep-rgb) / 0.66) 62%,
+      rgb(var(--navy-deep-rgb) / 0.46) 100%
+    ),
+    /* A vertical pass so the badge and the CTA row — the smallest text — sit on
+       darker ground than the headline needs. */
+    linear-gradient(
+      180deg,
+      rgb(var(--navy-deep-rgb) / 0.34) 0%,
+      transparent 38%,
+      transparent 60%,
+      rgb(var(--navy-deep-rgb) / 0.46) 100%
+    ),
+    var(--hero-flag);
+  background-size: cover, cover, cover;
+  background-position: center, center, center right;
+  background-repeat: no-repeat, no-repeat, no-repeat;
+}
+
+/* Phones: .hero-visual is hidden and the copy spans the full width, so the photo
+   sits behind ALL of the text. Push the scrim close to opaque. */
+@media (max-width: 900px) {
+  [data-theme='tiranga'] .hero {
+    background-image:
+      linear-gradient(
+        180deg,
+        rgb(var(--navy-deep-rgb) / 0.92) 0%,
+        rgb(var(--navy-deep-rgb) / 0.88) 55%,
+        rgb(var(--navy-deep-rgb) / 0.94) 100%
+      ),
+      var(--hero-flag);
+    background-size: cover, cover;
+    background-position: center, center center;
+    background-repeat: no-repeat, no-repeat;
+  }
+}
+/* Grid + tricolour wash. The base .hero::before is already used, so this rides
+   on ::after and sits behind content via z-index. */
+[data-theme='tiranga'] .hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgb(255 255 255 / 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(255 255 255 / 0.045) 1px, transparent 1px),
+    radial-gradient(60% 70% at 8% 15%, rgb(var(--saffron-rgb) / 0.20), transparent 62%),
+    radial-gradient(55% 65% at 92% 82%, rgb(var(--india-green-rgb) / 0.18), transparent 62%);
+  background-size: 46px 46px, 46px 46px, 100% 100%, 100% 100%;
+  /* Fade the grid out toward the bottom so it never fights the copy. */
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 55%, transparent 100%);
+          mask-image: linear-gradient(180deg, #000 0%, #000 55%, transparent 100%);
+}
+
+/* ⚠️ Stacking guard. HeroAtmosphere is position:absolute, and a POSITIONED
+   element paints above non-positioned siblings regardless of source order — so
+   without this the sky would render on top of the headline and CTAs. Lifting
+   the content container onto its own layer keeps text above the atmosphere.
+   This is the single most important rule in this file. */
+[data-theme='tiranga'] .hero > .container {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Premium shine sweep ──
+   A diagonal light reflection that crosses ONCE on hover and then stops — the
+   e-commerce "premium product" cue. Deliberately not looping: a permanently
+   sweeping highlight reads as a loading skeleton, not polish. */
+[data-theme='tiranga'] .btn-primary,
+[data-theme='tiranga'] .enrollNow,
+[data-theme='tiranga'] .courseCardBlock,
+[data-theme='tiranga'] .mainCard {
+  position: relative;
+  overflow: hidden;
+}
+[data-theme='tiranga'] .btn-primary::after,
+[data-theme='tiranga'] .enrollNow::after,
+[data-theme='tiranga'] .courseCardBlock::after,
+[data-theme='tiranga'] .mainCard::after {
+  content: '';
+  position: absolute;
+  top: -60%;
+  left: -75%;
+  width: 45%;
+  height: 220%;
+  transform: rotate(18deg) translateX(-140%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgb(255 255 255 / 0.42),
+    rgb(255 224 180 / 0.30),
+    transparent
+  );
+  opacity: 0;
+  pointer-events: none;
+}
+[data-theme='tiranga'] .btn-primary:hover::after,
+[data-theme='tiranga'] .enrollNow:hover::after,
+[data-theme='tiranga'] .courseCardBlock:hover::after,
+[data-theme='tiranga'] .mainCard:hover::after {
+  animation: tir-shine 760ms cubic-bezier(0.32, 0, 0.24, 1);
+}
+@keyframes tir-shine {
+  0%   { opacity: 0;    transform: rotate(18deg) translateX(-140%); }
+  16%  { opacity: 0.95; }
+  100% { opacity: 0;    transform: rotate(18deg) translateX(320%); }
+}
+
+/* Hero eyebrow badge picks up the tricolour. */
+[data-theme='tiranga'] .hero-badge {
+  background: rgb(255 255 255 / 0.08) !important;
+  border: 1px solid rgb(var(--saffron-rgb) / 0.42) !important;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+[data-theme='tiranga'] .hero-badge span {
+  background: var(--saffron) !important;
+  box-shadow: 0 0 0 3px rgb(var(--saffron-rgb) / 0.22);
+}
+[data-theme='tiranga'] .hero-title .highlight {
+  background: linear-gradient(90deg, var(--saffron) 0%, #FFFFFF 52%, #7CD16F 100%);
+  -webkit-background-clip: text;
+          background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * 6b. SECTION BACKGROUNDS — the flag carried through the whole page.
+ *
+ * Applied as LAYERED BACKGROUNDS on the section elements themselves, never as
+ * pseudo-elements: `.cta-section` already uses BOTH ::before and ::after for its
+ * decorative gold rings, and overriding either would delete them silently.
+ *
+ * ⚠️ THE SCRIM STRENGTH IS THE ENTIRE DESIGN HERE, and it differs by section
+ * because the TEXT COLOUR differs:
+ *
+ *   LIGHT sections (courses, FAQ, stats) carry near-black navy body copy on
+ *   white/cream. Text there is only readable if the photo stays a whisper — so
+ *   the scrim sits at 0.94–0.97 and the flag reads as faint texture, not
+ *   imagery. Anything stronger and the course descriptions become unreadable.
+ *
+ *   DARK sections (testimonials, CTA) carry white text on navy, which tolerates
+ *   far more, so the scrim drops to ~0.88 and the flag genuinely shows.
+ *
+ * The two photos alternate so the page doesn't read as one image tiled five
+ * times. `card flag.jpg` MUST be written with %20 — a raw space silently voids
+ * the whole declaration.
+ * ───────────────────────────────────────────────────────────────────────────── */
+
+/* ── Courses ("Explore Top Courses") — white ground, dark text ── */
+[data-theme='tiranga'] .section-white {
+  background-color: #fff;
+  background-image:
+    linear-gradient(
+      180deg,
+      rgb(255 255 255 / 0.97) 0%,
+      rgb(255 255 255 / 0.94) 45%,
+      rgb(255 255 255 / 0.97) 100%
+    ),
+    url('/flag/indianflag.avif');
+  background-size: cover, cover;
+  background-position: center, center;
+  background-repeat: no-repeat, no-repeat;
+}
+
+/* ── Stats band ──────────────────────────────────────────────────────────────
+   The band itself deliberately carries NO photograph — its imagery lives on the
+   individual .stat-item cells instead (see the STATS BAND section below).
+
+   Why: this band is ~150px tall and full-bleed, so `cover` from `card flag.jpg`
+   (391×783, portrait) cropped it to a 391×31 sliver — 4% of the image, which is
+   a horizontal stripe of colour and not a recognisable flag. Combined with the
+   0.93 scrim it was there, was paid for on every page load, and was invisible.
+
+   A .stat-item is ~300×150, so cover takes 47% of the image height instead of
+   4%: the chakra, the saffron and the green all survive the crop. That is the
+   whole reason for moving it down a level. ─────────────────────────────────── */
+
+/* ── FAQ — cream ground, dark text ── */
+[data-theme='tiranga'] .faq-section {
+  background-color: var(--cream, #FAFAF7);
+  background-image:
+    linear-gradient(
+      180deg,
+      rgb(250 250 247 / 0.97) 0%,
+      rgb(250 250 247 / 0.94) 50%,
+      rgb(250 250 247 / 0.97) 100%
+    ),
+    url('/flag/indianflag.avif');
+  background-size: cover, cover;
+  background-position: center, center bottom;
+  background-repeat: no-repeat, no-repeat;
+}
+
+/* ── Testimonials — navy ground, WHITE text ⇒ the flag can actually show ── */
+[data-theme='tiranga'] .testimonials-section {
+  background-color: var(--navy);
+  background-image:
+    linear-gradient(
+      110deg,
+      rgb(var(--navy-deep-rgb) / 0.93) 0%,
+      rgb(var(--navy-deep-rgb) / 0.86) 50%,
+      rgb(var(--navy-deep-rgb) / 0.91) 100%
+    ),
+    url('/flag/card%20flag.jpg');
+  background-size: cover, cover;
+  background-position: center, center right;
+  background-repeat: no-repeat, no-repeat;
+}
+
+/* ── Final CTA — navy gradient, WHITE text. Its ::before/::after rings are
+      untouched and still paint over this. ── */
+[data-theme='tiranga'] .cta-section {
+  background-color: var(--navy);
+  background-image:
+    linear-gradient(
+      135deg,
+      rgb(var(--navy-deep-rgb) / 0.92) 0%,
+      rgb(var(--navy-rgb) / 0.88) 50%,
+      rgb(var(--navy-deep-rgb) / 0.93) 100%
+    ),
+    url('/flag/indianflag.avif');
+  background-size: cover, cover;
+  background-position: center, center;
+  background-repeat: no-repeat, no-repeat;
+}
+
+/* Phones: every section's copy spans the full width with nothing beside it, so
+   push each scrim a few points denser. Cheap insurance for readability on the
+   screens where it matters most. */
+@media (max-width: 900px) {
+  /* .stats-bar is absent here on purpose — it no longer carries an image; its
+     cells do, and they get their own mobile rule further down. */
+  [data-theme='tiranga'] .section-white,
+  [data-theme='tiranga'] .faq-section {
+    background-image:
+      linear-gradient(180deg, rgb(255 255 255 / 0.975), rgb(255 255 255 / 0.965)),
+      url('/flag/indianflag.avif');
+    background-size: cover, cover;
+    background-position: center, center;
+  }
+  [data-theme='tiranga'] .testimonials-section,
+  [data-theme='tiranga'] .cta-section {
+    background-image:
+      linear-gradient(180deg, rgb(var(--navy-deep-rgb) / 0.94), rgb(var(--navy-deep-rgb) / 0.92)),
+      url('/flag/indianflag.avif');
+    background-size: cover, cover;
+    background-position: center, center;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * 6d. PAGE HEADERS — the flag behind the banner on every inner page.
+ *
+ * `.ph-wrap` is the shared PageHeader, so ONE rule covers About, Contact Us,
+ * Courses, Course Detail, Gallery and Verify Certificate — every public page
+ * that has a banner. Applied as layered backgrounds on the element itself, so
+ * `.ph-wrap::before` (the gold/teal brand glows) keeps painting over the top and
+ * is not overwritten.
+ *
+ * These banners are white-text-on-navy, so they tolerate a much lighter scrim
+ * than the light content sections — the flag can genuinely show here. The
+ * gradient still runs densest at the LEFT, where the breadcrumb, title and
+ * description sit, and lifts toward the right where there is no copy.
+ *
+ * IMAGE: the smoke flag (banner-flag.jpg), not the hero's photograph. It is a
+ * dark image — black smoke at both ends with the tricolour burning through the
+ * middle — which is why it survives here at a lighter scrim than the hero's.
+ *
+ * ⚠️ Its ONE bright region is the white/chakra band across the vertical centre,
+ * and `cover` on a ~6:1 banner shows almost exactly that band and nothing else.
+ * So the scrim is not decorative: white body copy lands directly on white smoke
+ * without it. Measured against the worst case (pure-white smoke under the copy):
+ * 12.6:1 at the left edge, 7.5:1 at 68% across, both past AA. Past ~70% there is
+ * no text, so the image is allowed to come forward.
+ *
+ * Horizontal `background-position` is deliberately absent: `cover` scales this
+ * image to the full banner width, so there is no horizontal overflow left to
+ * position. Only the vertical crop is live, and centre is what puts the chakra
+ * on screen.
+ * ───────────────────────────────────────────────────────────────────────────── */
+[data-theme='tiranga'] .ph-wrap {
+  background-color: var(--navy);
+  background-image:
+    linear-gradient(
+      100deg,
+      rgb(var(--navy-deep-rgb) / 0.92) 0%,
+      rgb(var(--navy-deep-rgb) / 0.88) 45%,
+      rgb(var(--navy-rgb) / 0.72) 68%,
+      rgb(var(--navy-rgb) / 0.50) 100%
+    ),
+    var(--banner-flag);
+  background-size: cover, cover;
+  background-position: center, center;
+  background-repeat: no-repeat, no-repeat;
+}
+
+/* A tricolour hairline along the banner's base, tying it to the seam used on
+   the navbar, footer and stats band. */
+[data-theme='tiranga'] .ph-wrap::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: var(--tiranga-bar);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Phones: the copy spans the full width with nothing beside it, so a
+   left-to-right clearing gradient has nowhere to clear — it goes uniform and
+   dense instead.
+
+   Note the banner is roughly 1.6:1 here against the image's 1.7:1, so unlike
+   desktop very nearly the WHOLE frame is on screen: saffron smoke at the top,
+   green at the bottom. That is the better read of the two, and it is also why
+   the source had to be cropped — the watermark band would have been visible at
+   this size. */
+@media (max-width: 900px) {
+  [data-theme='tiranga'] .ph-wrap {
+    background-image:
+      linear-gradient(
+        180deg,
+        rgb(var(--navy-deep-rgb) / 0.91) 0%,
+        rgb(var(--navy-deep-rgb) / 0.88) 100%
+      ),
+      var(--banner-flag);
+    background-position: center, center;
+  }
+}
+
+/* The ADMIN banner is a separate component with its own class, so it needs the
+   same treatment explicitly. Note both of its pseudo-elements are already spoken
+   for by this file — ::before is the chakra watermark and ::after the tricolour
+   base edge — which is exactly why this rides on the element's own background.
+   Scrim is a touch denser than the public banners: admin screens are work
+   surfaces, so the imagery stays further back. */
+[data-theme='tiranga'] .adm-hero {
+  background-color: var(--navy);
+  background-image:
+    linear-gradient(
+      100deg,
+      rgb(var(--navy-deep-rgb) / 0.94) 0%,
+      rgb(var(--navy-deep-rgb) / 0.91) 45%,
+      rgb(var(--navy-rgb) / 0.78) 100%
+    ),
+    var(--banner-flag);
+  background-size: cover, cover;
+  background-position: center, center;
+  background-repeat: no-repeat, no-repeat;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * 6c. COURSE CARD ARTWORK — the Independence illustration on every course card,
+ *     on the home grid (.cg-*) and the /courses listing (.cl-*), which covers
+ *     Summer Training, Internship and every other category.
+ *
+ * ⚠️ PERFORMANCE: the supplied file is 8640×5762 / 1.4MB — roughly 30× the
+ * pixels a ~300px card slot can use, on four cards at once. It is NOT used
+ * directly. `course-card.jpg` is a 1000px re-encode generated with sharp
+ * (78KB, 94.5% smaller) and that is what ships. The originals are kept in
+ * public/flag/ as masters; regenerate with:
+ *   sharp(src).resize({width:1000}).jpeg({quality:82,mozjpeg:true})
+ *
+ * ⚠️ TRADE-OFF, stated plainly: this puts the SAME artwork on every card, so
+ * PHP / MERN / Python / Android are no longer visually distinguishable at a
+ * glance — the thumbnail stops carrying information. That is the explicit
+ * request, and it is one line to revert (delete this block). If the courses
+ * should stay distinguishable, the alternative is a tricolour ribbon over each
+ * existing thumbnail instead.
+ * ───────────────────────────────────────────────────────────────────────────── */
+[data-theme='tiranga'] .cg-image-wrap,
+[data-theme='tiranga'] .cl-image-wrap {
+  /* Required so the ribbon can be positioned against the thumbnail, and so it
+     is clipped to the image area instead of hanging over the card body.
+     .cg-image-wrap already sets both; .cl-image-wrap gets them here. */
+  position: relative;
+  overflow: hidden;
+}
+
+/* The ribbon itself — a tricolour band across the top-right corner.
+   Uses ::before because .cg-image-wrap::after is ALREADY the card's hover
+   gradient; taking it would have deleted that effect. The level badge sits
+   top-LEFT, so the two never collide.
+   z-index 2 puts it above the hover gradient (z-index 1) but the badge is also
+   2 and sits on the opposite corner, so neither is obscured. */
+[data-theme='tiranga'] .cg-image-wrap::before,
+[data-theme='tiranga'] .cl-image-wrap::before {
+  content: '';
+  position: absolute;
+  z-index: 2;
+  /* Sized and offset so the 45° band crosses the corner cleanly at any card
+     width — the diagonal of the visible triangle, not the card. */
+  top: 16px;
+  right: -58px;
+  width: 190px;
+  height: 26px;
+  transform: rotate(45deg);
+  background: linear-gradient(
+    90deg,
+    var(--saffron) 0%, var(--saffron) 33.33%,
+    #FFFFFF 33.33%, #FFFFFF 66.66%,
+    var(--india-green) 66.66%, var(--india-green) 100%
+  );
+  box-shadow: 0 2px 8px rgb(var(--navy-deep-rgb) / 0.35);
+  /* Chakra-navy hairlines on the band's own edges, so the white stripe never
+     dissolves into a pale thumbnail and the ribbon keeps a defined shape
+     whatever photo sits behind it.
+     These MUST live on the ribbon (::before). Putting them on ::after would
+     have hit the card's existing hover gradient, which is inset:0 — drawing a
+     stray line across the entire thumbnail instead of under the band. */
+  border-top: 1px solid rgb(var(--chakra-rgb) / 0.28);
+  border-bottom: 1px solid rgb(var(--chakra-rgb) / 0.28);
+  pointer-events: none;
+}
+
+/* Slight lift on hover, matching the card's own hover motion. */
+[data-theme='tiranga'] .cg-card:hover .cg-image-wrap::before,
+[data-theme='tiranga'] .cl-card:hover .cl-image-wrap::before {
+  transform: rotate(45deg) translateY(-2px);
+  transition: transform .24s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-theme='tiranga'] .cg-card:hover .cg-image-wrap::before,
+  [data-theme='tiranga'] .cl-card:hover .cl-image-wrap::before {
+    transform: rotate(45deg);
+    transition: none;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * 7. MICRO-INTERACTIONS — cards, buttons, focus.
+ *    Applied to shared structural classes only, so one rule covers many pages.
+ * ───────────────────────────────────────────────────────────────────────────── */
+
+/* Card lift + tricolour top edge. The edge is a pseudo-element, so no border is
+   added and nothing reflows. */
+[data-theme='tiranga'] .courseCardBlock,
+[data-theme='tiranga'] .mainCard,
+[data-theme='tiranga'] .adm-card {
+  position: relative;
+  transition: transform .22s ease, box-shadow .22s ease;
+}
+[data-theme='tiranga'] .courseCardBlock::before,
+[data-theme='tiranga'] .mainCard::before,
+[data-theme='tiranga'] .adm-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  border-radius: 3px 3px 0 0;
+  background: var(--tiranga-bar);
+  opacity: 0;
+  transition: opacity .22s ease;
+  pointer-events: none;
+}
+[data-theme='tiranga'] .courseCardBlock:hover,
+[data-theme='tiranga'] .mainCard:hover,
+[data-theme='tiranga'] .adm-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 40px rgb(var(--chakra-rgb) / 0.13);
+}
+[data-theme='tiranga'] .courseCardBlock:hover::before,
+[data-theme='tiranga'] .mainCard:hover::before,
+[data-theme='tiranga'] .adm-card:hover::before {
+  opacity: 1;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * STATS BAND — tricolour seam, tricolour stat underlines, and hover.
+ * ───────────────────────────────────────────────────────────────────────────── */
+
+/* The 2px gold seam bridging the navy hero into the cream band becomes the
+   full tricolour. Painted with a gradient on the existing border box rather
+   than a new element, so nothing reflows. */
+[data-theme='tiranga'] .stats-bar {
+  position: relative;
+  border-top-color: transparent;
+}
+[data-theme='tiranga'] .stats-bar::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--tiranga-bar);
+  pointer-events: none;
+}
+
+/* Each stat sits on its own tricolour segment, revealed on hover — so the band
+   reads as one continuous flag when scanned, not four repeated flags. */
+[data-theme='tiranga'] .stat-item {
+  position: relative;
+  transition: background-color .22s ease, transform .22s ease;
+
+  /* The flag, one per cell. Scrim is RADIAL rather than linear: it pools the
+     image in the middle of each cell, behind the figure, and closes to solid
+     cream at the cell's edges. That does two jobs at once — it keeps the
+     imagery deliberate rather than wall-to-wall, and it means the four cells
+     fade out before the container edge, so there is no seam where the band's
+     plain cream gutters begin.
+
+     0.72 in the centre is far lighter than the 0.93+ used elsewhere on light
+     sections, and it is affordable: measured against the darkest 1% of pixels
+     in this crop, the 13px labels still hold 6.5:1 and the numerals ~13:1,
+     both comfortably past AA. Contrast was never the limit on this band — the
+     crop was. */
+  background-image:
+    radial-gradient(
+      ellipse 120% 108% at 50% 46%,
+      rgb(250 250 247 / 0.72) 0%,
+      rgb(250 250 247 / 0.82) 52%,
+      rgb(250 250 247 / 0.95) 88%,
+      rgb(250 250 247 / 1) 100%
+    ),
+    url('/flag/indianflag.avif');
+  background-size: cover, cover;
+  background-repeat: no-repeat, no-repeat;
+}
+
+/* Four cells showing the identical crop would read as a tiled texture. Each
+   takes a different slice instead, walking down the flag from the saffron at
+   the top to the green at the bottom, so the band gains a left-to-right
+   tricolour progression that follows the reading direction.
+
+   Only the VERTICAL value does anything here: `cover` scales this image to the
+   cell's width exactly, so there is no horizontal overflow left to position. */
+[data-theme='tiranga'] .stat-item:nth-child(1) { background-position: center, center 22%; }
+[data-theme='tiranga'] .stat-item:nth-child(2) { background-position: center, center 42%; }
+[data-theme='tiranga'] .stat-item:nth-child(3) { background-position: center, center 58%; }
+[data-theme='tiranga'] .stat-item:nth-child(4) { background-position: center, center 78%; }
+
+/* Hover warmth. This has to be its own layer: the cell's `background-color`
+   now sits UNDER an opaque photograph and can never be seen again, and a
+   gradient cannot be transitioned, so neither of the obvious routes animates.
+   An overlay on ::before does — and ::before was the one pseudo-element on
+   .stat-item still free (::after is the tricolour underline below).
+
+   It paints over the text as well as the background, which is fine at this
+   alpha: an 8% saffron wash moves the numerals from ~15:1 to ~13:1. */
+[data-theme='tiranga'] .stat-item::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgb(var(--saffron-rgb) / 0.08);
+  opacity: 0;
+  transition: opacity .22s ease;
+  pointer-events: none;
+}
+[data-theme='tiranga'] .stat-item:hover::before { opacity: 1; }
+[data-theme='tiranga'] .stat-item::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background: var(--tiranga-bar);
+  opacity: 0;
+  transform: scaleX(.4);
+  transform-origin: center;
+  transition: opacity .24s ease, transform .32s cubic-bezier(0.22, 0.61, 0.36, 1);
+  pointer-events: none;
+}
+/* ⚠️ This was `background: rgb(...)` — the SHORTHAND, which resets
+   background-image to none and would have wiped the flag above on hover. The
+   warmth moved to ::before; all this rule does now is lift the cell. */
+[data-theme='tiranga'] .stat-item:hover {
+  transform: translateY(-2px);
+}
+[data-theme='tiranga'] .stat-item:hover::after {
+  opacity: 1;
+  transform: scaleX(1);
+}
+
+/* ⚠️ Below ~950px the per-cell vertical offsets above silently stop working,
+   and it is worth understanding why rather than rediscovering it later.
+
+   `cover` only overflows on the axis where the box is proportionally shorter
+   than the image. This image is 3:2; a 150px-tall cell has to be at least
+   ~225px wide for the crop to overflow VERTICALLY. Four cells in a 1200px
+   container are 300px each, so it works on desktop — but as the container
+   narrows the cells drop under 225px, the crop starts overflowing horizontally
+   instead, and every `center 22%` becomes a no-op. All four cells would then
+   show an identical crop, which is exactly the tiling this was meant to avoid.
+
+   So below that width the variation moves to the axis that still has room. */
+@media (max-width: 900px) {
+  [data-theme='tiranga'] .stat-item {
+    /* Denser too: on a phone the copy runs edge to edge inside the cell. */
+    background-image:
+      radial-gradient(
+        ellipse 130% 115% at 50% 46%,
+        rgb(250 250 247 / 0.80) 0%,
+        rgb(250 250 247 / 0.88) 55%,
+        rgb(250 250 247 / 0.97) 90%,
+        rgb(250 250 247 / 1) 100%
+      ),
+      url('/flag/indianflag.avif');
+  }
+  [data-theme='tiranga'] .stat-item:nth-child(1) { background-position: center, 18% center; }
+  [data-theme='tiranga'] .stat-item:nth-child(2) { background-position: center, 39% center; }
+  [data-theme='tiranga'] .stat-item:nth-child(3) { background-position: center, 61% center; }
+  [data-theme='tiranga'] .stat-item:nth-child(4) { background-position: center, 82% center; }
+}
+
+/* The little rule under each number goes tricolour and widens on hover. */
+[data-theme='tiranga'] .stat-value::after {
+  background: var(--tiranga-bar) !important;
+  opacity: 0.9 !important;
+  transition: width .3s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+[data-theme='tiranga'] .stat-item:hover .stat-value::after {
+  width: 46px;
+}
+
+/* Chakra navy for the numerals — the highest-contrast flag colour (~15:1), so
+   the figures stay the most legible thing in the band. */
+[data-theme='tiranga'] .stat-value {
+  color: var(--chakra);
+  transition: color .22s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-theme='tiranga'] .stat-item,
+  [data-theme='tiranga'] .stat-item::before,
+  [data-theme='tiranga'] .stat-item::after,
+  [data-theme='tiranga'] .stat-value,
+  [data-theme='tiranga'] .stat-value::after {
+    transition: none !important;
+  }
+  [data-theme='tiranga'] .stat-item:hover { transform: none; }
+}
+
+/* Primary buttons get a warm tricolour-leaning glow on hover. */
+[data-theme='tiranga'] .btn-primary:hover,
+[data-theme='tiranga'] .enrollNow:hover {
+  box-shadow:
+    0 6px 18px rgb(var(--saffron-rgb) / 0.34),
+    0 2px 6px rgb(var(--india-green-rgb) / 0.20);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * 8. FOOTER — tricolour edge is already handled above; add the closing line.
+ * ───────────────────────────────────────────────────────────────────────────── */
+[data-theme='tiranga'] footer::after {
+  content: 'Proudly building India’s next generation of developers';
+  display: block;
+  padding: 14px 16px 18px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: rgb(255 255 255 / 0.55);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * 9. Motion. The project forbids bounce/elastic easing, and every animation
+ *    must respect reduced-motion.
+ * ───────────────────────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  [data-theme='tiranga'] .adm-hero::before,
+  [data-theme='tiranga'] .nb-logo::after {
+    animation: none !important;
+  }
+  [data-theme='tiranga'] .nb-logo img,
+  [data-theme='tiranga'] .nb-logo::before,
+  [data-theme='tiranga'] .courseCardBlock,
+  [data-theme='tiranga'] .mainCard,
+  [data-theme='tiranga'] .adm-card,
+  [data-theme='tiranga'] .courseCardBlock::before,
+  [data-theme='tiranga'] .mainCard::before,
+  [data-theme='tiranga'] .adm-card::before {
+    transition: none !important;
+  }
+  [data-theme='tiranga'] .courseCardBlock:hover,
+  [data-theme='tiranga'] .mainCard:hover,
+  [data-theme='tiranga'] .adm-card:hover {
+    transform: none;
+  }
+  /* No shine sweep either — it is pure decorative motion. */
+  [data-theme='tiranga'] .btn-primary:hover::after,
+  [data-theme='tiranga'] .enrollNow:hover::after,
+  [data-theme='tiranga'] .courseCardBlock:hover::after,
+  [data-theme='tiranga'] .mainCard:hover::after {
+    animation: none !important;
+    opacity: 0 !important;
+  }
+}

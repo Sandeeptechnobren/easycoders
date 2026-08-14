@@ -139,19 +139,13 @@ export default function CoursesList() {
     <section className="cl-wrap" aria-labelledby="courses-heading">
       <style jsx>{`
         :global(:root) {
-          --navy:        #0B1B3A;
-          --navy-mid:    #152D5A;
-          --navy-soft:   #F4F6FB;
-          --gold:        #E8A020;
-          --gold-light:  #F5C356;
-          --gold-soft:   #FEF6E7;
+          /* Brand tokens now come from globals.css — redeclaring them here would
+             outrank the theme override. Only divergent / page-specific values stay.
+             ⚠️ --gold-deep is #8A5A0B here but #B97A0F globally: pre-existing
+             palette drift. Kept as-is so this commit changes nothing visually;
+             worth reconciling deliberately, not as a side effect of theming. */
           --gold-deep:   #8A5A0B;
-          --teal:        #1AA5BB;
           --teal-deep:   #0E7C8C;
-          --slate:       #4A5568;
-          --slate-soft:  #94A3B8;
-          --border:      #E5E9F2;
-          --white:       #FFFFFF;
         }
         .cl-wrap {
           /* Subtle navy-tinted gradient ground (was a flat pale wash) gives the

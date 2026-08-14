@@ -11,6 +11,8 @@ import FAQAccordion from '@/components/FAQAccordion';
 import Registration from '@/components/Registration'; // ← adjust path if needed
 import TestimonialCarousel from '@/components/TestimonialCarousel';
 import GalleryTeaser from '@/components/GalleryTeaser';
+import HeroAtmosphere from '@/components/independence/HeroAtmosphere';
+import { useSiteTheme } from '@/context/ThemeContext';
 
 /* ──────────────────────────────────────────────────────────────────────
  * FAQ list — kept in one place so it can drive BOTH the on-screen
@@ -74,6 +76,11 @@ const FALLBACK_COURSES: HomeCourse[] = [
 ];
 
 export default function HomePage() {
+  // Drives the Independence Day hero variant. Falls back to 'default' outside
+  // the provider, so this page can never crash on it.
+  const { theme } = useSiteTheme();
+  const isTiranga = theme === 'tiranga';
+
   const [courses, setCourses] = useState<HomeCourse[]>(FALLBACK_COURSES);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('All');
@@ -156,18 +163,20 @@ export default function HomePage() {
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap');
 
         :root {
-          --navy: #0B1B3A;
-          --navy-mid: #152D5A;
-          --gold: #E8A020;
-          --gold-light: #F5C356;
+          /* --navy, --navy-mid, --gold, --gold-light, --slate and --teal used to
+             be redeclared here with the same values as globals.css. They are now
+             inherited from the central :root so the theme can actually override
+             them — a local redeclaration would win and silently defeat theming.
+             Only page-specific values remain below. */
           --cream: #FAFAF7;
-          --slate: #4A5568;
           --light-blue: #EEF4FF;
-          /* Section eyebrows now use the brand GOLD (was a generic indigo
-             #1A56DB that belonged to no part of the EasyCoders identity).
-             --teal is the logo accent, threaded into interactive states. */
-          --accent: #E8A020;
-          --teal: #1AA5BB;
+          /* Section eyebrows use the brand GOLD (was a generic indigo #1A56DB
+             that belonged to no part of the EasyCoders identity). Now points at
+             the token rather than a literal, so it follows the active theme. */
+          --accent: var(--gold);
+          /* NOTE: deliberately NOT removed — this is #E2E8F0, whereas the global
+             --border is #E5E9F2. Dropping it would subtly restyle every border on
+             the home page, so the divergence is preserved rather than "tidied". */
           --border: #E2E8F0;
           --radius: 12px;
           --radius-lg: 20px;
@@ -398,22 +407,49 @@ export default function HomePage() {
 
       {/* ── HERO ── */}
       <section className="hero">
+        {/* Parallax sky behind the hero content. Masked to fade out before the
+            headline, so it never costs contrast on the copy or the CTAs. */}
+        {isTiranga && <HeroAtmosphere />}
+
         <div className="container">
           <div className="hero-grid">
             <div className="hero-content">
-              <div className="hero-badge">
-                <span></span>
-                Industry-Aligned Coding Programs
-              </div>
-              <h1 className="hero-title">
-                Launch Your<br />
-                <span className="highlight">Coding Career</span><br />
-                with Confidence
-              </h1>
-              <p className="hero-subtitle">
-                From absolute beginner to job-ready professional.
-                <br /><strong>No prior coding knowledge required.</strong> Just your ambition.
-              </p>
+              {/* Independence Day headline. Swapped in only while the theme is
+                  on, so switching the theme off restores the evergreen hero
+                  exactly — no content is lost or duplicated. */}
+              {isTiranga ? (
+                <>
+                  <div className="hero-badge id-badge">
+                    <span></span>
+                    Happy Independence Day · 15 August 2026
+                  </div>
+                  <h1 className="hero-title">
+                    Build Skills.<br />
+                    <span className="highlight">Build Careers.</span><br />
+                    Build India.
+                  </h1>
+                  <p className="hero-subtitle">
+                    Celebrating the spirit of freedom, innovation and a digitally empowered India.
+                    <br /><strong>Industry-oriented software training.</strong> No prior coding knowledge required.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <div className="hero-badge">
+                    <span></span>
+                    Industry-Aligned Coding Programs
+                  </div>
+                  <h1 className="hero-title">
+                    Launch Your<br />
+                    <span className="highlight">Coding Career</span><br />
+                    with Confidence
+                  </h1>
+                  <p className="hero-subtitle">
+                    From absolute beginner to job-ready professional.
+                    <br /><strong>No prior coding knowledge required.</strong> Just your ambition.
+                  </p>
+                </>
+              )}
               <div className="hero-cta">
                 <Link href="/courses" className="btn-primary">Explore Courses →</Link>
                 <Link href="/about" className="btn-outline">Learn About Us</Link>

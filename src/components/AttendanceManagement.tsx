@@ -595,19 +595,11 @@ export default function AttendanceManagement() {
             text-decoration: none;
           }
           :global(.attn-page) {
-            --navy:       #0B1B3A;
-            --navy-mid:   #152D5A;
-            --navy-deep:  #07122A;
-            --navy-soft:  #F4F6FB;
-            --gold:       #E8A020;
-            --gold-light: #F5C356;
-            --gold-soft:  #FEF6E7;
-            --gold-deep:  #B97A0F;
-            --slate:      #4A5568;
-            --slate-soft: #94A3B8;
-            --border:     #E5E9F2;
+            /* Brand tokens come from globals.css. Redeclaring them on this
+               wrapper outranks :root for the whole subtree and would defeat
+               theming; the values were identical, so this is a no-op today.
+               Only the page-specific token remains. */
             --border-soft:#F1F4F9;
-            --white:      #ffffff;
           }
 
           .attn-page {
