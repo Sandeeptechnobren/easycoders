@@ -1,0 +1,209 @@
+/* ──────────────────────────────────────────────────────────────────────────
+ * AttendanceCalendar — month grid of one person's attendance.
+ *
+ * CSS Modules, so class names are hashed and cannot collide with the globally
+ * loaded Bootstrap CDN stylesheet. The `ac` prefix is belt-and-braces for the
+ * few places these names surface in devtools.
+ *
+ * Neutrals are tinted toward the brand navy rather than pure grey, matching
+ * the rest of the design system.
+ * ────────────────────────────────────────────────────────────────────────── */
+
+.acWrap {
+  --ac-present: #16a34a;
+  --ac-present-bg: #e8f6ec;
+  --ac-late: #b26a00;      /* darker than brand gold so it passes on its tint */
+  --ac-late-bg: #fdf1dc;
+  --ac-absent: #c22c2c;
+  --ac-absent-bg: #fbeaea;
+  --ac-holiday: #12809a;
+  --ac-holiday-bg: #e4f4f8;
+  --ac-off: #8b93a7;
+
+  font-family: 'DM Sans', system-ui, sans-serif;
+  color: var(--navy, #0b1b3a);
+}
+
+/* ── Header ─────────────────────────────────────────────────────────────── */
+.acHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.acMonth {
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.01em;
+}
+
+.acNav {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  border: 1px solid var(--border, #e5e9f2);
+  background: #fff;
+  color: var(--navy, #0b1b3a);
+  cursor: pointer;
+  transition: background 0.16s ease, border-color 0.16s ease;
+}
+.acNav:hover:not(:disabled) {
+  background: var(--navy-soft, #f4f6fb);
+  border-color: var(--navy, #0b1b3a);
+}
+.acNav:disabled { opacity: 0.35; cursor: not-allowed; }
+.acNav:focus-visible { outline: 2px solid var(--gold, #e8a020); outline-offset: 2px; }
+
+/* ── Summary ────────────────────────────────────────────────────────────── */
+.acStats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.acStat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 9px 6px;
+  border-radius: 10px;
+  background: var(--navy-soft, #f4f6fb);
+  border: 1px solid var(--border, #e5e9f2);
+}
+
+.acStatNum { font-size: 18px; font-weight: 700; line-height: 1; }
+.acStatLbl {
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--slate, #4a5568);
+  text-align: center;
+}
+
+.acFgPresent { color: var(--ac-present); }
+.acFgLate    { color: var(--ac-late); }
+.acFgAbsent  { color: var(--ac-absent); }
+
+.acError {
+  margin: 0 0 12px;
+  padding: 9px 12px;
+  border-radius: 9px;
+  font-size: 13px;
+  color: var(--ac-absent);
+  background: var(--ac-absent-bg);
+}
+
+/* ── Grid ───────────────────────────────────────────────────────────────── */
+.acGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+}
+
+.acWd {
+  text-align: center;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--slate, #4a5568);
+  padding-bottom: 4px;
+}
+
+.acBlank { aspect-ratio: 1; }
+
+.acSkeleton {
+  aspect-ratio: 1;
+  border-radius: 9px;
+  background: var(--navy-soft, #f4f6fb);
+  animation: acPulse 1.2s ease-in-out infinite;
+}
+@keyframes acPulse { 50% { opacity: 0.45; } }
+
+.acDay {
+  aspect-ratio: 1;
+  min-height: 38px;
+  border-radius: 9px;
+  border: 1px solid transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  /* `title` supplies the detail, so the cursor should say "there is more here" */
+  cursor: default;
+}
+
+.acNum { font-size: 12.5px; font-weight: 600; line-height: 1; }
+.acTime {
+  font-size: 8.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  opacity: 0.85;
+  line-height: 1;
+}
+
+/* Today gets a ring rather than a fill, so it can mark ANY status without
+   overwriting the colour that carries the actual meaning. */
+.acToday {
+  box-shadow: 0 0 0 2px var(--navy, #0b1b3a);
+}
+
+/* ── Statuses ───────────────────────────────────────────────────────────── */
+.ac_present { background: var(--ac-present-bg); color: var(--ac-present); border-color: rgba(22, 163, 74, 0.22); }
+.ac_late    { background: var(--ac-late-bg);    color: var(--ac-late);    border-color: rgba(178, 106, 0, 0.22); }
+.ac_absent  { background: var(--ac-absent-bg);  color: var(--ac-absent);  border-color: rgba(194, 44, 44, 0.22); }
+.ac_holiday { background: var(--ac-holiday-bg); color: var(--ac-holiday); border-color: rgba(18, 128, 154, 0.22); }
+.ac_weekend { background: var(--navy-soft, #f4f6fb); color: var(--ac-off); }
+/* Outside the enrolment window — present in the grid so the month keeps its
+   shape, but visibly not part of the record. */
+.ac_off     { background: transparent; color: #c2c8d6; border-color: var(--border, #e5e9f2); border-style: dashed; }
+
+/* ── Legend ─────────────────────────────────────────────────────────────── */
+.acLegend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border, #e5e9f2);
+  font-size: 11.5px;
+  color: var(--slate, #4a5568);
+}
+
+.acLegItem { display: inline-flex; align-items: center; gap: 5px; }
+
+.acSwatch {
+  width: 11px;
+  height: 11px;
+  border-radius: 3px;
+  border: 1px solid transparent;
+  flex: none;
+}
+
+.acNote {
+  flex-basis: 100%;
+  font-size: 11px;
+  color: var(--slate-soft, #94a3b8);
+}
+
+/* ── Small screens ──────────────────────────────────────────────────────── */
+@media (max-width: 560px) {
+  .acStats { grid-template-columns: repeat(2, 1fr); }
+  .acGrid { gap: 3px; }
+  .acDay { min-height: 32px; border-radius: 7px; }
+  .acNum { font-size: 11.5px; }
+  .acTime { display: none; }   /* the title attribute still carries it */
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .acSkeleton { animation: none; }
+  .acNav { transition: none; }
+}

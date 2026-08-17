@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import RoleGuard from '@/components/RoleGuard';
+import AttendanceCalendar from '@/components/AttendanceCalendar';
 import { fetchWithAuth } from '@/lib/api';
 
 const BASE = 'https://api.easycoders.in/api';
@@ -24,7 +25,13 @@ type Stats = {
   sundays_skipped: number;
   holidays_skipped: number;
   present: number;
+  /** Attended but under the 3h threshold, or never punched out. */
+  late: number;
+  /** present + late — the days actually turned up for. */
+  attended: number;
   absent: number;
+  /** Server-computed attended/working_days. null when there are no working days. */
+  percentage: number | null;
 };
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -45,7 +52,7 @@ const daysAgoYmd = (n: number) => {
 };
 
 export default function StudentAttendancePage() {
-  const [tab, setTab] = useState<'punch' | 'history'>('punch');
+  const [tab, setTab] = useState<'punch' | 'calendar' | 'history'>('punch');
   const [records, setRecords] = useState<AttendanceRecord[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(false);
@@ -175,8 +182,8 @@ export default function StudentAttendancePage() {
   const isPunchedIn  = todayRecord && !todayRecord.punch_out;
   const isPunchedOut = todayRecord && !!todayRecord.punch_out;
 
-  const attendancePct = stats && stats.working_days > 0
-    ? Math.round((stats.present / stats.working_days) * 100)
+  const attendancePct = stats && stats.percentage !== null
+    ? Math.round(stats.percentage)
     : null;
 
   return (
@@ -221,6 +228,12 @@ export default function StudentAttendancePage() {
                   </div>
                   <div className="col-6 col-md">
                     <div className="border rounded p-2">
+                      <div className="text-muted small">Late</div>
+                      <div className="fw-bold fs-4 text-warning">{stats.late}</div>
+                    </div>
+                  </div>
+                  <div className="col-6 col-md">
+                    <div className="border rounded p-2">
                       <div className="text-muted small">Absent</div>
                       <div className="fw-bold fs-4 text-danger">{stats.absent}</div>
                     </div>
@@ -251,6 +264,9 @@ export default function StudentAttendancePage() {
           <ul className="nav nav-tabs mb-4">
             <li className="nav-item">
               <button className={`nav-link ${tab === 'punch' ? 'active' : ''}`} onClick={() => setTab('punch')}>Punch In/Out</button>
+            </li>
+            <li className="nav-item">
+              <button className={`nav-link ${tab === 'calendar' ? 'active' : ''}`} onClick={() => setTab('calendar')}>Calendar</button>
             </li>
             <li className="nav-item">
               <button className={`nav-link ${tab === 'history' ? 'active' : ''}`} onClick={() => setTab('history')}>History</button>
@@ -309,6 +325,17 @@ export default function StudentAttendancePage() {
                 <p className="text-muted small mt-4">
                   Both office WiFi <strong>AND</strong> GPS must match the configured location to punch in.
                 </p>
+              </div>
+            </div>
+          )}
+
+          {/* Calendar — the only view that shows ABSENT days. History and the
+              punch tab can only list rows that exist, and a row only exists on
+              a day the student turned up. */}
+          {tab === 'calendar' && (
+            <div className="card mb-4">
+              <div className="card-body">
+                <AttendanceCalendar />
               </div>
             </div>
           )}
