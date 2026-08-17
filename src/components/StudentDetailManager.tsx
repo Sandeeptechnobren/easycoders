@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import styles from './studentManager.module.css';
+import AttendanceCalendar from './AttendanceCalendar';
 import { fetchWithAuth } from '@/lib/api';
 import { useFeeVisibility, maskAmount, FeeToggle } from '@/lib/feeMask';
 
@@ -255,7 +256,6 @@ export default function StudentDetailManager({ studentId, canManage, backHref, c
   const inr = (n: number | undefined | null) => maskAmount(n, feesVisible);
   const payments = useMemo(() => student?.payments ?? [], [student]);
   const marks = useMemo(() => student?.marks ?? [], [student]);
-  const attendance = useMemo(() => student?.attendance ?? [], [student]);
 
   const addPayment = async () => {
     if (!student) return;
@@ -294,6 +294,11 @@ export default function StudentDetailManager({ studentId, canManage, backHref, c
     }
   };
 
+  /* Bumped after a successful save so <AttendanceCalendar> refetches. The
+     calendar derives its month from the server, so it cannot pick up a new
+     mark from the student payload the way the old inline list did. */
+  const [attCalKey, setAttCalKey] = useState(0);
+
   const markAttendance = async () => {
     if (!student || !attDate) return;
     try {
@@ -304,6 +309,7 @@ export default function StudentDetailManager({ studentId, canManage, backHref, c
         body: JSON.stringify({ attendance_date: attDate, status: attStatus }),
       });
       setAttDate('');
+      setAttCalKey((k) => k + 1);
       await loadStudent();
     } catch (e: unknown) {
       alert(e instanceof Error ? e.message : 'Could not save attendance.');
@@ -722,28 +728,14 @@ export default function StudentDetailManager({ studentId, canManage, backHref, c
                 </div>
               )}
 
-              {attendance.length > 0 ? (
-                <>
-                  {canManage && <div className={styles.divider} />}
-                  <div className={styles.tableWrap}>
-                    <table className={styles.table}>
-                      <thead><tr><th>Date</th><th>Status</th></tr></thead>
-                      <tbody>
-                        {attendance.slice(0, 8).map((a) => (
-                          <tr key={a.id}>
-                            <td>{String(a.date).slice(0, 10)}</td>
-                            <td>
-                              <span className={`${styles.pill} ${String(a.status).toUpperCase() === 'PRESENT' ? styles.pillGreen : styles.pillAmber}`}>
-                                {a.status}
-                              </span>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </>
-              ) : (!canManage && <p className={styles.emptyText} style={{ marginTop: 4 }}>No attendance recorded yet.</p>)}
+              {/* The old flat list could only ever show days that EXIST in the
+                  table, and the table only holds days the student turned up —
+                  so it could never show an absence. The calendar derives the
+                  whole month server-side, which is what makes absent and late
+                  visible at all. `attCalKey` bumps on save so a freshly marked
+                  day appears without a page reload. */}
+              {canManage && <div className={styles.divider} />}
+              <AttendanceCalendar userId={student.id} refreshKey={attCalKey} />
             </div>
 
             {/* Marks */}
