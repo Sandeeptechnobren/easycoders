@@ -103,14 +103,24 @@ export default function AttendanceCalendar({ userId, refreshKey = 0 }: Props) {
     try {
       const params = new URLSearchParams({ from: ymd(monthStart), to: ymd(monthEnd) });
       if (userId) params.set('user_id', String(userId));
-      const res = await fetchWithAuth(`${BASE}/attendance/calendar?${params.toString()}`);
-      if (!res.ok) throw new Error(res.status === 403 ? 'You do not have access to this attendance.' : 'Could not load attendance.');
-      const json = await res.json();
-      setDays(json?.data?.days ?? []);
+
+      /* fetchWithAuth returns PARSED JSON, not a Response — it reads the body
+         and throws on any non-2xx itself. Checking `.ok` here would test an
+         undefined property and fail every single time, which is exactly the
+         bug this line replaced. */
+      const json = await fetchWithAuth(`${BASE}/attendance/calendar?${params.toString()}`);
+
+      setDays(Array.isArray(json?.data?.days) ? json.data.days : []);
       setSummary(json?.data?.summary ?? null);
       if (typeof json?.data?.late_below_hours === 'number') setLateBelow(json.data.late_below_hours);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not load attendance.');
+      // fetchWithAuth throws the literal 'Unauthorized' for both 401 and 403.
+      const msg = e instanceof Error ? e.message : '';
+      setError(
+        msg === 'Unauthorized'
+          ? 'Your session has expired, or you do not have access to this attendance.'
+          : msg || 'Could not load attendance.',
+      );
       setDays([]);
       setSummary(null);
     } finally {
