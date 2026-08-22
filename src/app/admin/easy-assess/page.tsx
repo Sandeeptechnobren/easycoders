@@ -38,6 +38,19 @@ export default function EasyAssessAdminHome() {
           />
 
           <AdminCard
+            href="/admin/easy-assess/bulk-upload"
+            title="Bulk User Upload"
+            description="Create Easy Assess accounts in bulk from the registration sheet. Each new user is emailed a generated password and the login link."
+            icon={
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="17 8 12 3 7 8" />
+                <line x1="12" y1="3" x2="12" y2="15" />
+              </svg>
+            }
+          />
+
+          <AdminCard
             href="/admin/easy-assess/code-review"
             title="Code Review"
             description="Review and score coding answers — auto-graded results plus open / free-form submissions waiting for a trainer's mark."
