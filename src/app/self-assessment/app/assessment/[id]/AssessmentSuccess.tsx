@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import AssessmentFeedback from './AssessmentFeedback';
 
 /* ──────────────────────────────────────────────────────────────────────────
  * Post-assessment result screen.
@@ -38,11 +39,16 @@ type Outcome = {
   passed:          boolean;
   forceSubmitted:  boolean;
   assessmentId:    number | null;
+  attemptId:       number | null;
+  /** Server's answer for THIS attempt. Attempts that predate the feedback
+   *  feature report false, so an old result never asks for feedback. */
+  feedbackRequired: boolean;
 };
 
 export default function AssessmentSuccess() {
   const router = useRouter();
   const [outcome, setOutcome] = useState<Outcome | null>(null);
+  const [feedbackDone, setFeedbackDone] = useState(false);
 
   /* Read the cached result on mount. Defer the setState to a microtask
    * so we don't trigger the cascading-renders lint rule by setting state
@@ -54,6 +60,8 @@ export default function AssessmentSuccess() {
       const passing = Number(localStorage.getItem('score_passing') ?? 40);
       const aid     = localStorage.getItem('score_assessment_id');
       const forced  = localStorage.getItem('score_force_submitted') === '1';
+      const attId   = localStorage.getItem('score_attempt_id');
+      const needsFb = localStorage.getItem('score_feedback_required') === '1';
       const percent = total > 0 ? Math.round((score / total) * 100) : 0;
       setOutcome({
         score,
@@ -63,9 +71,18 @@ export default function AssessmentSuccess() {
         passed: percent >= passing,
         forceSubmitted: forced,
         assessmentId: aid ? Number(aid) : null,
+        attemptId: attId ? Number(attId) : null,
+        feedbackRequired: needsFb,
       });
     });
   }, []);
+
+  /* The form is shown when the server flagged this attempt AND we have an
+   * attempt id to post against. Without the id there is nothing to attach
+   * feedback to, so showing the form would strand the taker — better to fall
+   * through to the normal CTAs and let the download path explain. */
+  const showFeedback =
+    !!outcome && outcome.feedbackRequired && !feedbackDone && outcome.attemptId !== null;
 
   /* Confetti only when the user actually passed. */
   useEffect(() => {
@@ -389,6 +406,17 @@ export default function AssessmentSuccess() {
           </div>
         </div>
 
+        {/* Feedback comes BEFORE the certificate. Only for attempts the server
+            says owe it, and only until it has been given — so a re-render or a
+            second visit to this screen never asks twice. */}
+        {showFeedback ? (
+          <div className="sa-feedback-wrap">
+            <AssessmentFeedback
+              attemptId={outcome.attemptId as number}
+              onDone={() => setFeedbackDone(true)}
+            />
+          </div>
+        ) : (
         <div className="sa-actions">
           {passed ? (
             <>
@@ -436,6 +464,7 @@ export default function AssessmentSuccess() {
             </>
           )}
         </div>
+        )}
       </div>
     </div>
   );

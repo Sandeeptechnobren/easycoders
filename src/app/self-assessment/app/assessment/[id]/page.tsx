@@ -150,6 +150,11 @@ export default function AssessmentPage() {
         localStorage.setItem('score_passing',      String(current.passing_score ?? 40));
         localStorage.setItem('score_assessment_id', String(current.id));
         localStorage.setItem('score_force_submitted', reason === 'forced' ? '1' : '0');
+        // The success screen posts feedback against this attempt, and shows the
+        // form only when the server says this attempt owes it. Both are read
+        // from the submit response so no extra round trip is needed.
+        localStorage.setItem('score_attempt_id', String(res.data?.attempt_id ?? ''));
+        localStorage.setItem('score_feedback_required', res.data?.feedback_required ? '1' : '0');
         setPhase('submitted');
       } else {
         submittedRef.current = false;

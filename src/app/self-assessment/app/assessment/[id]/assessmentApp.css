@@ -504,3 +504,138 @@
   height: 100%;
   background: #8b5cf6;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * POST-ASSESSMENT FEEDBACK (AssessmentFeedback.tsx)
+ *
+ * Shown between submitting and the certificate. Kept visually calm: the taker
+ * has just come out of a timed, fullscreen-locked test, so this should read as
+ * a short courtesy rather than another task.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+.fb {
+  max-width: 520px;
+  margin: 0 auto;
+  text-align: left;
+  background: #fff;
+  border: 1px solid #E5E9F2;
+  border-radius: 16px;
+  padding: 28px;
+  box-shadow: 0 10px 34px rgb(11 27 58 / 0.08);
+}
+
+.fb-title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: #0B1B3A;
+  margin: 0 0 6px;
+  text-align: center;
+}
+
+.fb-sub {
+  font-size: 14px;
+  color: #4A5568;
+  line-height: 1.6;
+  margin: 0 0 22px;
+  text-align: center;
+}
+
+.fb-block { margin-bottom: 20px; }
+
+.fb-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #0B1B3A;
+  margin-bottom: 9px;
+}
+
+.fb-req {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #B42318;
+  margin-left: 6px;
+}
+
+.fb-stars { display: flex; gap: 4px; }
+
+.fb-star {
+  border: 0;
+  background: none;
+  padding: 2px;
+  cursor: pointer;
+  color: #D9DFEA;
+  line-height: 0;
+  transition: color .14s ease, transform .14s ease;
+}
+.fb-star.on { color: #E8A020; }
+.fb-star:hover { transform: scale(1.12); }
+.fb-star:focus-visible { outline: 2px solid #E8A020; outline-offset: 2px; border-radius: 4px; }
+
+.fb-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.fb-chip {
+  padding: 8px 15px;
+  border-radius: 999px;
+  border: 1px solid #E5E9F2;
+  background: #fff;
+  color: #4A5568;
+  font-size: 13px;
+  cursor: pointer;
+  transition: border-color .14s ease, background .14s ease, color .14s ease;
+}
+.fb-chip:hover { border-color: #0B1B3A; }
+.fb-chip.sel { background: #0B1B3A; border-color: #0B1B3A; color: #fff; }
+.fb-chip:focus-visible { outline: 2px solid #E8A020; outline-offset: 2px; }
+
+.fb-text {
+  width: 100%;
+  border: 1px solid #E5E9F2;
+  border-radius: 10px;
+  padding: 11px 13px;
+  font-size: 13.5px;
+  font-family: inherit;
+  color: #0B1B3A;
+  resize: vertical;
+}
+.fb-text:focus { outline: 2px solid #E8A020; outline-offset: 1px; border-color: transparent; }
+
+.fb-count { display: block; text-align: right; font-size: 11px; color: #94A3B8; margin-top: 4px; }
+
+.fb-error {
+  font-size: 13px;
+  color: #B42318;
+  background: #FDECEA;
+  border: 1px solid #F5C6C2;
+  border-radius: 9px;
+  padding: 10px 13px;
+  margin: 0 0 14px;
+}
+
+.fb-submit {
+  width: 100%;
+  padding: 13px 20px;
+  border: 0;
+  border-radius: 10px;
+  background: #0B1B3A;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity .16s ease;
+}
+.fb-submit:disabled { opacity: .5; cursor: not-allowed; }
+.fb-submit:hover:not(:disabled) { opacity: .92; }
+
+@media (max-width: 560px) {
+  .fb { padding: 22px 18px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fb-star, .fb-chip, .fb-submit { transition: none; }
+  .fb-star:hover { transform: none; }
+}
+.sa-feedback-wrap { margin-top: 8px; }
