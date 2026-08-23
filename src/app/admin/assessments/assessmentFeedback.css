@@ -1,0 +1,108 @@
+/* Student-feedback modal, opened from an assessment card.
+   Plain global CSS with an fbm- prefix, matching how this page already styles
+   its own modals. The prefix keeps it clear of the globally loaded Bootstrap. */
+
+.fbm-backdrop {
+  position: fixed; inset: 0; z-index: 1060;
+  background: rgba(7, 18, 42, 0.55);
+  backdrop-filter: blur(2px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+  font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+  animation: fbm-fade .18s ease;
+}
+@keyframes fbm-fade { from { opacity: 0; } to { opacity: 1; } }
+
+.fbm-card {
+  background: #fff; border-radius: 20px;
+  width: 100%; max-width: 780px; max-height: 92vh;
+  display: flex; flex-direction: column; overflow: hidden;
+  box-shadow: 0 24px 60px rgba(7, 18, 42, .45);
+  animation: fbm-rise .22s cubic-bezier(.2,.9,.3,1.2);
+}
+@keyframes fbm-rise { from { transform: translateY(12px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+.fbm-head {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 16px;
+  padding: 20px 24px; border-bottom: 1px solid #E5E9F2;
+}
+.fbm-eyebrow {
+  font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #E8A020;
+}
+.fbm-title { margin: 4px 0 0; font-size: 19px; font-weight: 700; color: #0B1B3A; }
+.fbm-x {
+  border: 0; background: #F4F6FB; color: #4A5568;
+  width: 32px; height: 32px; border-radius: 9px; font-size: 22px; line-height: 1; cursor: pointer;
+}
+.fbm-x:hover { background: #E5E9F2; }
+
+.fbm-body { padding: 20px 24px 24px; overflow-y: auto; }
+
+.fbm-muted { color: #4A5568; font-size: 13px; margin: 0; }
+.fbm-sm { font-size: 12px; }
+
+.fbm-error {
+  font-size: 13px; color: #B42318; background: #FDECEA;
+  border: 1px solid #F5C6C2; border-radius: 10px; padding: 11px 14px; margin-bottom: 14px;
+}
+
+.fbm-empty { text-align: center; padding: 28px 10px; }
+.fbm-empty-t { font-size: 15px; font-weight: 700; color: #0B1B3A; margin: 0 0 6px; }
+
+/* ── Summary ───────────────────────────────────────────────────────────── */
+.fbm-summary {
+  display: grid; grid-template-columns: 140px 1fr; gap: 20px;
+  background: #F4F6FB; border: 1px solid #E5E9F2; border-radius: 14px;
+  padding: 18px; margin-bottom: 18px;
+}
+.fbm-avg { text-align: center; }
+.fbm-avg-num { font-family: 'Playfair Display', Georgia, serif; font-size: 38px; font-weight: 700; color: #0B1B3A; line-height: 1; }
+
+.fbm-stars { letter-spacing: 1px; color: #D9DFEA; font-size: 14px; }
+.fbm-stars .on { color: #E8A020; }
+
+.fbm-bars { display: flex; flex-direction: column; gap: 5px; justify-content: center; }
+.fbm-bar-row { display: grid; grid-template-columns: 26px 1fr 26px; align-items: center; gap: 8px; }
+.fbm-bar-lbl { font-size: 11.5px; color: #4A5568; }
+.fbm-bar-track { height: 7px; border-radius: 4px; background: #E5E9F2; overflow: hidden; }
+.fbm-bar-fill { display: block; height: 100%; background: #E8A020; border-radius: 4px; }
+.fbm-bar-n { font-size: 11.5px; color: #4A5568; text-align: right; }
+
+.fbm-facts { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; border-top: 1px solid #E5E9F2; padding-top: 14px; }
+.fbm-fact { display: flex; flex-direction: column; gap: 3px; }
+.fbm-fact-lbl { font-size: 10.5px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: #4A5568; }
+.fbm-fact-val { font-size: 13px; color: #0B1B3A; font-weight: 600; }
+
+/* ── Filters ───────────────────────────────────────────────────────────── */
+.fbm-filters { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 14px; }
+.fbm-chip {
+  padding: 6px 13px; border-radius: 999px; border: 1px solid #E5E9F2;
+  background: #fff; color: #4A5568; font-size: 12.5px; cursor: pointer;
+}
+.fbm-chip:hover:not(:disabled) { border-color: #0B1B3A; }
+.fbm-chip.sel { background: #0B1B3A; border-color: #0B1B3A; color: #fff; }
+.fbm-chip:disabled { opacity: .45; cursor: not-allowed; }
+
+/* ── Responses ─────────────────────────────────────────────────────────── */
+.fbm-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.fbm-item { border: 1px solid #E5E9F2; border-radius: 12px; padding: 13px 15px; }
+.fbm-item-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.fbm-item-who { font-size: 13px; font-weight: 600; color: #0B1B3A; }
+.fbm-item-date { margin-left: auto; font-size: 11.5px; color: #94A3B8; }
+.fbm-item-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.fbm-tag { font-size: 11px; padding: 3px 9px; border-radius: 999px; background: #F4F6FB; color: #4A5568; }
+.fbm-tag.yes { background: #E8F6EC; color: #15803D; }
+.fbm-tag.no  { background: #FDECEA; color: #B42318; }
+.fbm-item-comment { margin: 10px 0 0; font-size: 13.5px; color: #0B1B3A; line-height: 1.6; }
+
+.fbm-pager { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 16px; }
+
+@media (max-width: 620px) {
+  .fbm-summary { grid-template-columns: 1fr; }
+  .fbm-facts { grid-template-columns: 1fr; }
+  .fbm-body { padding: 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fbm-backdrop, .fbm-card { animation: none; }
+}

@@ -5,6 +5,8 @@ import Link from 'next/link';
 import RoleGuard from '@/components/RoleGuard';
 import { fetchWithAuth } from '@/lib/api';
 import { CODING_LANG_LIST } from '@/lib/codingLangs';
+import AssessmentFeedbackModal from './AssessmentFeedbackModal';
+import './assessmentFeedback.css';
 
 const BASE = 'https://api.easycoders.in/api';
 
@@ -62,6 +64,8 @@ export default function AssessmentsPage() {
   const [assessments, setAssessments] = useState<Assessment[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState('');
+  // Which assessment's student feedback is open, if any.
+  const [feedbackFor, setFeedbackFor] = useState<{ id: number; title: string } | null>(null);
   const [togglingId, setTogglingId] = useState<number | null>(null);
 
   // Create/Edit assessment
@@ -489,6 +493,7 @@ export default function AssessmentsPage() {
                           <button className="ax-btn ax-edit" onClick={() => openEdit(a)}>Edit</button>
                           <button className="ax-btn ax-ghost" onClick={() => openQuestions(a)}>Questions</button>
                           <Link href={`/admin/assessments/${a.id}/stats`} className="ax-btn ax-stats">Statistics</Link>
+                          <button className="ax-btn ax-ghost" onClick={() => setFeedbackFor({ id: a.id, title: a.title })}>Feedback</button>
                           <button className="ax-btn ax-del" onClick={() => deleteAssess(a.id)}>Delete</button>
                         </div>
                       </div>
@@ -500,6 +505,15 @@ export default function AssessmentsPage() {
           )}
         </div>
       </div>
+
+      {/* ── Student feedback for one assessment ── */}
+      {feedbackFor && (
+        <AssessmentFeedbackModal
+          assessmentId={feedbackFor.id}
+          title={feedbackFor.title}
+          onClose={() => setFeedbackFor(null)}
+        />
+      )}
 
       {/* ── Create / Edit Assessment Modal (navy/gold, 2-column) ── */}
       {showAssessModal && (
