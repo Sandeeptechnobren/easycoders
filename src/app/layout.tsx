@@ -116,7 +116,7 @@ export default function RootLayout({
          * against the server afterwards and corrects the value if it changed. */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('ec_site_theme');if(t==='tiranga'){var d=document.documentElement;d.setAttribute('data-theme','tiranga');}}catch(e){}})();`,
+            __html: `(function(){try{var K=['tiranga','rakhi'];var p=null;try{p=new URLSearchParams(location.search).get('theme');}catch(e){}var s=null;try{s=sessionStorage.getItem('ec_theme_preview');}catch(e){}var t=(K.indexOf(p)>-1?p:(K.indexOf(s)>-1?s:localStorage.getItem('ec_site_theme')));if(K.indexOf(t)>-1){document.documentElement.setAttribute('data-theme',t);}}catch(e){}})();`,
           }}
         />
 
