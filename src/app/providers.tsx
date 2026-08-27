@@ -14,6 +14,9 @@ import JetFlypast from '@/components/independence/JetFlypast';
 import PointerFX from '@/components/independence/PointerFX';
 import TricolourFall from '@/components/independence/TricolourFall';
 import GloryWave from '@/components/independence/GloryWave';
+import RakhiLoader from '@/components/rakhi/RakhiLoader';
+import RakhiBanner from '@/components/rakhi/RakhiBanner';
+import PetalFall from '@/components/rakhi/PetalFall';
 
 /**
  * Independence Day chrome. Split into its own component because it must sit
@@ -57,6 +60,28 @@ function IndependenceChrome({ showBanner }: { showBanner: boolean }) {
   );
 }
 
+/**
+ * Raksha Bandhan chrome. Same shape and same gating as IndependenceChrome:
+ * theme-gated, and the decorative pieces stay off the portals, which are work
+ * surfaces where falling petals over a data table are a distraction.
+ *
+ * The loader is NOT gated on showBanner — an admin arriving straight at
+ * /admin should still get the themed opening rather than a bare white flash.
+ */
+function RakhiChrome({ showBanner }: { showBanner: boolean }) {
+  const { theme } = useSiteTheme();
+  if (theme !== 'rakhi') return null;
+
+  return (
+    <>
+      <RakhiLoader />
+      {showBanner && <RakhiBanner />}
+      {/* One-shot on load; unmounts itself once the last petal lands. */}
+      {showBanner && <PetalFall />}
+    </>
+  );
+}
+
 /* Logged-in portals (and the self-assessment sub-app) don't need the public
  * app-download dock — show it only on the marketing / public pages. */
 const PORTAL_PREFIXES = [
@@ -88,6 +113,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
      * round-trip. */
     <ThemeProvider>
       <IndependenceChrome showBanner={isPublicPage} />
+      <RakhiChrome showBanner={isPublicPage} />
       <AuthProvider>
         {!isSelfAssessment && <Navbar />}
         <main className="flex-grow-1">{children}</main>

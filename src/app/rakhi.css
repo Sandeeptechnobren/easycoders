@@ -1,0 +1,395 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+ * RAKSHA BANDHAN — an accent layer over the EasyCoders identity
+ *
+ * Scoped entirely under :root[data-theme='rakhi'], so with the theme off not one
+ * declaration here applies.
+ *
+ * ⚠️ REWRITTEN. The first version remapped --gold to marigold, --bs-primary to
+ * red, and recoloured buttons, stat figures and section labels. That is a
+ * RESKIN: every brand signal was replaced, and the site stopped looking like
+ * EasyCoders. This version does the opposite.
+ *
+ * THE RULE HERE
+ * -------------
+ * Navy and gold are NOT touched. They carry the brand and nearly all of the
+ * text contrast on this site. The festival is expressed through ADDED
+ * ornament — a braided thread, a charm, warm light — never by replacing what
+ * is already there.
+ *
+ * WHY THAT STILL READS AS RAKSHA BANDHAN
+ * -------------------------------------
+ * Because EasyCoders' gold is already a festival colour. A rakhi thread is
+ * gold and red; the brand supplies the gold, so only a single deep-red strand
+ * has to be introduced. Red therefore appears as a THREAD, at small sizes,
+ * against navy — never as a surface, a button, or body text.
+ *
+ * Roughly: 70% brand, 20% premium surface, 10% festival.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+:root[data-theme='rakhi'] {
+  /* The ONE new colour. Deep kumkum red, dark enough to sit on white if it
+     ever has to: #A3121B is 6.6:1 on white. It is used for thread strands and
+     tiny accents, not for surfaces. */
+  --rk-red:      #A3121B;
+  --rk-red-lift: #C1272D;   /* the brighter strand, decorative only */
+  --rk-red-rgb:  163 18 27;
+
+  /* Everything else is the EXISTING brand palette, referenced not redefined.
+     --gold, --gold-light, --navy, --navy-deep and friends stay exactly as
+     globals.css declares them. Nothing below overrides them. */
+
+  /* ── The signature motif: a braided rakhi thread ───────────────────────────
+   * Gold-dominant on purpose — this is the brand's gold doing festival duty.
+   * Two gold strands to one red keeps it unmistakably EasyCoders while the red
+   * supplies the rakhi. Diagonal bands read as a twisted cord rather than a
+   * stripe. */
+  /* ── The hero photograph ──────────────────────────────────────────────────
+   * A pooja thali with rice and kumkum, and a rakhi laid beside it.
+   *
+   * If the file is missing the url() simply fails and the navy background-color
+   * underneath shows through — so a wrong path degrades to the plain themed
+   * hero rather than to a broken page. Nothing else depends on it. */
+  --rakhi-hero: url('/rakhi/rakhi-hero.jpg');
+
+  --rakhi-thread: repeating-linear-gradient(
+    62deg,
+    var(--gold)       0px, var(--gold)       8px,
+    var(--gold-light) 8px, var(--gold-light) 13px,
+    var(--rk-red)    13px, var(--rk-red)    18px,
+    var(--gold)      18px, var(--gold)      21px
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * 1. SEAMS — the thread appears exactly where the site already has an edge
+ *
+ * No new structure: the navbar, the banners, the stats band and the footer all
+ * have a rule or border already. The thread replaces that one line. This is
+ * the whole theme's backbone, and it costs nothing.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+:root[data-theme='rakhi'] body::before {
+  content: '';
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--rakhi-thread);
+  z-index: 10000;
+  pointer-events: none;
+}
+
+/* The real navbar class is .nb (see components/Navbar.tsx). There is no
+   .navbar anywhere in this codebase — Bootstrap is loaded but the site does not
+   use its navbar component. */
+:root[data-theme='rakhi'] .nb { position: relative; }
+
+:root[data-theme='rakhi'] .nb::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 2px;
+  background: var(--rakhi-thread);
+  opacity: .85;
+  pointer-events: none;
+}
+
+:root[data-theme='rakhi'] footer { position: relative; }
+:root[data-theme='rakhi'] footer::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--rakhi-thread);
+}
+
+/* ── Greeting-bar offset ──────────────────────────────────────────────────────
+ * RakhiBanner is `position: fixed` because the navbar is fixed too and every
+ * page hardcodes its own top padding to clear it — a banner in normal flow
+ * simply rendered underneath the navbar and was never visible.
+ *
+ * The bar adds `rb-on` to <html> and publishes its measured height as --rb-h,
+ * so these two rules push the navbar and the page body down by exactly that
+ * much and every page's existing spacing is preserved. Dismiss the bar and both
+ * the class and the variable go away, restoring the untouched layout.
+ *
+ * The fallback in var() matters: if --rb-h has not been written yet (the frame
+ * between `rb-on` landing and the measurement), 38px is close enough that
+ * nothing visibly jumps.
+ */
+/* `.rb-on` on <html> plus the type selector is (0,2,1) — deliberately above the
+   (0,2,0) that styled-jsx emits for `.nb-header.jsx-xxx`. Equal specificity
+   would lose on source order, because styled-jsx injects at runtime, AFTER this
+   imported stylesheet. That exact trap is why every rule in this file is
+   prefixed `:root[data-theme='rakhi']` rather than `[data-theme='rakhi']`. */
+html.rb-on .nb-header { top: var(--rb-h, 38px); }
+html.rb-on body       { padding-top: var(--rb-h, 38px); }
+
+/* The greeting bar carries its own thread along its bottom edge, so the
+   full-bleed one would just be a second stripe 38px above it. Hide it while the
+   bar is up; it comes back the moment the bar is dismissed. */
+html.rb-on body::before { display: none; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * 2. HERO — the rakhi photograph behind the brand navy
+ *
+ * ⚠️ CONTRAST IS THE WHOLE PROBLEM HERE, and it is the opposite of the tiranga
+ * hero's. That photo was a flag with bright saffron; this one is a BEIGE STUDIO
+ * SHOT — large, evenly-lit, near-#D8C4A8 areas. Dropped in raw behind the
+ * white headline it would not be low-contrast, it would be illegible.
+ *
+ * So the scrim sits ON TOP of the photo (first background layer paints topmost)
+ * and is dense over the left text column, clearing toward the right where the
+ * hero visual card sits and nothing has to be read. The photo reads as a warm
+ * texture behind the navy, not as a picture the user is asked to look at.
+ *
+ * The gold and kumkum pools from the non-photographic version are kept: they
+ * still do the work when the image is absent or slow.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+:root[data-theme='rakhi'] .hero {
+  position: relative;
+  isolation: isolate;
+  /* Shows through if the image 404s ⇒ this degrades to the plain themed hero. */
+  background-color: var(--navy);
+  background-image:
+    /* 1 — the horizontal scrim. 0.94 under the headline is not excessive: at
+       0.80 the beige lifts the local background to roughly #4A4034 and white
+       body copy drops under 7:1. */
+    linear-gradient(
+      100deg,
+      rgb(var(--navy-deep-rgb) / 0.96) 0%,
+      rgb(var(--navy-deep-rgb) / 0.94) 38%,
+      rgb(var(--navy-deep-rgb) / 0.78) 64%,
+      rgb(var(--navy-deep-rgb) / 0.58) 100%
+    ),
+    /* 2 — a vertical pass, so the badge and the CTA row (the smallest text on
+       the hero) sit on darker ground than the headline needs. */
+    linear-gradient(
+      180deg,
+      rgb(var(--navy-deep-rgb) / 0.38) 0%,
+      transparent 36%,
+      transparent 58%,
+      rgb(var(--navy-deep-rgb) / 0.50) 100%
+    ),
+    /* 3 — the brand's own gold, turned up for the occasion. */
+    radial-gradient(ellipse 760px 440px at 76% 20%, rgb(var(--gold-rgb) / 0.20) 0%, transparent 64%),
+    /* 4 — one restrained ember of kumkum, low and left, away from the headline. */
+    radial-gradient(ellipse 520px 320px at 8% 88%, rgb(var(--rk-red-rgb) / 0.16) 0%, transparent 70%),
+    /* 5 — the photograph itself, bottom of the stack. */
+    var(--rakhi-hero);
+  /* `cover` from a ~1.6:1 source into a ~2.5:1 hero crops top and bottom, which
+     is the right crop: the thali and the rakhi both sit in the middle band.
+     `center right` keeps the rakhi on the side that is NOT being read. */
+  background-size: cover, cover, cover, cover, cover;
+  background-position: center, center, center, center, center right;
+  background-repeat: no-repeat;
+}
+
+/* Phones: .hero-visual is hidden and the copy spans the full width, so the
+   photo sits behind ALL of the text. Push the scrim close to opaque — a warm
+   tint is all that should survive. */
+@media (max-width: 900px) {
+  :root[data-theme='rakhi'] .hero {
+    background-image:
+      linear-gradient(
+        180deg,
+        rgb(var(--navy-deep-rgb) / 0.94) 0%,
+        rgb(var(--navy-deep-rgb) / 0.90) 55%,
+        rgb(var(--navy-deep-rgb) / 0.95) 100%
+      ),
+      radial-gradient(ellipse 420px 300px at 82% 12%, rgb(var(--gold-rgb) / 0.18) 0%, transparent 66%),
+      var(--rakhi-hero);
+    background-size: cover, cover, cover;
+    background-position: center, center, center center;
+    background-repeat: no-repeat;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * 3. SECTIONS — barely there
+ *
+ * These carry near-black navy body copy on white and cream. The festival does
+ * NOT belong behind paragraphs, so this is a whisper of warmth at the section
+ * edge and nothing else. The dark sections keep the brand navy and gain the
+ * same gold lift as the hero.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+:root[data-theme='rakhi'] .section-white {
+  background:
+    radial-gradient(ellipse 900px 260px at 50% 0%, rgb(var(--gold-rgb) / 0.05) 0%, transparent 72%),
+    #fff;
+}
+
+:root[data-theme='rakhi'] .section-cream,
+:root[data-theme='rakhi'] .faq-section {
+  background:
+    radial-gradient(ellipse 820px 260px at 50% 100%, rgb(var(--gold-rgb) / 0.07) 0%, transparent 72%),
+    var(--gold-soft);
+}
+
+:root[data-theme='rakhi'] .testimonials-section,
+:root[data-theme='rakhi'] .cta-section {
+  background-color: var(--navy);
+  background-image:
+    radial-gradient(ellipse 700px 400px at 80% 20%, rgb(var(--gold-rgb) / 0.17) 0%, transparent 66%),
+    radial-gradient(ellipse 520px 320px at 12% 88%, rgb(var(--rk-red-rgb) / 0.13) 0%, transparent 72%);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * 4. PAGE BANNERS — shared PageHeader across every inner page
+ *
+ * .ph-wrap::before holds the existing gold/teal glows, so the warmth rides on
+ * the element background and the thread takes ::after.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+:root[data-theme='rakhi'] .ph-wrap {
+  background-color: var(--navy);
+  background-image:
+    radial-gradient(ellipse 640px 300px at 80% 26%, rgb(var(--gold-rgb) / 0.18) 0%, transparent 66%),
+    radial-gradient(ellipse 460px 240px at 6% 90%, rgb(var(--rk-red-rgb) / 0.14) 0%, transparent 74%),
+    linear-gradient(152deg, var(--navy-deep) 0%, var(--navy) 66%, #101E3E 100%);
+}
+
+:root[data-theme='rakhi'] .ph-wrap::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 2px;
+  background: var(--rakhi-thread);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* The little gold rule under each page title becomes the thread — the smallest
+   possible festive gesture on a brand element that already exists. */
+:root[data-theme='rakhi'] .ph-rule {
+  background: var(--rakhi-thread);
+  width: 52px;
+}
+
+:root[data-theme='rakhi'] .adm-hero {
+  background-color: var(--navy);
+  background-image:
+    radial-gradient(ellipse 520px 260px at 84% 24%, rgb(var(--gold-rgb) / 0.13) 0%, transparent 66%),
+    linear-gradient(152deg, var(--navy-deep) 0%, var(--navy) 74%, #101E3E 100%);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * 5. COURSE CARDS — one thread ribbon across the thumbnail corner
+ *
+ * ⚠️ .cg-image-wrap::after is ALREADY the hover gradient, so this must use
+ * ::before. Getting it wrong draws a band across the whole image.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+:root[data-theme='rakhi'] .cg-image-wrap,
+:root[data-theme='rakhi'] .cl-image-wrap { position: relative; overflow: hidden; }
+
+:root[data-theme='rakhi'] .cg-image-wrap::before,
+:root[data-theme='rakhi'] .cl-image-wrap::before {
+  content: '';
+  position: absolute;
+  z-index: 2;
+  top: 13px;
+  right: -56px;
+  width: 186px;
+  height: 16px;
+  transform: rotate(45deg);
+  background: var(--rakhi-thread);
+  box-shadow: 0 1px 6px rgb(0 0 0 / .22);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * 6. STATS BAND
+ *
+ * ⚠️ .stat-value stays NAVY. Recolouring the figures red was the single
+ * clearest symptom of the first version being a reskin — those numbers are a
+ * brand element, not decoration. Only the seam and the little rule change.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+:root[data-theme='rakhi'] .stats-bar {
+  position: relative;
+  border-top-color: transparent;
+}
+
+:root[data-theme='rakhi'] .stats-bar::before {
+  content: '';
+  position: absolute;
+  top: -2px; left: 0; right: 0;
+  height: 3px;
+  background: var(--rakhi-thread);
+  pointer-events: none;
+}
+
+:root[data-theme='rakhi'] .stat-item {
+  position: relative;
+  transition: transform .22s ease;
+}
+:root[data-theme='rakhi'] .stat-item:hover { transform: translateY(-2px); }
+
+/* ::before is free here (::after is the underline reveal). A gold wash, not
+   red — same reason as the figures. */
+:root[data-theme='rakhi'] .stat-item::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgb(var(--gold-rgb) / .06);
+  opacity: 0;
+  transition: opacity .22s ease;
+  pointer-events: none;
+}
+:root[data-theme='rakhi'] .stat-item:hover::before { opacity: 1; }
+
+:root[data-theme='rakhi'] .stat-item::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 3px;
+  background: var(--rakhi-thread);
+  opacity: 0;
+  transform: scaleX(.4);
+  transition: opacity .24s ease, transform .32s cubic-bezier(.22,.61,.36,1);
+  pointer-events: none;
+}
+:root[data-theme='rakhi'] .stat-item:hover::after { opacity: 1; transform: scaleX(1); }
+
+/* The existing gold keyline under each figure becomes the thread. */
+:root[data-theme='rakhi'] .stat-value::after {
+  background: var(--rakhi-thread) !important;
+  opacity: 1 !important;
+  transition: width .3s cubic-bezier(.22,.61,.36,1);
+}
+:root[data-theme='rakhi'] .stat-item:hover .stat-value::after { width: 46px; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * 7. SECTION LABELS — the eyebrow rule only
+ *
+ * The label TEXT keeps its brand colour. Only the little dash beside it picks
+ * up the thread.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+:root[data-theme='rakhi'] .section-label::before {
+  background: var(--rakhi-thread);
+  width: 28px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * 8. BUTTONS
+ *
+ * ⚠️ Deliberately NOT restyled. The first version made every primary button a
+ * red gradient, which erased the brand's gold call-to-action — the strongest
+ * identity signal on the page. A festival lasts a week; the button is the
+ * business. The only change is a warmer shadow on hover.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+:root[data-theme='rakhi'] .btn-primary:hover,
+:root[data-theme='rakhi'] .enrollNow:hover {
+  box-shadow: 0 8px 22px rgb(var(--gold-rgb) / .34);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root[data-theme='rakhi'] .stat-item,
+  :root[data-theme='rakhi'] .stat-item::before,
+  :root[data-theme='rakhi'] .stat-item::after,
+  :root[data-theme='rakhi'] .stat-value::after { transition: none !important; }
+  :root[data-theme='rakhi'] .stat-item:hover { transform: none; }
+}

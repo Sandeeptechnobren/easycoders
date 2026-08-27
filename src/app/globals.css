@@ -4,6 +4,7 @@
    inert unless the admin switches the theme on. Kept in its own file so it can
    be reviewed — or deleted — as one unit. */
 @import './tiranga.css';
+@import './rakhi.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

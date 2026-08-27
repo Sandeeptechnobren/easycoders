@@ -25,7 +25,42 @@ import {
  * the theme off, the next load fixes itself.
  */
 
-export type SiteTheme = 'default' | 'tiranga';
+export type SiteTheme = 'default' | 'tiranga' | 'rakhi';
+
+/** Every theme the CSS knows how to paint. Anything else falls back to default. */
+export const KNOWN_THEMES: SiteTheme[] = ['tiranga', 'rakhi'];
+
+const isKnown = (value: unknown): value is SiteTheme =>
+  typeof value === 'string' && (KNOWN_THEMES as string[]).includes(value);
+
+/**
+ * `?theme=rakhi` previews a theme without switching it on for everyone.
+ *
+ * Kept in sessionStorage so it survives client-side navigation but dies with
+ * the tab — a preview that outlived the session would be indistinguishable
+ * from the real setting and someone would eventually report a "bug" that is
+ * just their own stale override. `?theme=off` clears it.
+ */
+const PREVIEW_KEY = 'ec_theme_preview';
+
+function readPreview(): SiteTheme | null | 'clear' {
+  if (typeof window === 'undefined') return null;
+  try {
+    const param = new URLSearchParams(window.location.search).get('theme');
+    if (param === 'off' || param === 'default') {
+      sessionStorage.removeItem(PREVIEW_KEY);
+      return 'clear';
+    }
+    if (isKnown(param)) {
+      sessionStorage.setItem(PREVIEW_KEY, param);
+      return param;
+    }
+    const stored = sessionStorage.getItem(PREVIEW_KEY);
+    return isKnown(stored) ? stored : null;
+  } catch {
+    return null;
+  }
+}
 
 const BASE = 'https://api.easycoders.in/api';
 
@@ -82,25 +117,51 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
      * initialiser instead would reintroduce a hydration mismatch. */
     const adoptPainted = () => {
       try {
-        if (localStorage.getItem(STORAGE_KEY) === 'tiranga') setTheme('tiranga');
+        const cached = localStorage.getItem(STORAGE_KEY);
+        if (isKnown(cached)) setTheme(cached);
       } catch {
         /* storage unavailable — the DOM attribute still stands */
       }
     };
 
-    // Deliberately a bare fetch, not fetchWithAuth: this endpoint is public and
-    // must work for logged-out visitors. A failure here must never break the
-    // page — we simply keep the cached theme.
-    fetch(`${BASE}/site-settings`, { headers: { Accept: 'application/json' } })
-      .then((r) => (r.ok ? r.json() : null))
+    /* Everything below runs inside promise callbacks on purpose. Setting state
+     * synchronously in an effect body triggers a cascading render
+     * (react-hooks/set-state-in-effect); deferring by one microtask costs
+     * nothing visible, because the pre-paint script in layout.tsx has already
+     * put the right theme on <html> before React ever runs.
+     *
+     * A ?theme= preview WINS over the server and skips the fetch entirely —
+     * the whole point is to see a theme the server has not switched on yet. */
+    Promise.resolve()
+      .then(() => {
+        const preview = readPreview();
+        if (cancelled) return null;
+
+        if (preview === 'clear') {
+          applyTheme('default');
+          setResolved(true);
+          return null;
+        }
+        if (preview) {
+          applyTheme(preview);
+          setResolved(true);
+          return null;
+        }
+
+        // Deliberately a bare fetch, not fetchWithAuth: this endpoint is public
+        // and must work for logged-out visitors. A failure here must never
+        // break the page — we simply keep the cached theme.
+        return fetch(`${BASE}/site-settings`, { headers: { Accept: 'application/json' } })
+          .then((r) => (r.ok ? r.json() : null));
+      })
       .then((j) => {
-        if (cancelled) return;
+        if (cancelled || j === null) return;
         if (!j?.data) {
           // Unexpected shape — treat it like a failure and trust the cache.
           adoptPainted();
           return;
         }
-        applyTheme(j.data.active && j.data.theme === 'tiranga' ? 'tiranga' : 'default');
+        applyTheme(j.data.active && isKnown(j.data.theme) ? j.data.theme : 'default');
       })
       .catch(() => {
         // Offline or API down: keep whatever the pre-paint script painted, and
