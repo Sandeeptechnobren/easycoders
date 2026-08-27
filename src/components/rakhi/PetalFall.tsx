@@ -26,6 +26,10 @@ const MOBILE_PETALS = 12;
  * Anything shorter unmounts petals mid-air and they visibly vanish.
  */
 const LIFETIME_MS = 9500;
+/** Safety net if `ec:loader-done` never fires. Sits just past the loader's own
+ *  2.36s lifetime (2000ms hold + 360ms fade), so it only ever wins when the
+ *  loader is genuinely absent. */
+const FALLBACK_START_MS = 3000;
 
 type Petal = {
   left: number;      // vw
@@ -70,20 +74,36 @@ export default function PetalFall() {
       ? MOBILE_PETALS
       : DESKTOP_PETALS;
 
-    /* Microtask, not requestAnimationFrame — rAF never fires while the tab is
-       in the background, so the petals were never created there. */
-    let cancelled = false;
-    let timer: ReturnType<typeof setTimeout>;
+    /* Wait for the loader to get out of the way.
+     *
+     * These used to start on mount, which meant a 9.5s fall began behind a 2s
+     * opaque overlay — a fifth of the animation was spent invisible, and the
+     * first petals the visitor actually saw were already halfway down. This is
+     * the same cue and the same fallback that TricolourFall uses on the
+     * Independence theme.
+     *
+     * RakhiLoader fires `ec:loader-done` when it leaves AND immediately if it
+     * decides not to show at all (reduced motion), so the common path never
+     * reaches the fallback. The fallback exists only for the case where the
+     * loader is absent entirely — e.g. if the chrome is ever rendered without
+     * it — because petals that never arrive are worse than late ones. */
+    let started = false;
+    let endTimer: ReturnType<typeof setTimeout>;
 
-    void Promise.resolve().then(() => {
-      if (cancelled) return;
+    const start = () => {
+      if (started) return;
+      started = true;
       setPetals(makePetals(count));
-      timer = setTimeout(() => setGone(true), LIFETIME_MS);
-    });
+      endTimer = setTimeout(() => setGone(true), LIFETIME_MS);
+    };
+
+    window.addEventListener('ec:loader-done', start, { once: true });
+    const startTimer = setTimeout(start, FALLBACK_START_MS);
 
     return () => {
-      cancelled = true;
-      clearTimeout(timer);
+      window.removeEventListener('ec:loader-done', start);
+      clearTimeout(startTimer);
+      clearTimeout(endTimer);
     };
   }, []);
 
