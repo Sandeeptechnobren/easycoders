@@ -33,6 +33,6 @@ deleted whenever you like — left in place rather than removed unasked.
   scrim hides this over the text column, but it is visible toward the right
   where the scrim clears to 0.58. If a larger original exists, drop it in — the
   CSS needs no change. Anything from about 1600px wide would remove the issue.
-- ⚠️ **Licensing:** this looks like a stock photograph. Confirm the licence
-  covers commercial web use before this theme goes anywhere near production —
-  the same issue as the Alamy-watermarked flag image in `public/flag/`.
+- **Licensing: cleared by the owner on 2026-08-27** — the licence covers
+  commercial web use. (This does NOT extend to the Alamy-derived flag image in
+  `public/flag/`, which is a separate and still-open question.)
